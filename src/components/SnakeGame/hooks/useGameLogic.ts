@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { GameState } from '../types';
 import { GRID_SIZE, APPLE_COUNT, FPS } from '../constants';
 import { moveSnake } from '../utils';
@@ -20,6 +20,9 @@ export const useGameLogic = () => {
     2: 0,
     3: 0,
   });
+
+  // Referencia para el tiempo de inicio de cada ronda
+  const roundStartTime = useRef<number>(Date.now());
 
   const ensureMinimumApples = (apples: typeof gameState.apples) => {
     const minimumApples = 5;
@@ -46,9 +49,20 @@ export const useGameLogic = () => {
       apples,
       gridSize: GRID_SIZE,
     });
+
+    // Resetear el tiempo de inicio de la ronda
+    roundStartTime.current = Date.now();
   };
 
   const updateGame = () => {
+    // Verificar si ha pasado 1 minuto
+    const currentTime = Date.now();
+    if (currentTime - roundStartTime.current >= 60000) { // 60000ms = 1 minuto
+      console.log('1 minuto sin victoria - Reiniciando juego');
+      initializeGame();
+      return;
+    }
+
     setGameState(prevState => {
       // Mover las serpientes usando la red neuronal
       const newSnakes = prevState.snakes.map(snake => {
