@@ -27,9 +27,27 @@ const Index = () => {
       },
       {
         id: 1,
-        positions: generateInitialSnake(15, 15),
+        positions: generateInitialSnake(25, 25),
         direction: 'LEFT' as Direction,
         color: 'blue',
+        score: 0,
+        brain: new NeuralNetwork(8, 12, 4),
+        alive: true
+      },
+      {
+        id: 2,
+        positions: generateInitialSnake(5, 25),
+        direction: 'UP' as Direction,
+        color: 'green',
+        score: 0,
+        brain: new NeuralNetwork(8, 12, 4),
+        alive: true
+      },
+      {
+        id: 3,
+        positions: generateInitialSnake(25, 5),
+        direction: 'DOWN' as Direction,
+        color: 'red',
         score: 0,
         brain: new NeuralNetwork(8, 12, 4),
         alive: true
