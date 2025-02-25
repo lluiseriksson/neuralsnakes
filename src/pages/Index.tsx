@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -222,7 +223,7 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    let gameLoop: number;
+    let gameLoop: NodeJS.Timeout;
     
     if (isRunning) {
       gameLoop = setInterval(() => {
