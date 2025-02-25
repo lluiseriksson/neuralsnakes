@@ -5,7 +5,6 @@ import { NeuralNetwork } from "../components/SnakeGame/NeuralNetwork";
 import { GRID_SIZE, APPLE_COUNT, FPS } from "../components/SnakeGame/constants";
 import { generateInitialSnake, moveSnake } from "../components/SnakeGame/utils";
 import GameCanvas from "../components/SnakeGame/GameCanvas";
-import GameControls from "../components/SnakeGame/GameControls";
 import ScoreBoard from "../components/SnakeGame/ScoreBoard";
 
 const Index = () => {
@@ -14,24 +13,28 @@ const Index = () => {
     apples: [],
     gridSize: GRID_SIZE,
   });
-  const [isRunning, setIsRunning] = useState(true);
 
   const initializeGame = () => {
-    // Inicializar solo dos serpientes para empezar
-    const initialPositions = [
-      [5, 5],
-      [15, 15]
+    const snakes = [
+      {
+        id: 0,
+        positions: generateInitialSnake(5, 5),
+        direction: 'RIGHT' as Direction,
+        color: 'yellow',
+        score: 0,
+        brain: new NeuralNetwork(8, 12, 4),
+        alive: true
+      },
+      {
+        id: 1,
+        positions: generateInitialSnake(15, 15),
+        direction: 'LEFT' as Direction,
+        color: 'blue',
+        score: 0,
+        brain: new NeuralNetwork(8, 12, 4),
+        alive: true
+      }
     ];
-    
-    const snakes = initialPositions.map((pos, index) => ({
-      id: index,
-      positions: generateInitialSnake(pos[0], pos[1]),
-      direction: 'RIGHT' as Direction,
-      color: ['yellow', 'blue'][index],
-      score: 0,
-      brain: new NeuralNetwork(8, 12, 4),
-      alive: true
-    }));
 
     const apples = Array(APPLE_COUNT).fill(null).map(() => ({
       position: {
@@ -43,40 +46,39 @@ const Index = () => {
     setGameState({ snakes, apples, gridSize: GRID_SIZE });
   };
 
-  const checkCollisions = () => {
-    const newGameState = { ...gameState };
-
-    // Colisiones con manzanas
-    newGameState.snakes.forEach(snake => {
-      if (!snake.alive) return;
-
-      const head = snake.positions[0];
-      const appleIndex = newGameState.apples.findIndex(apple => 
-        apple.position.x === head.x && apple.position.y === head.y
-      );
-
-      if (appleIndex !== -1) {
-        snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
-        snake.score += 10;
-        newGameState.apples[appleIndex] = {
-          position: {
-            x: Math.floor(Math.random() * GRID_SIZE),
-            y: Math.floor(Math.random() * GRID_SIZE),
-          },
-        };
-      }
-    });
-
-    setGameState(newGameState);
-  };
-
   const updateGame = () => {
-    setGameState(prevState => ({
-      ...prevState,
-      snakes: prevState.snakes.map(snake => 
-        moveSnake(snake, prevState)
-      ),
-    }));
+    setGameState(prevState => {
+      // Mover serpientes
+      const newSnakes = prevState.snakes.map(snake => moveSnake(snake, prevState));
+      
+      // Verificar colisiones con manzanas
+      const newApples = [...prevState.apples];
+      newSnakes.forEach(snake => {
+        if (!snake.alive) return;
+
+        const head = snake.positions[0];
+        const appleIndex = newApples.findIndex(apple => 
+          apple.position.x === head.x && apple.position.y === head.y
+        );
+
+        if (appleIndex !== -1) {
+          snake.score += 10;
+          snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
+          newApples[appleIndex] = {
+            position: {
+              x: Math.floor(Math.random() * GRID_SIZE),
+              y: Math.floor(Math.random() * GRID_SIZE),
+            },
+          };
+        }
+      });
+
+      return {
+        ...prevState,
+        snakes: newSnakes,
+        apples: newApples
+      };
+    });
   };
 
   useEffect(() => {
@@ -84,37 +86,13 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    let gameLoop: NodeJS.Timeout;
-    
-    if (isRunning) {
-      gameLoop = setInterval(() => {
-        updateGame();
-        checkCollisions();
-      }, 1000 / FPS);
-    }
-
-    return () => {
-      if (gameLoop) clearInterval(gameLoop);
-    };
-  }, [isRunning]);
-
-  const handleStartStop = () => {
-    setIsRunning(!isRunning);
-  };
-
-  const handleReset = () => {
-    setIsRunning(true);
-    initializeGame();
-  };
+    const gameLoop = setInterval(updateGame, 1000 / FPS);
+    return () => clearInterval(gameLoop);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
       <h1 className="text-2xl font-bold mb-4 text-white">Snake AI Battle</h1>
-      <GameControls
-        isRunning={isRunning}
-        onStartStop={handleStartStop}
-        onReset={handleReset}
-      />
       <div className="relative">
         <GameCanvas gameState={gameState} />
       </div>

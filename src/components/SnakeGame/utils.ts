@@ -16,18 +16,17 @@ export const moveSnake = (snake: Snake, gameState: GameState): Snake => {
   const head = snake.positions[0];
   let newHead = { ...head };
 
-  // Movimiento aleatorio pero con preferencia por la dirección actual
-  let possibleDirections: Direction[] = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+  // Lista de posibles direcciones
+  const directions: Direction[] = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
   
-  // 80% de probabilidad de mantener la dirección actual si es posible
-  if (Math.random() < 0.8) {
-    possibleDirections = [snake.direction];
+  // Elegir una nueva dirección aleatoria o mantener la actual
+  let newDirection = snake.direction;
+  if (Math.random() < 0.2) { // 20% de probabilidad de cambiar de dirección
+    newDirection = directions[Math.floor(Math.random() * directions.length)];
   }
 
-  const direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
-
   // Mover en la dirección elegida
-  switch (direction) {
+  switch (newDirection) {
     case 'UP':
       newHead.y = (newHead.y - 1 + GRID_SIZE) % GRID_SIZE;
       break;
@@ -42,10 +41,9 @@ export const moveSnake = (snake: Snake, gameState: GameState): Snake => {
       break;
   }
 
-  // Actualizar la serpiente
   return {
     ...snake,
     positions: [newHead, ...snake.positions.slice(0, -1)],
-    direction: direction
+    direction: newDirection
   };
 };
