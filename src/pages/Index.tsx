@@ -44,11 +44,37 @@ const Index = () => {
 
   const checkCollisions = (snakes: Snake[]) => {
     const newSnakes = [...snakes];
+    let newApples = gameState.apples;
 
     newSnakes.forEach((snake, i) => {
       if (!snake.alive) return;
       
       const head = snake.positions[0];
+
+      // Verificar colisión con sí misma
+      for (let j = 1; j < snake.positions.length; j++) {
+        if (head.x === snake.positions[j].x && head.y === snake.positions[j].y) {
+          // Generar 10 manzanas alrededor del punto de muerte
+          const explosionApples = Array(10).fill(null).map(() => ({
+            position: {
+              x: Math.max(0, Math.min(GRID_SIZE - 1, head.x + Math.floor(Math.random() * 7) - 3)),
+              y: Math.max(0, Math.min(GRID_SIZE - 1, head.y + Math.floor(Math.random() * 7) - 3)),
+            },
+          }));
+          newApples = [...newApples, ...explosionApples];
+
+          // Respawnear la serpiente
+          const respawnSnake = createSnake(
+            snake.id,
+            [5, 25, 5, 25][snake.id],
+            [5, 25, 25, 5][snake.id],
+            ['RIGHT', 'LEFT', 'UP', 'DOWN'][snake.id] as Direction,
+            snake.color
+          );
+          newSnakes[i] = respawnSnake;
+          return;
+        }
+      }
 
       // Colisión con otras serpientes
       newSnakes.forEach((otherSnake, j) => {
@@ -60,7 +86,7 @@ const Index = () => {
             if (index === 0) { // Colisión cabeza con cabeza
               // La serpiente con más longitud gana
               if (snake.positions.length > otherSnake.positions.length) {
-                snake.score += otherSnake.positions.length; // Gana puntos igual a la longitud de la serpiente derrotada
+                snake.score += otherSnake.positions.length;
                 // Aumenta la longitud de la serpiente ganadora
                 for (let k = 0; k < otherSnake.positions.length; k++) {
                   snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
@@ -74,7 +100,7 @@ const Index = () => {
                 );
                 newSnakes[j] = respawnSnake;
               } else {
-                otherSnake.score += snake.positions.length; // Gana puntos igual a la longitud de la serpiente derrotada
+                otherSnake.score += snake.positions.length;
                 // Aumenta la longitud de la serpiente ganadora
                 for (let k = 0; k < snake.positions.length; k++) {
                   otherSnake.positions.push({ ...otherSnake.positions[otherSnake.positions.length - 1] });
@@ -89,8 +115,7 @@ const Index = () => {
                 newSnakes[i] = respawnSnake;
               }
             } else { // Colisión con el cuerpo
-              // La serpiente que chocó muere y la otra gana puntos y longitud
-              otherSnake.score += snake.positions.length; // Gana puntos igual a la longitud de la serpiente derrotada
+              otherSnake.score += snake.positions.length;
               // Aumenta la longitud de la serpiente ganadora
               for (let k = 0; k < snake.positions.length; k++) {
                 otherSnake.positions.push({ ...otherSnake.positions[otherSnake.positions.length - 1] });
@@ -108,6 +133,11 @@ const Index = () => {
         });
       });
     });
+
+    setGameState(prev => ({
+      ...prev,
+      apples: newApples
+    }));
 
     return newSnakes;
   };
@@ -131,7 +161,7 @@ const Index = () => {
         );
 
         if (appleIndex !== -1) {
-          snake.score += 1; // +1 punto por manzana
+          snake.score += 1;
           snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
           newApples[appleIndex] = {
             position: {
