@@ -1,6 +1,6 @@
 
-export const GRID_SIZE = 30;
+export const GRID_SIZE = 20;
 export const CELL_SIZE = 20;
-export const INITIAL_SNAKE_LENGTH = 2;
-export const APPLE_COUNT = 20; // Más manzanas para más acción
-export const FPS = 15; // Mayor velocidad
+export const INITIAL_SNAKE_LENGTH = 3;
+export const APPLE_COUNT = 5;
+export const FPS = 5;

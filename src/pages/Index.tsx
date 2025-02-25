@@ -14,22 +14,20 @@ const Index = () => {
     apples: [],
     gridSize: GRID_SIZE,
   });
-  const [isRunning, setIsRunning] = useState(true); // Iniciar automáticamente
+  const [isRunning, setIsRunning] = useState(true);
 
   const initializeGame = () => {
-    const initialDirections: Direction[] = ['RIGHT', 'LEFT', 'UP', 'DOWN'];
+    // Inicializar solo dos serpientes para empezar
     const initialPositions = [
-      [0, 0],
-      [GRID_SIZE-1, 0],
-      [0, GRID_SIZE-1],
-      [GRID_SIZE-1, GRID_SIZE-1]
+      [5, 5],
+      [15, 15]
     ];
     
     const snakes = initialPositions.map((pos, index) => ({
       id: index,
       positions: generateInitialSnake(pos[0], pos[1]),
-      direction: initialDirections[index] as Direction,
-      color: ['yellow', 'blue', 'green', 'purple'][index],
+      direction: 'RIGHT' as Direction,
+      color: ['yellow', 'blue'][index],
       score: 0,
       brain: new NeuralNetwork(8, 12, 4),
       alive: true
@@ -48,6 +46,7 @@ const Index = () => {
   const checkCollisions = () => {
     const newGameState = { ...gameState };
 
+    // Colisiones con manzanas
     newGameState.snakes.forEach(snake => {
       if (!snake.alive) return;
 
@@ -59,31 +58,13 @@ const Index = () => {
       if (appleIndex !== -1) {
         snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
         snake.score += 10;
-        newGameState.apples.splice(appleIndex, 1);
-        newGameState.apples.push({
+        newGameState.apples[appleIndex] = {
           position: {
             x: Math.floor(Math.random() * GRID_SIZE),
             y: Math.floor(Math.random() * GRID_SIZE),
           },
-        });
+        };
       }
-    });
-
-    newGameState.snakes.forEach(snake => {
-      if (!snake.alive) return;
-
-      const head = snake.positions[0];
-      newGameState.snakes.forEach(otherSnake => {
-        if (snake.id === otherSnake.id || !otherSnake.alive) return;
-
-        otherSnake.positions.forEach(pos => {
-          if (pos.x === head.x && pos.y === head.y) {
-            otherSnake.alive = false;
-            snake.score += otherSnake.positions.length;
-            snake.positions.push(...Array(otherSnake.positions.length).fill(snake.positions[snake.positions.length - 1]));
-          }
-        });
-      });
     });
 
     setGameState(newGameState);
@@ -93,7 +74,7 @@ const Index = () => {
     setGameState(prevState => ({
       ...prevState,
       snakes: prevState.snakes.map(snake => 
-        snake.alive ? moveSnake(snake, prevState) : snake
+        moveSnake(snake, prevState)
       ),
     }));
   };
@@ -115,14 +96,14 @@ const Index = () => {
     return () => {
       if (gameLoop) clearInterval(gameLoop);
     };
-  }, [gameState, isRunning]);
+  }, [isRunning]);
 
   const handleStartStop = () => {
     setIsRunning(!isRunning);
   };
 
   const handleReset = () => {
-    setIsRunning(true); // Mantener el juego corriendo después de reset
+    setIsRunning(true);
     initializeGame();
   };
 
