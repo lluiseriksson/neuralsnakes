@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { GameState, Direction, Position, Snake } from "../components/SnakeGame/types";
+import { GameState, Direction, Snake } from "../components/SnakeGame/types";
 import { NeuralNetwork } from "../components/SnakeGame/NeuralNetwork";
 import { GRID_SIZE, APPLE_COUNT, FPS } from "../components/SnakeGame/constants";
 import { generateInitialSnake, moveSnake } from "../components/SnakeGame/utils";
@@ -30,6 +30,13 @@ const Index = () => {
     alive: true
   });
 
+  const generateApple = () => ({
+    position: {
+      x: Math.floor(Math.random() * GRID_SIZE),
+      y: Math.floor(Math.random() * GRID_SIZE),
+    },
+  });
+
   const initializeGame = () => {
     const snakes = [
       createSnake(0, 5, 5, 'RIGHT', 'yellow'),
@@ -38,13 +45,7 @@ const Index = () => {
       createSnake(3, 25, 5, 'DOWN', 'red')
     ];
 
-    // Generar manzanas iniciales en posiciones aleatorias
-    const apples = Array.from({ length: APPLE_COUNT }, () => ({
-      position: {
-        x: Math.floor(Math.random() * GRID_SIZE),
-        y: Math.floor(Math.random() * GRID_SIZE),
-      },
-    }));
+    const apples = Array.from({ length: APPLE_COUNT }, generateApple);
 
     setGameState({
       snakes,
@@ -55,7 +56,7 @@ const Index = () => {
 
   const checkCollisions = (snakes: Snake[]) => {
     const newSnakes = [...snakes];
-    let newApples = [...gameState.apples]; // Asegurarnos de crear una copia del array
+    let newApples = [...gameState.apples];
 
     newSnakes.forEach((snake, i) => {
       if (!snake.alive) return;
@@ -65,13 +66,8 @@ const Index = () => {
       // Verificar colisión con sí misma
       for (let j = 1; j < snake.positions.length; j++) {
         if (head.x === snake.positions[j].x && head.y === snake.positions[j].y) {
-          // Generar 10 manzanas alrededor del punto de muerte
-          const explosionApples = Array(10).fill(null).map(() => ({
-            position: {
-              x: Math.max(0, Math.min(GRID_SIZE - 1, head.x + Math.floor(Math.random() * 7) - 3)),
-              y: Math.max(0, Math.min(GRID_SIZE - 1, head.y + Math.floor(Math.random() * 7) - 3)),
-            },
-          }));
+          // Generar manzanas al morir
+          const explosionApples = Array(10).fill(null).map(generateApple);
           newApples = [...newApples, ...explosionApples];
 
           // Respawnear la serpiente
@@ -145,12 +141,7 @@ const Index = () => {
       });
     });
 
-    setGameState(prev => ({
-      ...prev,
-      apples: newApples
-    }));
-
-    return newSnakes;
+    return { newSnakes, newApples };
   };
 
   const updateGame = () => {
@@ -159,28 +150,26 @@ const Index = () => {
       const newSnakes = prevState.snakes.map(snake => moveSnake(snake, prevState));
       
       // Verificar colisiones entre serpientes
-      const snakesAfterCollisions = checkCollisions(newSnakes);
+      const { newSnakes: snakesAfterCollisions, newApples } = checkCollisions(newSnakes);
 
       // Verificar colisiones con manzanas y victoria
-      const newApples = [...prevState.apples];
+      const finalApples = [...newApples];
       
       snakesAfterCollisions.forEach(snake => {
         if (!snake.alive) return;
 
         const head = snake.positions[0];
-        const appleIndex = newApples.findIndex(apple => 
+        const appleIndex = finalApples.findIndex(apple => 
           apple.position.x === head.x && apple.position.y === head.y
         );
 
         if (appleIndex !== -1) {
+          // Comer manzana
           snake.score += 1;
           snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
-          newApples[appleIndex] = {
-            position: {
-              x: Math.floor(Math.random() * GRID_SIZE),
-              y: Math.floor(Math.random() * GRID_SIZE),
-            },
-          };
+          
+          // Generar nueva manzana en posición aleatoria
+          finalApples[appleIndex] = generateApple();
         }
 
         // Verificar victoria
@@ -189,7 +178,7 @@ const Index = () => {
             ...prev,
             [snake.id]: prev[snake.id] + 1
           }));
-          initializeGame(); // Reiniciar el juego
+          initializeGame();
           return;
         }
       });
@@ -197,7 +186,7 @@ const Index = () => {
       return {
         ...prevState,
         snakes: snakesAfterCollisions,
-        apples: newApples
+        apples: finalApples
       };
     });
   };
