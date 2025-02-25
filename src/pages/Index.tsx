@@ -17,7 +17,7 @@ const Index = () => {
   const [isRunning, setIsRunning] = useState(true); // Iniciar automáticamente
 
   const initializeGame = () => {
-    const initialDirections: Direction[] = ['RIGHT', 'LEFT', 'UP', 'UP'];
+    const initialDirections: Direction[] = ['RIGHT', 'LEFT', 'UP', 'DOWN'];
     const initialPositions = [
       [0, 0],
       [GRID_SIZE-1, 0],
