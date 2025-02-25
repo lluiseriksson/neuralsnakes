@@ -1,0 +1,24 @@
+
+import React from 'react';
+
+interface VictoryDisplayProps {
+  victories: { [key: number]: number };
+}
+
+const VictoryDisplay: React.FC<VictoryDisplayProps> = ({ victories }) => {
+  return (
+    <div className="mb-4 grid grid-cols-2 gap-4">
+      {Object.entries(victories).map(([id, wins]) => (
+        <div key={id} className="text-white flex items-center gap-2">
+          <div 
+            className="w-4 h-4 rounded-full" 
+            style={{ backgroundColor: ['yellow', 'blue', 'green', 'red'][Number(id)] }} 
+          />
+          <span>Victories: {wins}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default VictoryDisplay;
