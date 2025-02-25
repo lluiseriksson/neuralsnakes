@@ -25,7 +25,7 @@ export const generateApple = () => ({
 export const useGameLogic = () => {
   const [gameState, setGameState] = useState<GameState>({
     snakes: [],
-    apples: [],
+    apples: Array.from({ length: APPLE_COUNT }, generateApple), // Inicializar manzanas desde el estado inicial
     gridSize: GRID_SIZE,
   });
 
@@ -53,9 +53,9 @@ export const useGameLogic = () => {
     });
   };
 
-  const checkCollisions = (snakes: Snake[]) => {
+  const checkCollisions = (snakes: Snake[], currentApples: typeof gameState.apples) => {
     const newSnakes = [...snakes];
-    let newApples = [...gameState.apples];
+    let newApples = [...currentApples];
 
     newSnakes.forEach((snake, i) => {
       if (!snake.alive) return;
@@ -65,8 +65,9 @@ export const useGameLogic = () => {
       // Verificar colisión con sí misma
       for (let j = 1; j < snake.positions.length; j++) {
         if (head.x === snake.positions[j].x && head.y === snake.positions[j].y) {
-          const explosionApples = Array(10).fill(null).map(generateApple);
-          newApples = [...newApples, ...explosionApples];
+          // Al morir, generar nuevas manzanas
+          const explosionApples = Array(5).fill(null).map(generateApple);
+          newApples = [...newApples, ...explosionApples].slice(0, APPLE_COUNT * 2); // Limitar el número máximo de manzanas
 
           const respawnSnake = createSnake(
             snake.id,
@@ -138,11 +139,17 @@ export const useGameLogic = () => {
 
   const updateGame = () => {
     setGameState(prevState => {
+      // Mover las serpientes
       const newSnakes = prevState.snakes.map(snake => moveSnake(snake, prevState));
-      const { newSnakes: snakesAfterCollisions, newApples } = checkCollisions(newSnakes);
-      const finalApples = [...newApples];
       
-      snakesAfterCollisions.forEach(snake => {
+      // Verificar colisiones y obtener nuevas manzanas
+      const { newSnakes: snakesAfterCollisions, newApples } = checkCollisions(newSnakes, prevState.apples);
+      
+      // Verificar colisiones con manzanas y actualizar el estado
+      let finalApples = [...newApples];
+      let snakesToUpdate = [...snakesAfterCollisions];
+      
+      snakesToUpdate.forEach(snake => {
         if (!snake.alive) return;
 
         const head = snake.positions[0];
@@ -151,11 +158,15 @@ export const useGameLogic = () => {
         );
 
         if (appleIndex !== -1) {
+          // Comer manzana
           snake.score += 1;
           snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
+          
+          // Reemplazar la manzana comida con una nueva en una posición aleatoria
           finalApples[appleIndex] = generateApple();
         }
 
+        // Verificar victoria
         if (snake.score >= 150) {
           setVictories(prev => ({
             ...prev,
@@ -166,10 +177,15 @@ export const useGameLogic = () => {
         }
       });
 
+      // Asegurarse de que siempre haya al menos APPLE_COUNT manzanas
+      while (finalApples.length < APPLE_COUNT) {
+        finalApples.push(generateApple());
+      }
+
       return {
         ...prevState,
-        snakes: snakesAfterCollisions,
-        apples: finalApples
+        snakes: snakesToUpdate,
+        apples: finalApples.slice(0, APPLE_COUNT) // Mantener solo APPLE_COUNT manzanas
       };
     });
   };
