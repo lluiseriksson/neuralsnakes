@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { GameState, Direction, Snake } from '../types';
 import { NeuralNetwork } from '../NeuralNetwork';
@@ -64,10 +65,13 @@ export const useGameLogic = () => {
       // Verificar colisión con sí misma
       for (let j = 1; j < snake.positions.length; j++) {
         if (head.x === snake.positions[j].x && head.y === snake.positions[j].y) {
-          // Al morir, generar nuevas manzanas
-          const explosionApples = Array(5).fill(null).map(generateApple);
-          newApples = [...newApples, ...explosionApples].slice(0, APPLE_COUNT * 2);
+          // Convertir todas las posiciones de la serpiente en manzanas
+          const explosionApples = snake.positions.map(position => ({
+            position: { ...position }
+          }));
+          newApples = [...newApples, ...explosionApples];
 
+          // Respawnear la serpiente
           const respawnSnake = createSnake(
             snake.id,
             [5, 25, 5, 25][snake.id],
@@ -160,9 +164,7 @@ export const useGameLogic = () => {
           // Comer manzana
           snake.score += 1;
           snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
-          
-          // Reemplazar la manzana comida con una nueva en una posición aleatoria
-          finalApples[appleIndex] = generateApple();
+          finalApples.splice(appleIndex, 1);
         }
 
         // Verificar victoria
@@ -176,15 +178,10 @@ export const useGameLogic = () => {
         }
       });
 
-      // Asegurarse de que siempre haya al menos APPLE_COUNT manzanas
-      while (finalApples.length < APPLE_COUNT) {
-        finalApples.push(generateApple());
-      }
-
       return {
         ...prevState,
         snakes: snakesToUpdate,
-        apples: finalApples.slice(0, APPLE_COUNT)
+        apples: finalApples
       };
     });
   };
