@@ -14,6 +14,13 @@ const Index = () => {
     gridSize: GRID_SIZE,
   });
 
+  const [victories, setVictories] = useState<{ [key: number]: number }>({
+    0: 0,
+    1: 0,
+    2: 0,
+    3: 0,
+  });
+
   const createSnake = (id: number, x: number, y: number, direction: Direction, color: string) => ({
     id,
     positions: generateInitialSnake(x, y),
@@ -32,6 +39,7 @@ const Index = () => {
       createSnake(3, 25, 5, 'DOWN', 'red')
     ];
 
+    // Asegurarnos de que las manzanas se generen en posiciones válidas
     const apples = Array(APPLE_COUNT).fill(null).map(() => ({
       position: {
         x: Math.floor(Math.random() * GRID_SIZE),
@@ -44,7 +52,7 @@ const Index = () => {
 
   const checkCollisions = (snakes: Snake[]) => {
     const newSnakes = [...snakes];
-    let newApples = gameState.apples;
+    let newApples = [...gameState.apples]; // Asegurarnos de crear una copia del array
 
     newSnakes.forEach((snake, i) => {
       if (!snake.alive) return;
@@ -149,9 +157,10 @@ const Index = () => {
       
       // Verificar colisiones entre serpientes
       const snakesAfterCollisions = checkCollisions(newSnakes);
-      
-      // Verificar colisiones con manzanas
+
+      // Verificar colisiones con manzanas y victoria
       const newApples = [...prevState.apples];
+      
       snakesAfterCollisions.forEach(snake => {
         if (!snake.alive) return;
 
@@ -169,6 +178,16 @@ const Index = () => {
               y: Math.floor(Math.random() * GRID_SIZE),
             },
           };
+        }
+
+        // Verificar victoria
+        if (snake.score >= 150) {
+          setVictories(prev => ({
+            ...prev,
+            [snake.id]: prev[snake.id] + 1
+          }));
+          initializeGame(); // Reiniciar el juego
+          return;
         }
       });
 
@@ -192,6 +211,17 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
       <h1 className="text-2xl font-bold mb-4 text-white">Snake AI Battle</h1>
+      <div className="mb-4 grid grid-cols-2 gap-4">
+        {Object.entries(victories).map(([id, wins]) => (
+          <div key={id} className="text-white flex items-center gap-2">
+            <div 
+              className="w-4 h-4 rounded-full" 
+              style={{ backgroundColor: ['yellow', 'blue', 'green', 'red'][Number(id)] }} 
+            />
+            <span>Victories: {wins}</span>
+          </div>
+        ))}
+      </div>
       <div className="relative">
         <GameCanvas gameState={gameState} />
       </div>
