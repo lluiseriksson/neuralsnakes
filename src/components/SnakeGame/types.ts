@@ -4,6 +4,8 @@ export type Position = {
   y: number;
 };
 
+export type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
+
 export type Snake = {
   id: number;
   positions: Position[];
@@ -17,8 +19,6 @@ export type Snake = {
 export type Apple = {
   position: Position;
 };
-
-export type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 
 export type GameState = {
   snakes: Snake[];

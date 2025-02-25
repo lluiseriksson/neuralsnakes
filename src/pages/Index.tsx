@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { GameState } from "../components/SnakeGame/types";
+import { GameState, Direction } from "../components/SnakeGame/types";
 import { NeuralNetwork } from "../components/SnakeGame/NeuralNetwork";
 import { GRID_SIZE, APPLE_COUNT, FPS } from "../components/SnakeGame/constants";
 import { generateInitialSnake, moveSnake } from "../components/SnakeGame/utils";
@@ -14,15 +14,26 @@ const Index = () => {
     apples: [],
     gridSize: GRID_SIZE,
   });
-  const [isRunning, setIsRunning] = useState(false);
+  const [isRunning, setIsRunning] = useState(true); // Iniciar automáticamente
 
   const initializeGame = () => {
-    const snakes = [
-      { id: 0, positions: generateInitialSnake(0, 0), direction: 'RIGHT', color: 'yellow', score: 0, brain: new NeuralNetwork(8, 12, 4), alive: true },
-      { id: 1, positions: generateInitialSnake(GRID_SIZE-1, 0), direction: 'LEFT', color: 'blue', score: 0, brain: new NeuralNetwork(8, 12, 4), alive: true },
-      { id: 2, positions: generateInitialSnake(0, GRID_SIZE-1), direction: 'UP', color: 'green', score: 0, brain: new NeuralNetwork(8, 12, 4), alive: true },
-      { id: 3, positions: generateInitialSnake(GRID_SIZE-1, GRID_SIZE-1), direction: 'UP', color: 'purple', score: 0, brain: new NeuralNetwork(8, 12, 4), alive: true },
+    const initialDirections: Direction[] = ['RIGHT', 'LEFT', 'UP', 'UP'];
+    const initialPositions = [
+      [0, 0],
+      [GRID_SIZE-1, 0],
+      [0, GRID_SIZE-1],
+      [GRID_SIZE-1, GRID_SIZE-1]
     ];
+    
+    const snakes = initialPositions.map((pos, index) => ({
+      id: index,
+      positions: generateInitialSnake(pos[0], pos[1]),
+      direction: initialDirections[index] as Direction,
+      color: ['yellow', 'blue', 'green', 'purple'][index],
+      score: 0,
+      brain: new NeuralNetwork(8, 12, 4),
+      alive: true
+    }));
 
     const apples = Array(APPLE_COUNT).fill(null).map(() => ({
       position: {
@@ -111,7 +122,7 @@ const Index = () => {
   };
 
   const handleReset = () => {
-    setIsRunning(false);
+    setIsRunning(true); // Mantener el juego corriendo después de reset
     initializeGame();
   };
 
