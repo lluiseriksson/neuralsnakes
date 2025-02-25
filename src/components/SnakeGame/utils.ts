@@ -12,7 +12,7 @@ export const generateInitialSnake = (x: number, y: number): Position[] => {
 export const getSnakeInputs = (snake: Snake, gameState: GameState): number[] => {
   const head = snake.positions[0];
   
-  // Encontrar la manzana más cercana
+  // Encontrar la manzana más cercana y su dirección relativa
   const nearestApple = gameState.apples.reduce((nearest, apple) => {
     const distance = Math.sqrt(
       Math.pow(apple.position.x - head.x, 2) + 
@@ -24,16 +24,19 @@ export const getSnakeInputs = (snake: Snake, gameState: GameState): number[] => 
     return nearest;
   }, null as { apple: typeof gameState.apples[0], distance: number } | null);
 
-  // Inputs para la red neuronal
+  // Calcular direcciones relativas a la manzana
+  const appleDirectionX = nearestApple ? Math.sign(nearestApple.apple.position.x - head.x) : 0;
+  const appleDirectionY = nearestApple ? Math.sign(nearestApple.apple.position.y - head.y) : 0;
+
   return [
     head.x / GRID_SIZE, // Posición X normalizada
     head.y / GRID_SIZE, // Posición Y normalizada
-    nearestApple ? nearestApple.apple.position.x / GRID_SIZE : 0, // Posición X de la manzana más cercana
-    nearestApple ? nearestApple.apple.position.y / GRID_SIZE : 0, // Posición Y de la manzana más cercana
-    snake.direction === 'UP' ? 1 : 0,
-    snake.direction === 'DOWN' ? 1 : 0,
-    snake.direction === 'LEFT' ? 1 : 0,
-    snake.direction === 'RIGHT' ? 1 : 0,
+    appleDirectionX, // Dirección X hacia la manzana (-1, 0, 1)
+    appleDirectionY, // Dirección Y hacia la manzana (-1, 0, 1)
+    snake.direction === 'UP' ? 1 : -1,
+    snake.direction === 'DOWN' ? 1 : -1,
+    snake.direction === 'LEFT' ? 1 : -1,
+    snake.direction === 'RIGHT' ? 1 : -1,
   ];
 };
 
@@ -53,7 +56,7 @@ export const moveSnake = (snake: Snake, gameState: GameState): Snake => {
   const head = snake.positions[0];
   let newHead = { ...head };
 
-  // Calcular nueva posición
+  // Calcular nueva posición basada en la dirección
   switch (newDirection) {
     case 'UP':
       newHead.y = (newHead.y - 1 + GRID_SIZE) % GRID_SIZE;
