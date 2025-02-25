@@ -172,8 +172,8 @@ const Index = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear canvas
-    ctx.fillStyle = '#f0f0f0';
+    // Clear canvas with black background
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw apples
@@ -249,21 +249,21 @@ const Index = () => {
   }, [gameState]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f0f0f0] p-4">
-      <h1 className="text-2xl font-bold mb-4">Snake AI Battle</h1>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
+      <h1 className="text-2xl font-bold mb-4 text-white">Snake AI Battle</h1>
       <div className="relative">
         <canvas
           ref={canvasRef}
           width={GRID_SIZE * CELL_SIZE}
           height={GRID_SIZE * CELL_SIZE}
-          className="border border-gray-300 bg-white rounded-lg shadow-lg"
+          className="border border-gray-800 bg-black rounded-lg shadow-lg"
         />
       </div>
       <div className="mt-4 grid grid-cols-2 gap-4">
         {gameState.snakes.map(snake => (
           <div key={snake.id} className="flex items-center gap-2">
             <div className={`w-4 h-4 rounded-full`} style={{ backgroundColor: snake.color }} />
-            <span className="font-medium">
+            <span className="font-medium text-white">
               Score: {snake.score} {!snake.alive && '(Dead)'}
             </span>
           </div>
