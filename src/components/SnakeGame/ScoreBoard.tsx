@@ -13,7 +13,7 @@ const ScoreBoard: React.FC<ScoreBoardProps> = ({ snakes }) => {
         <div key={snake.id} className="flex items-center gap-2">
           <div className={`w-4 h-4 rounded-full`} style={{ backgroundColor: snake.color }} />
           <span className="font-medium text-white">
-            Score: {snake.score} | Balls: {snake.balls} {!snake.alive && '(Dead)'}
+            Score: {snake.score} {!snake.alive && '(Dead)'}
           </span>
         </div>
       ))}

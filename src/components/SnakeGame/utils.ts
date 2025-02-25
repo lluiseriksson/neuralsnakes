@@ -10,6 +10,15 @@ export const generateInitialSnake = (x: number, y: number): Position[] => {
   ];
 };
 
+const isOppositeDirection = (current: Direction, next: Direction): boolean => {
+  return (
+    (current === 'UP' && next === 'DOWN') ||
+    (current === 'DOWN' && next === 'UP') ||
+    (current === 'LEFT' && next === 'RIGHT') ||
+    (current === 'RIGHT' && next === 'LEFT')
+  );
+};
+
 export const moveSnake = (snake: Snake, gameState: GameState): Snake => {
   if (!snake.alive) return snake;
 
@@ -22,7 +31,8 @@ export const moveSnake = (snake: Snake, gameState: GameState): Snake => {
   // Elegir una nueva dirección aleatoria o mantener la actual
   let newDirection = snake.direction;
   if (Math.random() < 0.2) { // 20% de probabilidad de cambiar de dirección
-    newDirection = directions[Math.floor(Math.random() * directions.length)];
+    const validDirections = directions.filter(dir => !isOppositeDirection(snake.direction, dir));
+    newDirection = validDirections[Math.floor(Math.random() * validDirections.length)];
   }
 
   // Mover en la dirección elegida
