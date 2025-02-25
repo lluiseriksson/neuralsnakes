@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { GameState, Direction, Position, Snake } from "../components/SnakeGame/types";
 import { NeuralNetwork } from "../components/SnakeGame/NeuralNetwork";
@@ -39,15 +38,19 @@ const Index = () => {
       createSnake(3, 25, 5, 'DOWN', 'red')
     ];
 
-    // Asegurarnos de que las manzanas se generen en posiciones válidas
-    const apples = Array(APPLE_COUNT).fill(null).map(() => ({
+    // Generar manzanas iniciales en posiciones aleatorias
+    const apples = Array.from({ length: APPLE_COUNT }, () => ({
       position: {
         x: Math.floor(Math.random() * GRID_SIZE),
         y: Math.floor(Math.random() * GRID_SIZE),
       },
     }));
 
-    setGameState({ snakes, apples, gridSize: GRID_SIZE });
+    setGameState({
+      snakes,
+      apples,
+      gridSize: GRID_SIZE,
+    });
   };
 
   const checkCollisions = (snakes: Snake[]) => {

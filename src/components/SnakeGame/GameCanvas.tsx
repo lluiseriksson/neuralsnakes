@@ -17,9 +17,11 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Limpiar el canvas
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Dibujar manzanas
     gameState.apples.forEach(apple => {
       ctx.fillStyle = 'red';
       ctx.beginPath();
@@ -33,6 +35,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
       ctx.fill();
     });
 
+    // Dibujar serpientes
     gameState.snakes.forEach(snake => {
       if (!snake.alive) return;
       
@@ -48,6 +51,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
         );
         ctx.fill();
 
+        // Dibujar ojos para la cabeza de la serpiente
         if (index === 0) {
           ctx.fillStyle = 'white';
           ctx.beginPath();
@@ -72,6 +76,13 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
   };
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Asegurar que el canvas tenga las dimensiones correctas
+    canvas.width = GRID_SIZE * CELL_SIZE;
+    canvas.height = GRID_SIZE * CELL_SIZE;
+
     const animationFrame = requestAnimationFrame(drawGame);
     return () => cancelAnimationFrame(animationFrame);
   }, [gameState]);
