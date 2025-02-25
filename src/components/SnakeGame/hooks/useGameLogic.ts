@@ -89,14 +89,14 @@ export const useGameLogic = () => {
         );
 
         if (appleIndex !== -1) {
-          // Comer manzana y aprender de la experiencia exitosa
+          // Comer manzana
           snake.score += 1;
           snake.brain.learn(true);
           snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
           finalApples.splice(appleIndex, 1);
         }
 
-        // Verificar victoria (cambiado a 100)
+        // Verificar victoria (100 puntos)
         if (snake.score >= 100) {
           // Guardar el cerebro exitoso
           const successfulBrain = snake.brain.clone();
@@ -120,8 +120,8 @@ export const useGameLogic = () => {
         }
       });
 
-      // Asegurar mínimo de manzanas nuevamente
-      finalApples = ensureMinimumApples(finalApples);
+      // Asegurar mínimo de manzanas, pero mantener todas las existentes
+      finalApples = finalApples.length < 5 ? [...finalApples, ...Array.from({ length: 5 - finalApples.length }, generateApple)] : finalApples;
 
       return {
         ...prevState,

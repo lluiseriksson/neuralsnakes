@@ -28,4 +28,6 @@ export type GameState = {
 
 export type NeuralNetwork = {
   predict: (inputs: number[]) => number[];
+  learn: (success: boolean) => void;
+  clone: () => NeuralNetwork;
 };

@@ -18,6 +18,8 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
         const explosionApples = snake.positions.map(position => ({
           position: { ...position }
         }));
+        
+        // Mantener las manzanas existentes y agregar las nuevas
         newApples = [...newApples, ...explosionApples];
 
         // Respawnear la serpiente
@@ -35,28 +37,53 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
       otherSnake.positions.forEach((segment, index) => {
         if (head.x === segment.x && head.y === segment.y) {
           if (index === 0) {
+            // Colisión cabeza con cabeza
             if (snake.positions.length > otherSnake.positions.length) {
+              // La serpiente más larga gana
               snake.score += otherSnake.positions.length;
               for (let k = 0; k < otherSnake.positions.length; k++) {
                 snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
               }
+              
+              // Convertir la serpiente perdedora en manzanas
+              const explosionApples = otherSnake.positions.map(position => ({
+                position: { ...position }
+              }));
+              newApples = [...newApples, ...explosionApples];
+              
               const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(otherSnake.id);
               const respawnSnake = createSnake(otherSnake.id, spawnX, spawnY, direction, color);
               newSnakes[j] = respawnSnake;
             } else {
+              // La otra serpiente gana
               otherSnake.score += snake.positions.length;
               for (let k = 0; k < snake.positions.length; k++) {
                 otherSnake.positions.push({ ...otherSnake.positions[otherSnake.positions.length - 1] });
               }
+              
+              // Convertir la serpiente perdedora en manzanas
+              const explosionApples = snake.positions.map(position => ({
+                position: { ...position }
+              }));
+              newApples = [...newApples, ...explosionApples];
+              
               const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(snake.id);
               const respawnSnake = createSnake(snake.id, spawnX, spawnY, direction, color);
               newSnakes[i] = respawnSnake;
             }
           } else {
+            // Colisión con el cuerpo
             otherSnake.score += snake.positions.length;
             for (let k = 0; k < snake.positions.length; k++) {
               otherSnake.positions.push({ ...otherSnake.positions[otherSnake.positions.length - 1] });
             }
+            
+            // Convertir la serpiente perdedora en manzanas
+            const explosionApples = snake.positions.map(position => ({
+              position: { ...position }
+            }));
+            newApples = [...newApples, ...explosionApples];
+            
             const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(snake.id);
             const respawnSnake = createSnake(snake.id, spawnX, spawnY, direction, color);
             newSnakes[i] = respawnSnake;
