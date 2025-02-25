@@ -61,6 +61,10 @@ const Index = () => {
               // La serpiente con más longitud gana
               if (snake.positions.length > otherSnake.positions.length) {
                 snake.score += otherSnake.positions.length; // Gana puntos igual a la longitud de la serpiente derrotada
+                // Aumenta la longitud de la serpiente ganadora
+                for (let k = 0; k < otherSnake.positions.length; k++) {
+                  snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
+                }
                 const respawnSnake = createSnake(
                   otherSnake.id,
                   [5, 25, 5, 25][otherSnake.id],
@@ -71,6 +75,10 @@ const Index = () => {
                 newSnakes[j] = respawnSnake;
               } else {
                 otherSnake.score += snake.positions.length; // Gana puntos igual a la longitud de la serpiente derrotada
+                // Aumenta la longitud de la serpiente ganadora
+                for (let k = 0; k < snake.positions.length; k++) {
+                  otherSnake.positions.push({ ...otherSnake.positions[otherSnake.positions.length - 1] });
+                }
                 const respawnSnake = createSnake(
                   snake.id,
                   [5, 25, 5, 25][snake.id],
@@ -81,8 +89,12 @@ const Index = () => {
                 newSnakes[i] = respawnSnake;
               }
             } else { // Colisión con el cuerpo
-              // La serpiente que chocó muere y la otra gana puntos
+              // La serpiente que chocó muere y la otra gana puntos y longitud
               otherSnake.score += snake.positions.length; // Gana puntos igual a la longitud de la serpiente derrotada
+              // Aumenta la longitud de la serpiente ganadora
+              for (let k = 0; k < snake.positions.length; k++) {
+                otherSnake.positions.push({ ...otherSnake.positions[otherSnake.positions.length - 1] });
+              }
               const respawnSnake = createSnake(
                 snake.id,
                 [5, 25, 5, 25][snake.id],
