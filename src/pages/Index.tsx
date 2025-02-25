@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { GameState, Direction } from "../components/SnakeGame/types";
+import { GameState, Direction, Position } from "../components/SnakeGame/types";
 import { NeuralNetwork } from "../components/SnakeGame/NeuralNetwork";
 import { GRID_SIZE, APPLE_COUNT, FPS } from "../components/SnakeGame/constants";
 import { generateInitialSnake, moveSnake } from "../components/SnakeGame/utils";
