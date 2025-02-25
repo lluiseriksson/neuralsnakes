@@ -1,26 +1,11 @@
 
 import { useState, useEffect } from 'react';
-import { GameState, Direction, Snake } from '../types';
-import { NeuralNetwork } from '../NeuralNetwork';
+import { GameState } from '../types';
 import { GRID_SIZE, APPLE_COUNT, FPS } from '../constants';
-import { generateInitialSnake, moveSnake } from '../utils';
-
-export const createSnake = (id: number, x: number, y: number, direction: Direction, color: string) => ({
-  id,
-  positions: generateInitialSnake(x, y),
-  direction,
-  color,
-  score: 0,
-  brain: new NeuralNetwork(8, 12, 4),
-  alive: true
-});
-
-export const generateApple = () => ({
-  position: {
-    x: Math.floor(Math.random() * GRID_SIZE),
-    y: Math.floor(Math.random() * GRID_SIZE),
-  },
-});
+import { moveSnake } from '../utils';
+import { createSnake, generateSnakeSpawnConfig } from './useSnakeCreation';
+import { generateApple } from './useAppleGeneration';
+import { checkCollisions } from './useCollisionDetection';
 
 export const useGameLogic = () => {
   const [gameState, setGameState] = useState<GameState>({
@@ -37,12 +22,10 @@ export const useGameLogic = () => {
   });
 
   const initializeGame = () => {
-    const snakes = [
-      createSnake(0, 5, 5, 'RIGHT', 'yellow'),
-      createSnake(1, 25, 25, 'LEFT', 'blue'),
-      createSnake(2, 5, 25, 'UP', 'green'),
-      createSnake(3, 25, 5, 'DOWN', '#9b87f5')
-    ];
+    const snakes = Array.from({ length: 4 }, (_, i) => {
+      const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(i);
+      return createSnake(i, spawnX, spawnY, direction, color);
+    });
 
     const apples = Array.from({ length: APPLE_COUNT }, generateApple);
 
@@ -51,93 +34,6 @@ export const useGameLogic = () => {
       apples,
       gridSize: GRID_SIZE,
     });
-  };
-
-  const checkCollisions = (snakes: Snake[], currentApples: typeof gameState.apples) => {
-    const newSnakes = [...snakes];
-    let newApples = [...currentApples];
-
-    newSnakes.forEach((snake, i) => {
-      if (!snake.alive) return;
-      
-      const head = snake.positions[0];
-
-      // Verificar colisión con sí misma
-      for (let j = 1; j < snake.positions.length; j++) {
-        if (head.x === snake.positions[j].x && head.y === snake.positions[j].y) {
-          // Convertir todas las posiciones de la serpiente en manzanas
-          const explosionApples = snake.positions.map(position => ({
-            position: { ...position }
-          }));
-          newApples = [...newApples, ...explosionApples];
-
-          // Respawnear la serpiente
-          const respawnSnake = createSnake(
-            snake.id,
-            [5, 25, 5, 25][snake.id],
-            [5, 25, 25, 5][snake.id],
-            ['RIGHT', 'LEFT', 'UP', 'DOWN'][snake.id] as Direction,
-            snake.color
-          );
-          newSnakes[i] = respawnSnake;
-          return;
-        }
-      }
-
-      // Colisión con otras serpientes
-      newSnakes.forEach((otherSnake, j) => {
-        if (i === j || !otherSnake.alive) return;
-
-        otherSnake.positions.forEach((segment, index) => {
-          if (head.x === segment.x && head.y === segment.y) {
-            if (index === 0) {
-              if (snake.positions.length > otherSnake.positions.length) {
-                snake.score += otherSnake.positions.length;
-                for (let k = 0; k < otherSnake.positions.length; k++) {
-                  snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
-                }
-                const respawnSnake = createSnake(
-                  otherSnake.id,
-                  [5, 25, 5, 25][otherSnake.id],
-                  [5, 25, 25, 5][otherSnake.id],
-                  ['RIGHT', 'LEFT', 'UP', 'DOWN'][otherSnake.id] as Direction,
-                  otherSnake.color
-                );
-                newSnakes[j] = respawnSnake;
-              } else {
-                otherSnake.score += snake.positions.length;
-                for (let k = 0; k < snake.positions.length; k++) {
-                  otherSnake.positions.push({ ...otherSnake.positions[otherSnake.positions.length - 1] });
-                }
-                const respawnSnake = createSnake(
-                  snake.id,
-                  [5, 25, 5, 25][snake.id],
-                  [5, 25, 25, 5][snake.id],
-                  ['RIGHT', 'LEFT', 'UP', 'DOWN'][snake.id] as Direction,
-                  snake.color
-                );
-                newSnakes[i] = respawnSnake;
-              }
-            } else {
-              otherSnake.score += snake.positions.length;
-              for (let k = 0; k < snake.positions.length; k++) {
-                otherSnake.positions.push({ ...otherSnake.positions[otherSnake.positions.length - 1] });
-              }
-              const respawnSnake = createSnake(
-                snake.id,
-                [5, 25, 5, 25][snake.id],
-                [5, 25, 25, 5][snake.id],
-                ['RIGHT', 'LEFT', 'UP', 'DOWN'][snake.id] as Direction,
-                snake.color
-              );
-              newSnakes[i] = respawnSnake;
-            }
-          }
-        });
-      });
-    });
-
-    return { newSnakes, newApples };
   };
 
   const updateGame = () => {
