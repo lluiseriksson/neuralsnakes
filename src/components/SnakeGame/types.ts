@@ -14,6 +14,7 @@ export type Snake = {
   score: number;
   brain: NeuralNetwork;
   alive: boolean;
+  balls: number;  // Nuevo contador de bolas
 };
 
 export type Apple = {

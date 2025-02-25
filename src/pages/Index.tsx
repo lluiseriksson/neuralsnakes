@@ -14,44 +14,23 @@ const Index = () => {
     gridSize: GRID_SIZE,
   });
 
+  const createSnake = (id: number, x: number, y: number, direction: Direction, color: string) => ({
+    id,
+    positions: generateInitialSnake(x, y),
+    direction,
+    color,
+    score: 0,
+    brain: new NeuralNetwork(8, 12, 4),
+    alive: true,
+    balls: 3  // Cada serpiente comienza con 3 bolas
+  });
+
   const initializeGame = () => {
     const snakes = [
-      {
-        id: 0,
-        positions: generateInitialSnake(5, 5),
-        direction: 'RIGHT' as Direction,
-        color: 'yellow',
-        score: 0,
-        brain: new NeuralNetwork(8, 12, 4),
-        alive: true
-      },
-      {
-        id: 1,
-        positions: generateInitialSnake(25, 25),
-        direction: 'LEFT' as Direction,
-        color: 'blue',
-        score: 0,
-        brain: new NeuralNetwork(8, 12, 4),
-        alive: true
-      },
-      {
-        id: 2,
-        positions: generateInitialSnake(5, 25),
-        direction: 'UP' as Direction,
-        color: 'green',
-        score: 0,
-        brain: new NeuralNetwork(8, 12, 4),
-        alive: true
-      },
-      {
-        id: 3,
-        positions: generateInitialSnake(25, 5),
-        direction: 'DOWN' as Direction,
-        color: 'red',
-        score: 0,
-        brain: new NeuralNetwork(8, 12, 4),
-        alive: true
-      }
+      createSnake(0, 5, 5, 'RIGHT', 'yellow'),
+      createSnake(1, 25, 25, 'LEFT', 'blue'),
+      createSnake(2, 5, 25, 'UP', 'green'),
+      createSnake(3, 25, 5, 'DOWN', 'red')
     ];
 
     const apples = Array(APPLE_COUNT).fill(null).map(() => ({
@@ -64,14 +43,56 @@ const Index = () => {
     setGameState({ snakes, apples, gridSize: GRID_SIZE });
   };
 
+  const checkCollisions = (snakes: any[]) => {
+    const newSnakes = [...snakes];
+
+    // Revisar colisiones entre serpientes
+    newSnakes.forEach((snake, i) => {
+      if (!snake.alive) return;
+
+      const head = snake.positions[0];
+
+      // Revisar colisión con otras serpientes
+      newSnakes.forEach((otherSnake, j) => {
+        if (i === j || !otherSnake.alive) return;
+
+        // Colisión con el cuerpo de otra serpiente
+        otherSnake.positions.forEach((segment: Position, index: number) => {
+          if (head.x === segment.x && head.y === segment.y) {
+            // Si choca con la cabeza, el que provocó la colisión gana
+            if (index === 0) {
+              // La serpiente que provocó la colisión obtiene las bolas
+              otherSnake.balls += snake.balls;
+              otherSnake.score += 50;
+              // Resetear la serpiente que perdió
+              const respawnSnake = createSnake(
+                snake.id,
+                [5, 25, 5, 25][snake.id],
+                [5, 25, 25, 5][snake.id],
+                ['RIGHT', 'LEFT', 'UP', 'DOWN'][snake.id] as Direction,
+                snake.color
+              );
+              newSnakes[i] = respawnSnake;
+            }
+          }
+        });
+      });
+    });
+
+    return newSnakes;
+  };
+
   const updateGame = () => {
     setGameState(prevState => {
       // Mover serpientes
       const newSnakes = prevState.snakes.map(snake => moveSnake(snake, prevState));
       
+      // Verificar colisiones entre serpientes
+      const snakesAfterCollisions = checkCollisions(newSnakes);
+      
       // Verificar colisiones con manzanas
       const newApples = [...prevState.apples];
-      newSnakes.forEach(snake => {
+      snakesAfterCollisions.forEach(snake => {
         if (!snake.alive) return;
 
         const head = snake.positions[0];
@@ -93,7 +114,7 @@ const Index = () => {
 
       return {
         ...prevState,
-        snakes: newSnakes,
+        snakes: snakesAfterCollisions,
         apples: newApples
       };
     });
