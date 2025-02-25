@@ -9,7 +9,7 @@ export const createSnake = (id: number, x: number, y: number, direction: Directi
   direction,
   color,
   score: 0,
-  brain: new NeuralNetwork(16, 12, 4),  // Actualizamos a 16 inputs
+  brain: new NeuralNetwork(8, 12, 4),
   alive: true
 });
 
