@@ -60,7 +60,7 @@ const Index = () => {
             if (index === 0) { // Colisión cabeza con cabeza
               // La serpiente con más longitud gana
               if (snake.positions.length > otherSnake.positions.length) {
-                snake.score += otherSnake.positions.length;
+                snake.score += otherSnake.positions.length; // Gana puntos igual a la longitud de la serpiente derrotada
                 const respawnSnake = createSnake(
                   otherSnake.id,
                   [5, 25, 5, 25][otherSnake.id],
@@ -70,7 +70,7 @@ const Index = () => {
                 );
                 newSnakes[j] = respawnSnake;
               } else {
-                otherSnake.score += snake.positions.length;
+                otherSnake.score += snake.positions.length; // Gana puntos igual a la longitud de la serpiente derrotada
                 const respawnSnake = createSnake(
                   snake.id,
                   [5, 25, 5, 25][snake.id],
@@ -81,7 +81,8 @@ const Index = () => {
                 newSnakes[i] = respawnSnake;
               }
             } else { // Colisión con el cuerpo
-              // La serpiente que chocó muere
+              // La serpiente que chocó muere y la otra gana puntos
+              otherSnake.score += snake.positions.length; // Gana puntos igual a la longitud de la serpiente derrotada
               const respawnSnake = createSnake(
                 snake.id,
                 [5, 25, 5, 25][snake.id],
@@ -89,7 +90,6 @@ const Index = () => {
                 ['RIGHT', 'LEFT', 'UP', 'DOWN'][snake.id] as Direction,
                 snake.color
               );
-              otherSnake.score += snake.positions.length;
               newSnakes[i] = respawnSnake;
             }
           }
@@ -119,7 +119,7 @@ const Index = () => {
         );
 
         if (appleIndex !== -1) {
-          snake.score += 1; // Solo 1 punto por manzana
+          snake.score += 1; // +1 punto por manzana
           snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
           newApples[appleIndex] = {
             position: {
