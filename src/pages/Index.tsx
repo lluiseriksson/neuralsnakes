@@ -1,7 +1,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { type Snake, type Apple, type Position, type GameState } from "../components/SnakeGame/types";
+import { 
+  type Snake, 
+  type Apple, 
+  type Position, 
+  type GameState, 
+  type Direction 
+} from "../components/SnakeGame/types";
 import { NeuralNetwork } from "../components/SnakeGame/NeuralNetwork";
 
 const GRID_SIZE = 30;
