@@ -3,7 +3,8 @@ import { Snake, Position, Direction, GameState } from "./types";
 import { GRID_SIZE } from "./constants";
 
 export const generateInitialSnake = (x: number, y: number): Position[] => {
-  return Array(4).fill(null).map((_, i) => ({
+  // Generar snake más corta para mayor movilidad
+  return Array(2).fill(null).map((_, i) => ({
     x,
     y: y + i,
   }));
@@ -12,43 +13,45 @@ export const generateInitialSnake = (x: number, y: number): Position[] => {
 export const getSnakeInputs = (snake: Snake, gameState: GameState): number[] => {
   const head = snake.positions[0];
   
-  // Encontrar la manzana más cercana y su dirección relativa
-  const nearestApple = gameState.apples.reduce((nearest, apple) => {
-    const distance = Math.sqrt(
-      Math.pow(apple.position.x - head.x, 2) + 
-      Math.pow(apple.position.y - head.y, 2)
-    );
-    if (!nearest || distance < nearest.distance) {
-      return { apple, distance };
-    }
-    return nearest;
-  }, null as { apple: typeof gameState.apples[0], distance: number } | null);
+  // Simplificar inputs para decisiones más claras
+  const nearestApple = findNearestApple(head, gameState.apples);
+  
+  // Normalizar distancias
+  const dx = nearestApple ? (nearestApple.position.x - head.x) / GRID_SIZE : 0;
+  const dy = nearestApple ? (nearestApple.position.y - head.y) / GRID_SIZE : 0;
 
-  // Calcular direcciones relativas a la manzana
-  const appleDirectionX = nearestApple ? Math.sign(nearestApple.apple.position.x - head.x) : 0;
-  const appleDirectionY = nearestApple ? Math.sign(nearestApple.apple.position.y - head.y) : 0;
-
+  // Inputs simplificados
   return [
-    head.x / GRID_SIZE, // Posición X normalizada
-    head.y / GRID_SIZE, // Posición Y normalizada
-    appleDirectionX, // Dirección X hacia la manzana (-1, 0, 1)
-    appleDirectionY, // Dirección Y hacia la manzana (-1, 0, 1)
-    snake.direction === 'UP' ? 1 : -1,
-    snake.direction === 'DOWN' ? 1 : -1,
-    snake.direction === 'LEFT' ? 1 : -1,
-    snake.direction === 'RIGHT' ? 1 : -1,
+    dx,                                    // Distancia X a la manzana
+    dy,                                    // Distancia Y a la manzana
+    snake.direction === 'UP' ? 1 : 0,      // Dirección actual
+    snake.direction === 'DOWN' ? 1 : 0,
+    snake.direction === 'LEFT' ? 1 : 0,
+    snake.direction === 'RIGHT' ? 1 : 0,
+    head.x / GRID_SIZE,                    // Posición actual
+    head.y / GRID_SIZE
   ];
 };
 
+const findNearestApple = (head: Position, apples: Array<{position: Position}>) => {
+  return apples.reduce((nearest, apple) => {
+    const distance = Math.abs(apple.position.x - head.x) + Math.abs(apple.position.y - head.y);
+    if (!nearest || distance < Math.abs(nearest.position.x - head.x) + Math.abs(nearest.position.y - head.y)) {
+      return apple;
+    }
+    return nearest;
+  });
+};
+
 export const getDirectionFromOutputs = (outputs: number[]): Direction => {
-  const index = outputs.indexOf(Math.max(...outputs));
-  return ['UP', 'DOWN', 'LEFT', 'RIGHT'][index] as Direction;
+  const maxIndex = outputs.indexOf(Math.max(...outputs));
+  const directions: Direction[] = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+  return directions[maxIndex];
 };
 
 export const moveSnake = (snake: Snake, gameState: GameState): Snake => {
   if (!snake.alive) return snake;
 
-  // Obtener nueva dirección de la IA
   const inputs = getSnakeInputs(snake, gameState);
   const outputs = snake.brain.predict(inputs);
   const newDirection = getDirectionFromOutputs(outputs);
@@ -56,7 +59,7 @@ export const moveSnake = (snake: Snake, gameState: GameState): Snake => {
   const head = snake.positions[0];
   let newHead = { ...head };
 
-  // Calcular nueva posición basada en la dirección
+  // Movimiento determinista basado en la dirección
   switch (newDirection) {
     case 'UP':
       newHead.y = (newHead.y - 1 + GRID_SIZE) % GRID_SIZE;
@@ -72,9 +75,10 @@ export const moveSnake = (snake: Snake, gameState: GameState): Snake => {
       break;
   }
 
+  // Mover la serpiente
   return {
     ...snake,
     positions: [newHead, ...snake.positions.slice(0, -1)],
-    direction: newDirection,
+    direction: newDirection
   };
 };

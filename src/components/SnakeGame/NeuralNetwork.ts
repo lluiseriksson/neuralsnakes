@@ -8,12 +8,12 @@ export class NeuralNetwork {
   }
 
   private initializeWeights() {
-    // Inicializar pesos con valores aleatorios más grandes para decisiones más definidas
+    // Inicializar con valores más extremos para decisiones más claras
     const weights = [];
     for (let i = 0; i < this.outputSize; i++) {
       const layerWeights = [];
       for (let j = 0; j < this.inputSize; j++) {
-        layerWeights.push((Math.random() * 4 - 2)); // Valores entre -2 y 2
+        layerWeights.push(Math.random() < 0.5 ? -5 : 5); // Valores extremos para decisiones más claras
       }
       weights.push(layerWeights);
     }
@@ -21,18 +21,17 @@ export class NeuralNetwork {
   }
 
   predict(inputs: number[]): number[] {
-    // Implementación simple pero efectiva de feedforward
+    // Implementación directa sin capas ocultas
     const outputs = this.weights.map(neuronWeights => {
       let sum = 0;
       for (let i = 0; i < inputs.length; i++) {
         sum += inputs[i] * neuronWeights[i];
       }
-      return sum; // Sin ReLU para mantener valores negativos
+      return Math.tanh(sum); // Usar tanh para valores entre -1 y 1
     });
 
-    // Softmax para normalizar las salidas
-    const maxOutput = Math.max(...outputs);
-    const expOutputs = outputs.map(x => Math.exp(x - maxOutput)); // Restamos el máximo para estabilidad numérica
+    // Convertir a probabilidades
+    const expOutputs = outputs.map(x => Math.exp(x));
     const sumExp = expOutputs.reduce((a, b) => a + b, 0);
     return expOutputs.map(x => x / sumExp);
   }
