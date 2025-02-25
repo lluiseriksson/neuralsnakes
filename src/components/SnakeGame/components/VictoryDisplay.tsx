@@ -12,7 +12,7 @@ const VictoryDisplay: React.FC<VictoryDisplayProps> = ({ victories }) => {
         <div key={id} className="text-white flex items-center gap-2">
           <div 
             className="w-4 h-4 rounded-full" 
-            style={{ backgroundColor: ['yellow', 'blue', 'green', 'red'][Number(id)] }} 
+            style={{ backgroundColor: ['yellow', 'blue', 'green', '#9b87f5'][Number(id)] }} 
           />
           <span>Victories: {wins}</span>
         </div>

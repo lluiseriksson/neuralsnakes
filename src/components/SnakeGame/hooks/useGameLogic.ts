@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { GameState, Direction, Snake } from '../types';
 import { NeuralNetwork } from '../NeuralNetwork';
@@ -25,7 +24,7 @@ export const generateApple = () => ({
 export const useGameLogic = () => {
   const [gameState, setGameState] = useState<GameState>({
     snakes: [],
-    apples: Array.from({ length: APPLE_COUNT }, generateApple), // Inicializar manzanas desde el estado inicial
+    apples: Array.from({ length: APPLE_COUNT }, generateApple),
     gridSize: GRID_SIZE,
   });
 
@@ -41,7 +40,7 @@ export const useGameLogic = () => {
       createSnake(0, 5, 5, 'RIGHT', 'yellow'),
       createSnake(1, 25, 25, 'LEFT', 'blue'),
       createSnake(2, 5, 25, 'UP', 'green'),
-      createSnake(3, 25, 5, 'DOWN', 'red')
+      createSnake(3, 25, 5, 'DOWN', '#9b87f5')
     ];
 
     const apples = Array.from({ length: APPLE_COUNT }, generateApple);
@@ -67,7 +66,7 @@ export const useGameLogic = () => {
         if (head.x === snake.positions[j].x && head.y === snake.positions[j].y) {
           // Al morir, generar nuevas manzanas
           const explosionApples = Array(5).fill(null).map(generateApple);
-          newApples = [...newApples, ...explosionApples].slice(0, APPLE_COUNT * 2); // Limitar el número máximo de manzanas
+          newApples = [...newApples, ...explosionApples].slice(0, APPLE_COUNT * 2);
 
           const respawnSnake = createSnake(
             snake.id,
@@ -185,7 +184,7 @@ export const useGameLogic = () => {
       return {
         ...prevState,
         snakes: snakesToUpdate,
-        apples: finalApples.slice(0, APPLE_COUNT) // Mantener solo APPLE_COUNT manzanas
+        apples: finalApples.slice(0, APPLE_COUNT)
       };
     });
   };
