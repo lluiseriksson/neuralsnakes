@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -23,9 +22,9 @@ const Index = () => {
     apples: [],
     gridSize: GRID_SIZE,
   });
+  const [isRunning, setIsRunning] = useState(false);
 
   const initializeGame = () => {
-    // Initialize snakes with neural networks
     const snakes: Snake[] = [
       { id: 0, positions: generateInitialSnake(0, 0), direction: 'RIGHT', color: 'yellow', score: 0, brain: new NeuralNetwork(8, 12, 4), alive: true },
       { id: 1, positions: generateInitialSnake(GRID_SIZE-1, 0), direction: 'LEFT', color: 'blue', score: 0, brain: new NeuralNetwork(8, 12, 4), alive: true },
@@ -33,7 +32,6 @@ const Index = () => {
       { id: 3, positions: generateInitialSnake(GRID_SIZE-1, GRID_SIZE-1), direction: 'UP', color: 'purple', score: 0, brain: new NeuralNetwork(8, 12, 4), alive: true },
     ];
 
-    // Generate random apples
     const apples = Array(APPLE_COUNT).fill(null).map(() => ({
       position: {
         x: Math.floor(Math.random() * GRID_SIZE),
@@ -84,21 +82,17 @@ const Index = () => {
   const getSnakeInputs = (snake: Snake): number[] => {
     const head = snake.positions[0];
     return [
-      // Distance to walls
       head.x, head.y,
       GRID_SIZE - head.x, GRID_SIZE - head.y,
-      // Distance to nearest apple
       Math.min(...gameState.apples.map(apple => 
         Math.sqrt(Math.pow(apple.position.x - head.x, 2) + Math.pow(apple.position.y - head.y, 2))
       )),
-      // Distance to nearest snake
       Math.min(...gameState.snakes
         .filter(s => s.id !== snake.id)
         .map(s => Math.min(...s.positions.map(pos =>
           Math.sqrt(Math.pow(pos.x - head.x, 2) + Math.pow(pos.y - head.y, 2))
         )))
       ),
-      // Current direction
       snake.direction === 'UP' || snake.direction === 'DOWN' ? 1 : 0,
       snake.direction === 'LEFT' || snake.direction === 'RIGHT' ? 1 : 0,
     ];
@@ -112,7 +106,6 @@ const Index = () => {
   const checkCollisions = () => {
     const newGameState = { ...gameState };
 
-    // Check snake-apple collisions
     newGameState.snakes.forEach(snake => {
       if (!snake.alive) return;
 
@@ -122,7 +115,6 @@ const Index = () => {
       );
 
       if (appleIndex !== -1) {
-        // Snake ate an apple
         snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
         snake.score += 10;
         newGameState.apples.splice(appleIndex, 1);
@@ -135,7 +127,6 @@ const Index = () => {
       }
     });
 
-    // Check snake-snake collisions
     newGameState.snakes.forEach(snake => {
       if (!snake.alive) return;
 
@@ -172,11 +163,9 @@ const Index = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear canvas with black background
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw apples
     gameState.apples.forEach(apple => {
       ctx.fillStyle = 'red';
       ctx.beginPath();
@@ -190,7 +179,6 @@ const Index = () => {
       ctx.fill();
     });
 
-    // Draw snakes
     gameState.snakes.forEach(snake => {
       if (!snake.alive) return;
       
@@ -206,7 +194,6 @@ const Index = () => {
         );
         ctx.fill();
 
-        // Draw eyes for head
         if (index === 0) {
           ctx.fillStyle = 'white';
           ctx.beginPath();
@@ -235,22 +222,51 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    const gameLoop = setInterval(() => {
-      updateGame();
-      checkCollisions();
-    }, 1000 / FPS);
+    let gameLoop: number;
+    
+    if (isRunning) {
+      gameLoop = setInterval(() => {
+        updateGame();
+        checkCollisions();
+      }, 1000 / FPS);
+    }
 
-    return () => clearInterval(gameLoop);
-  }, [gameState]);
+    return () => {
+      if (gameLoop) clearInterval(gameLoop);
+    };
+  }, [gameState, isRunning]);
 
   useEffect(() => {
     const animationFrame = requestAnimationFrame(drawGame);
     return () => cancelAnimationFrame(animationFrame);
   }, [gameState]);
 
+  const handleStartStop = () => {
+    setIsRunning(!isRunning);
+  };
+
+  const handleReset = () => {
+    setIsRunning(false);
+    initializeGame();
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
       <h1 className="text-2xl font-bold mb-4 text-white">Snake AI Battle</h1>
+      <div className="flex gap-4 mb-4">
+        <button
+          onClick={handleStartStop}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+        >
+          {isRunning ? 'Stop' : 'Start'}
+        </button>
+        <button
+          onClick={handleReset}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+        >
+          Reset
+        </button>
+      </div>
       <div className="relative">
         <canvas
           ref={canvasRef}
