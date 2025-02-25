@@ -19,20 +19,29 @@ const isOppositeDirection = (current: Direction, next: Direction): boolean => {
   );
 };
 
-export const moveSnake = (snake: Snake, gameState: GameState): Snake => {
+export const moveSnake = (snake: Snake, gameState: GameState, predictions?: number[]): Snake => {
   if (!snake.alive) return snake;
 
   const head = snake.positions[0];
   let newHead = { ...head };
-
-  // Lista de posibles direcciones
-  const directions: Direction[] = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
-  
-  // Elegir una nueva dirección aleatoria o mantener la actual
   let newDirection = snake.direction;
-  if (Math.random() < 0.2) { // 20% de probabilidad de cambiar de dirección
-    const validDirections = directions.filter(dir => !isOppositeDirection(snake.direction, dir));
-    newDirection = validDirections[Math.floor(Math.random() * validDirections.length)];
+
+  if (predictions) {
+    // Usar predicciones de la red neuronal
+    const directions: Direction[] = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+    const maxIndex = predictions.reduce((iMax, x, i, arr) => x > arr[iMax] ? i : iMax, 0);
+    const predictedDirection = directions[maxIndex];
+    
+    if (!isOppositeDirection(snake.direction, predictedDirection)) {
+      newDirection = predictedDirection;
+    }
+  } else {
+    // Comportamiento aleatorio de respaldo
+    const directions: Direction[] = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+    if (Math.random() < 0.2) {
+      const validDirections = directions.filter(dir => !isOppositeDirection(snake.direction, dir));
+      newDirection = validDirections[Math.floor(Math.random() * validDirections.length)];
+    }
   }
 
   // Mover en la dirección elegida

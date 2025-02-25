@@ -21,6 +21,18 @@ export const useGameLogic = () => {
     3: 0,
   });
 
+  const ensureMinimumApples = (apples: typeof gameState.apples) => {
+    const minimumApples = 5;
+    if (apples.length < minimumApples) {
+      const newApples = Array.from(
+        { length: minimumApples - apples.length },
+        generateApple
+      );
+      return [...apples, ...newApples];
+    }
+    return apples;
+  };
+
   const initializeGame = () => {
     const snakes = Array.from({ length: 4 }, (_, i) => {
       const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(i);
@@ -38,14 +50,34 @@ export const useGameLogic = () => {
 
   const updateGame = () => {
     setGameState(prevState => {
-      // Mover las serpientes
-      const newSnakes = prevState.snakes.map(snake => moveSnake(snake, prevState));
+      // Mover las serpientes usando la red neuronal
+      const newSnakes = prevState.snakes.map(snake => {
+        if (!snake.alive) return snake;
+        
+        // Obtener inputs para la red neuronal
+        const head = snake.positions[0];
+        const inputs = [
+          head.x / GRID_SIZE,
+          head.y / GRID_SIZE,
+          snake.direction === 'UP' ? 1 : 0,
+          snake.direction === 'DOWN' ? 1 : 0,
+          snake.direction === 'LEFT' ? 1 : 0,
+          snake.direction === 'RIGHT' ? 1 : 0,
+          prevState.apples.length > 0 ? prevState.apples[0].position.x / GRID_SIZE : 0,
+          prevState.apples.length > 0 ? prevState.apples[0].position.y / GRID_SIZE : 0,
+        ];
+
+        // Obtener predicción de la red neuronal
+        const prediction = snake.brain.predict(inputs);
+        
+        return moveSnake(snake, prevState, prediction);
+      });
       
       // Verificar colisiones y obtener nuevas manzanas
       const { newSnakes: snakesAfterCollisions, newApples } = checkCollisions(newSnakes, prevState.apples);
       
-      // Verificar colisiones con manzanas y actualizar el estado
-      let finalApples = [...newApples];
+      // Asegurar mínimo de manzanas
+      let finalApples = ensureMinimumApples(newApples);
       let snakesToUpdate = [...snakesAfterCollisions];
       
       snakesToUpdate.forEach(snake => {
@@ -57,22 +89,39 @@ export const useGameLogic = () => {
         );
 
         if (appleIndex !== -1) {
-          // Comer manzana
+          // Comer manzana y aprender de la experiencia exitosa
           snake.score += 1;
+          snake.brain.learn(true);
           snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
           finalApples.splice(appleIndex, 1);
         }
 
-        // Verificar victoria
-        if (snake.score >= 150) {
+        // Verificar victoria (cambiado a 100)
+        if (snake.score >= 100) {
+          // Guardar el cerebro exitoso
+          const successfulBrain = snake.brain.clone();
+          
           setVictories(prev => ({
             ...prev,
             [snake.id]: prev[snake.id] + 1
           }));
+
+          // Transferir el aprendizaje a la siguiente generación
           initializeGame();
+          setGameState(prev => ({
+            ...prev,
+            snakes: prev.snakes.map(s => 
+              s.id === snake.id 
+                ? { ...s, brain: successfulBrain }
+                : s
+            )
+          }));
           return;
         }
       });
+
+      // Asegurar mínimo de manzanas nuevamente
+      finalApples = ensureMinimumApples(finalApples);
 
       return {
         ...prevState,
