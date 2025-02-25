@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { GameState, Direction, Snake } from '../types';
 import { NeuralNetwork } from '../NeuralNetwork';
@@ -64,9 +65,14 @@ export const useGameLogic = () => {
       // Verificar colisión con sí misma
       for (let j = 1; j < snake.positions.length; j++) {
         if (head.x === snake.positions[j].x && head.y === snake.positions[j].y) {
-          // Al morir, generar nuevas manzanas
-          const explosionApples = Array(5).fill(null).map(generateApple);
-          newApples = [...newApples, ...explosionApples].slice(0, APPLE_COUNT * 2);
+          // Al morir, generar nuevas manzanas cerca de donde murió la serpiente
+          const explosionApples = Array(10).fill(null).map(() => ({
+            position: {
+              x: Math.max(0, Math.min(GRID_SIZE - 1, head.x + Math.floor(Math.random() * 7) - 3)),
+              y: Math.max(0, Math.min(GRID_SIZE - 1, head.y + Math.floor(Math.random() * 7) - 3))
+            }
+          }));
+          newApples = [...newApples, ...explosionApples];
 
           const respawnSnake = createSnake(
             snake.id,
@@ -160,9 +166,12 @@ export const useGameLogic = () => {
           // Comer manzana
           snake.score += 1;
           snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
+          finalApples.splice(appleIndex, 1);
           
-          // Reemplazar la manzana comida con una nueva en una posición aleatoria
-          finalApples[appleIndex] = generateApple();
+          // Solo generar una nueva manzana si hay menos del mínimo
+          if (finalApples.length < APPLE_COUNT) {
+            finalApples.push(generateApple());
+          }
         }
 
         // Verificar victoria
@@ -176,7 +185,7 @@ export const useGameLogic = () => {
         }
       });
 
-      // Asegurarse de que siempre haya al menos APPLE_COUNT manzanas
+      // Mantener un mínimo de manzanas
       while (finalApples.length < APPLE_COUNT) {
         finalApples.push(generateApple());
       }
@@ -184,7 +193,7 @@ export const useGameLogic = () => {
       return {
         ...prevState,
         snakes: snakesToUpdate,
-        apples: finalApples.slice(0, APPLE_COUNT)
+        apples: finalApples
       };
     });
   };
