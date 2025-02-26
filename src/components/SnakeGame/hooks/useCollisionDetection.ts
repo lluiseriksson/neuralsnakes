@@ -54,12 +54,22 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
       // Colisión con el cuerpo de otra serpiente
       for (let k = 1; k < otherSnake.positions.length; k++) {
         if (head.x === otherSnake.positions[k].x && head.y === otherSnake.positions[k].y) {
-          // La serpiente que colisiona pierde, la otra gana puntos
-          const currentScore = snake.score;
+          // La serpiente que colisiona pierde, la otra gana puntos basado en el tamaño
+          const deadSnakeLength = snake.positions.length;
+          const currentScoreDead = snake.score;
+          
+          // El ganador obtiene puntos basados en el tamaño del perdedor
+          otherSnake.score += deadSnakeLength;
+          
+          // El ganador crece según el tamaño del perdedor
+          for (let l = 0; l < deadSnakeLength; l++) {
+            otherSnake.positions.push({ ...otherSnake.positions[otherSnake.positions.length - 1] });
+          }
+
+          // Respawnear la serpiente perdedora
           const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(snake.id);
           newSnakes[i] = createSnake(snake.id, spawnX, spawnY, direction, color);
-          newSnakes[i].score = currentScore; // Mantener el score del perdedor
-          newSnakes[j].score += 1; // Solo dar 1 punto por eliminación
+          newSnakes[i].score = currentScoreDead; // Mantener el score del perdedor
           break;
         }
       }
