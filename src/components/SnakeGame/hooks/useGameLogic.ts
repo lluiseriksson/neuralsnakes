@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { GameState } from '../types';
 import { GRID_SIZE, APPLE_COUNT, FPS } from '../constants';
@@ -21,8 +20,7 @@ export const useGameLogic = () => {
     3: 0,
   });
 
-  // Referencia para el tiempo de inicio de cada ronda
-  const roundStartTime = useRef<number>(Date.now());
+  const [startTime, setStartTime] = useState(Date.now());
 
   const ensureMinimumApples = (apples: typeof gameState.apples) => {
     const minimumApples = 5;
@@ -50,14 +48,13 @@ export const useGameLogic = () => {
       gridSize: GRID_SIZE,
     });
 
-    // Resetear el tiempo de inicio de la ronda
-    roundStartTime.current = Date.now();
+    setStartTime(Date.now());
   };
 
   const updateGame = () => {
     // Verificar si ha pasado 1 minuto
     const currentTime = Date.now();
-    if (currentTime - roundStartTime.current >= 60000) { // 60000ms = 1 minuto
+    if (currentTime - startTime >= 60000) { // 60000ms = 1 minuto
       setGameState(prevState => {
         // Encontrar el score más alto
         const maxScore = Math.max(...prevState.snakes.map(snake => snake.score));
@@ -83,8 +80,8 @@ export const useGameLogic = () => {
 
         const apples = Array.from({ length: APPLE_COUNT }, generateApple);
         
-        // Resetear el tiempo para la nueva ronda
-        roundStartTime.current = Date.now();
+        // Actualizar el tiempo de inicio para la nueva ronda
+        setStartTime(Date.now());
 
         return {
           snakes,
@@ -163,5 +160,5 @@ export const useGameLogic = () => {
     return () => clearInterval(gameLoop);
   }, []);
 
-  return { gameState, victories };
+  return { gameState, victories, startTime };
 };
