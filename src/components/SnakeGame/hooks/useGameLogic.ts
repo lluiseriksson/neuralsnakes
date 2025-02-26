@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState } from '../types';
 import { GRID_SIZE, APPLE_COUNT, FPS } from '../constants';
 import { moveSnake } from '../utils';
@@ -23,8 +23,10 @@ export const useGameLogic = () => {
 
   const [startTime, setStartTime] = useState(Date.now());
   const [isGameRunning, setIsGameRunning] = useState(true);
+  const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
+  const isProcessingUpdate = useRef(false);
 
-  const ensureMinimumApples = (apples: typeof gameState.apples) => {
+  const ensureMinimumApples = useCallback((apples: typeof gameState.apples) => {
     const minimumApples = 5;
     if (apples.length < minimumApples) {
       const newApples = Array.from(
@@ -34,9 +36,14 @@ export const useGameLogic = () => {
       return [...apples, ...newApples];
     }
     return apples;
-  };
+  }, []);
 
   const initializeGame = useCallback(() => {
+    if (gameLoopRef.current) {
+      clearInterval(gameLoopRef.current);
+      gameLoopRef.current = null;
+    }
+
     const snakes = Array.from({ length: 4 }, (_, i) => {
       const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(i);
       return createSnake(i, spawnX, spawnY, direction, color);
@@ -52,38 +59,40 @@ export const useGameLogic = () => {
 
     setStartTime(Date.now());
     setIsGameRunning(true);
+    isProcessingUpdate.current = false;
   }, []);
 
   const endRound = useCallback(() => {
-    // Detener el juego inmediatamente
+    if (gameLoopRef.current) {
+      clearInterval(gameLoopRef.current);
+      gameLoopRef.current = null;
+    }
+
     setIsGameRunning(false);
+    isProcessingUpdate.current = false;
 
-    // Usar una promesa para asegurar el orden de las operaciones
-    Promise.resolve().then(() => {
-      // Obtener el puntaje más alto entre todas las serpientes
-      const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
+    const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
+    
+    if (maxScore > 0) {
+      const winners = gameState.snakes.filter(snake => snake.score === maxScore);
       
-      if (maxScore > 0) {
-        // Encontrar todas las serpientes con el puntaje máximo
-        const winners = gameState.snakes.filter(snake => snake.score === maxScore);
-        
-        setVictories(prevVictories => {
-          const newVictories = { ...prevVictories };
-          winners.forEach(winner => {
-            console.log(`Snake ${winner.id} ganó con ${winner.score} puntos!`);
-            newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
-          });
-          return newVictories;
+      setVictories(prevVictories => {
+        const newVictories = { ...prevVictories };
+        winners.forEach(winner => {
+          console.log(`Snake ${winner.id} ganó con ${winner.score} puntos!`);
+          newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
         });
-      }
+        return newVictories;
+      });
+    }
 
-      // Asegurar que el reinicio ocurra después de procesar las victorias
-      setTimeout(initializeGame, 2000);
-    });
+    setTimeout(initializeGame, 2000);
   }, [gameState.snakes, initializeGame]);
 
   const updateGame = useCallback(() => {
-    if (!isGameRunning) return;
+    if (!isGameRunning || isProcessingUpdate.current) return;
+
+    isProcessingUpdate.current = true;
 
     const currentTime = Date.now();
     const timeElapsed = currentTime - startTime;
@@ -135,28 +144,40 @@ export const useGameLogic = () => {
 
       finalApples = ensureMinimumApples(finalApples);
 
+      isProcessingUpdate.current = false;
       return {
         ...prevState,
         snakes: snakesToUpdate,
         apples: finalApples
       };
     });
-  }, [isGameRunning, startTime, endRound]);
+  }, [isGameRunning, startTime, endRound, ensureMinimumApples]);
 
-  // Inicializar el juego cuando el componente se monta
   useEffect(() => {
     initializeGame();
     return () => {
+      if (gameLoopRef.current) {
+        clearInterval(gameLoopRef.current);
+      }
       setIsGameRunning(false);
     };
   }, [initializeGame]);
 
-  // Manejar el bucle del juego
   useEffect(() => {
     if (!isGameRunning) return;
     
-    const gameLoop = setInterval(updateGame, 1000 / FPS);
-    return () => clearInterval(gameLoop);
+    if (gameLoopRef.current) {
+      clearInterval(gameLoopRef.current);
+    }
+    
+    gameLoopRef.current = setInterval(updateGame, 1000 / FPS);
+    
+    return () => {
+      if (gameLoopRef.current) {
+        clearInterval(gameLoopRef.current);
+        gameLoopRef.current = null;
+      }
+    };
   }, [isGameRunning, updateGame]);
 
   return { gameState, victories, startTime };
