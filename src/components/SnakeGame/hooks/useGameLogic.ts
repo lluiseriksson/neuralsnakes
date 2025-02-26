@@ -54,37 +54,47 @@ export const useGameLogic = () => {
     isResetting.current = false;
   };
 
-  const determineWinnersAndReset = () => {
-    if (!isResetting.current) {
-      isResetting.current = true;
-
-      // Encontrar el score más alto
-      const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
-      
-      // Encontrar todas las serpientes con el score máximo
-      const winners = gameState.snakes.filter(snake => snake.score === maxScore);
-      
-      // Actualizar victorias de forma síncrona
-      setVictories(prev => {
-        const newVictories = { ...prev };
-        winners.forEach(winner => {
-          newVictories[winner.id] = prev[winner.id] + 1;
-          console.log(`Serpiente ${winner.id} ganó con ${winner.score} puntos`);
-        });
-        return newVictories;
-      });
-
-      // Reiniciar el juego inmediatamente después de asignar las victorias
-      initializeGame();
-    }
-  };
-
   const updateGame = () => {
     const currentTime = Date.now();
     
     // Verificar si ha pasado 1 minuto
     if (currentTime - startTime >= 60000) {
-      determineWinnersAndReset();
+      if (!isResetting.current) {
+        isResetting.current = true;
+
+        // Encontrar el score más alto y los ganadores
+        const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
+        const winners = gameState.snakes.filter(snake => snake.score === maxScore);
+        
+        // Actualizar victorias y reiniciar juego
+        setVictories(prev => {
+          const newVictories = { ...prev };
+          winners.forEach(winner => {
+            newVictories[winner.id] = (prev[winner.id] || 0) + 1;
+            console.log(`Snake ${winner.id} won with ${winner.score} points`);
+          });
+          return newVictories;
+        });
+
+        // Esperamos al siguiente tick para reiniciar
+        Promise.resolve().then(() => {
+          const snakes = Array.from({ length: 4 }, (_, i) => {
+            const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(i);
+            return createSnake(i, spawnX, spawnY, direction, color);
+          });
+
+          const apples = Array.from({ length: APPLE_COUNT }, generateApple);
+
+          setGameState({
+            snakes,
+            apples,
+            gridSize: GRID_SIZE,
+          });
+
+          setStartTime(Date.now());
+          isResetting.current = false;
+        });
+      }
       return;
     }
 
