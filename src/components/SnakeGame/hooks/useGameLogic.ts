@@ -57,20 +57,23 @@ export const useGameLogic = () => {
   const endRound = () => {
     setIsGameRunning(false);
     
-    // Obtener el puntaje más alto
-    const scores = gameState.snakes.map(snake => snake.score);
-    const maxScore = Math.max(...scores);
+    const livingSnakes = gameState.snakes.filter(snake => snake.alive);
+    if (livingSnakes.length === 0) return; // Si no hay serpientes vivas, no hay ganador
     
-    // Solo si hay al menos un punto
+    // Obtener el puntaje más alto entre las serpientes vivas
+    const maxScore = Math.max(...livingSnakes.map(snake => snake.score));
+    
+    // Solo asignar victoria si hay puntos
     if (maxScore > 0) {
-      // Encontrar las serpientes ganadoras (pueden ser varias con el mismo puntaje máximo)
-      const winners = gameState.snakes.filter(snake => snake.score === maxScore);
+      // Encontrar todas las serpientes con el puntaje máximo
+      const winners = livingSnakes.filter(snake => snake.score === maxScore);
       
+      // Actualizar las victorias
       setVictories(prevVictories => {
         const newVictories = { ...prevVictories };
         winners.forEach(winner => {
-          newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
           console.log(`Snake ${winner.id} ganó con ${winner.score} puntos!`);
+          newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
         });
         return newVictories;
       });
@@ -93,7 +96,6 @@ export const useGameLogic = () => {
     }
 
     setGameState(prevState => {
-      // Mover las serpientes usando la red neuronal
       const newSnakes = prevState.snakes.map(snake => {
         if (!snake.alive) return snake;
         
@@ -113,10 +115,7 @@ export const useGameLogic = () => {
         return moveSnake(snake, prevState, prediction);
       });
       
-      // Verificar colisiones y obtener nuevas manzanas
       const { newSnakes: snakesAfterCollisions, newApples } = checkCollisions(newSnakes, prevState.apples);
-      
-      // Asegurar mínimo de manzanas
       let finalApples = ensureMinimumApples(newApples);
       let snakesToUpdate = [...snakesAfterCollisions];
       
@@ -129,7 +128,6 @@ export const useGameLogic = () => {
         );
 
         if (appleIndex !== -1) {
-          // Comer manzana
           snake.score += 1;
           snake.brain.learn(true);
           snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
@@ -137,7 +135,6 @@ export const useGameLogic = () => {
         }
       });
 
-      // Asegurar mínimo de manzanas nuevamente
       finalApples = ensureMinimumApples(finalApples);
 
       return {
