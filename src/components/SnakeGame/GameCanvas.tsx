@@ -24,19 +24,18 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
 
     // Dibujar manzanas - Ahora más grandes y claramente visibles
     gameState.apples.forEach(apple => {
-      // Dibujar un círculo rojo más grande
       ctx.fillStyle = '#ff0000';
       ctx.beginPath();
       ctx.arc(
         apple.position.x * CELL_SIZE + CELL_SIZE / 2,
         apple.position.y * CELL_SIZE + CELL_SIZE / 2,
-        CELL_SIZE / 2 - 2, // Ligeramente más pequeño que la celda
+        CELL_SIZE / 2 - 2,
         0,
         2 * Math.PI
       );
       ctx.fill();
 
-      // Añadir un brillo para hacerlo más visible
+      // Brillo
       ctx.fillStyle = '#ff6666';
       ctx.beginPath();
       ctx.arc(
@@ -53,6 +52,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
     gameState.snakes.forEach(snake => {
       if (!snake.alive) return;
       
+      // Dibujar cuerpo
       snake.positions.forEach((position, index) => {
         ctx.fillStyle = snake.color;
         ctx.beginPath();
@@ -65,8 +65,8 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
         );
         ctx.fill();
 
+        // Dibujar ojos en la cabeza
         if (index === 0) {
-          // Ojos más visibles
           ctx.fillStyle = 'white';
           ctx.beginPath();
           ctx.arc(
@@ -93,11 +93,11 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Establecer dimensiones del canvas
     canvas.width = GRID_SIZE * CELL_SIZE;
     canvas.height = GRID_SIZE * CELL_SIZE;
 
-    // Dibujar el juego inmediatamente y en cada frame
-    drawGame();
+    // Dibujar el juego
     const animationFrame = requestAnimationFrame(drawGame);
     
     return () => cancelAnimationFrame(animationFrame);
@@ -106,8 +106,10 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
   return (
     <canvas
       ref={canvasRef}
-      width={GRID_SIZE * CELL_SIZE}
-      height={GRID_SIZE * CELL_SIZE}
+      style={{
+        width: `${GRID_SIZE * CELL_SIZE}px`,
+        height: `${GRID_SIZE * CELL_SIZE}px`,
+      }}
       className="border border-gray-800 bg-black rounded-lg shadow-lg"
     />
   );
