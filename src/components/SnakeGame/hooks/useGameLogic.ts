@@ -137,7 +137,12 @@ export const useGameLogic = () => {
         if (appleIndex !== -1) {
           snake.score += 1;
           snake.brain.learn(true);
-          snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
+          
+          // Aseguramos que la serpiente tenga el tamaño correcto: 3 (inicial) + score (manzanas comidas)
+          while (snake.positions.length < 3 + snake.score) {
+            snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
+          }
+          
           finalApples.splice(appleIndex, 1);
         }
       });
