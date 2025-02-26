@@ -55,10 +55,16 @@ export const useGameLogic = () => {
   };
 
   const endRound = () => {
+    // Primero detener el juego
     setIsGameRunning(false);
     
+    // Procesar los resultados de la ronda
     const livingSnakes = gameState.snakes.filter(snake => snake.alive);
-    if (livingSnakes.length === 0) return; // Si no hay serpientes vivas, no hay ganador
+    if (livingSnakes.length === 0) {
+      // Si no hay serpientes vivas, simplemente reiniciar
+      setTimeout(initializeGame, 1000);
+      return;
+    }
     
     // Obtener el puntaje más alto entre las serpientes vivas
     const maxScore = Math.max(...livingSnakes.map(snake => snake.score));
@@ -79,9 +85,8 @@ export const useGameLogic = () => {
       });
     }
 
-    setTimeout(() => {
-      initializeGame();
-    }, 1000);
+    // Reiniciar el juego después de un breve delay
+    setTimeout(initializeGame, 1000);
   };
 
   const updateGame = () => {
@@ -145,11 +150,18 @@ export const useGameLogic = () => {
     });
   };
 
+  // Inicializar el juego cuando el componente se monta
   useEffect(() => {
     initializeGame();
+    return () => {
+      setIsGameRunning(false); // Asegurarse de detener el juego al desmontar
+    };
   }, []);
 
+  // Manejar el bucle del juego
   useEffect(() => {
+    if (!isGameRunning) return;
+    
     const gameLoop = setInterval(updateGame, 1000 / FPS);
     return () => clearInterval(gameLoop);
   }, [isGameRunning]);
