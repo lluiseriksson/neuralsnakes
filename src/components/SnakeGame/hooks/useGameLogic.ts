@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { GameState } from '../types';
 import { GRID_SIZE, APPLE_COUNT, FPS } from '../constants';
 import { moveSnake } from '../utils';
@@ -55,31 +55,37 @@ export const useGameLogic = () => {
   };
 
   const endRound = () => {
+    // Detener el juego
     setIsGameRunning(false);
     
-    // Encontrar el puntaje más alto
+    // Encontrar el puntaje más alto entre las serpientes vivas
     const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
     
-    // Actualizar victorias
-    const newVictories = { ...victories };
-    gameState.snakes.forEach(snake => {
-      if (snake.score === maxScore) {
-        newVictories[snake.id] = victories[snake.id] + 1;
-        console.log(`Snake ${snake.id} ganó con ${snake.score} puntos!`);
-      }
+    // Actualizar victorias para todas las serpientes que alcanzaron el puntaje máximo
+    setVictories(prevVictories => {
+      const newVictories = { ...prevVictories };
+      gameState.snakes.forEach(snake => {
+        if (snake.score === maxScore) {
+          newVictories[snake.id] = (prevVictories[snake.id] || 0) + 1;
+          console.log(`Snake ${snake.id} ganó con ${snake.score} puntos!`);
+        }
+      });
+      return newVictories;
     });
-    
-    setVictories(newVictories);
-    
-    // Iniciar nueva ronda después de un breve delay
-    setTimeout(initializeGame, 1000);
+
+    // Esperar un segundo antes de iniciar una nueva ronda
+    setTimeout(() => {
+      initializeGame();
+    }, 1000);
   };
 
   const updateGame = () => {
     if (!isGameRunning) return;
 
     const currentTime = Date.now();
-    if (currentTime - startTime >= 60000) {
+    const timeElapsed = currentTime - startTime;
+    
+    if (timeElapsed >= 60000) {
       endRound();
       return;
     }
@@ -147,7 +153,7 @@ export const useGameLogic = () => {
   useEffect(() => {
     const gameLoop = setInterval(updateGame, 1000 / FPS);
     return () => clearInterval(gameLoop);
-  }, []);
+  }, [isGameRunning]); // Añadido isGameRunning como dependencia
 
   return { gameState, victories, startTime };
 };
