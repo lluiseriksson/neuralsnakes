@@ -6,75 +6,60 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
   const newSnakes = [...snakes];
   let newApples = [...currentApples];
 
-  // Verificar colisiones entre serpientes primero
-  for (let i = 0; i < newSnakes.length; i++) {
-    const snake = newSnakes[i];
-    if (!snake.alive) continue;
+  newSnakes.forEach((snake, i) => {
+    if (!snake.alive) return;
     
     const head = snake.positions[0];
 
-    // Colisión con sí misma
+    // Verificar colisión con sí misma
     for (let j = 1; j < snake.positions.length; j++) {
       if (head.x === snake.positions[j].x && head.y === snake.positions[j].y) {
-        // Mantener el score actual antes de resetear
-        const currentScore = snake.score;
+        // Convertir todas las posiciones de la serpiente en manzanas cuando colisiona consigo misma
+        const explosionApples = snake.positions.map(position => ({
+          position: { ...position }
+        }));
+        
+        // Agregar las manzanas al juego
+        newApples = [...newApples, ...explosionApples];
+
+        // Respawnear la serpiente
         const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(snake.id);
-        newSnakes[i] = createSnake(snake.id, spawnX, spawnY, direction, color);
-        newSnakes[i].score = currentScore; // Mantener el score
-        break;
+        const respawnSnake = createSnake(snake.id, spawnX, spawnY, direction, color);
+        newSnakes[i] = respawnSnake;
+        return;
       }
     }
 
     // Colisión con otras serpientes
-    for (let j = 0; j < newSnakes.length; j++) {
-      if (i === j) continue;
-      const otherSnake = newSnakes[j];
-      if (!otherSnake.alive) continue;
+    newSnakes.forEach((otherSnake, j) => {
+      if (i === j || !otherSnake.alive) return;
 
-      const otherHead = otherSnake.positions[0];
-      
-      // Colisión cabeza con cabeza
-      if (head.x === otherHead.x && head.y === otherHead.y) {
-        // Mantener los scores actuales
-        const score1 = snake.score;
-        const score2 = otherSnake.score;
-        
-        // Resetear ambas serpientes manteniendo sus scores
-        const [spawnX1, spawnY1, direction1, color1] = generateSnakeSpawnConfig(snake.id);
-        const [spawnX2, spawnY2, direction2, color2] = generateSnakeSpawnConfig(otherSnake.id);
-        
-        newSnakes[i] = createSnake(snake.id, spawnX1, spawnY1, direction1, color1);
-        newSnakes[j] = createSnake(otherSnake.id, spawnX2, spawnY2, direction2, color2);
-        
-        newSnakes[i].score = score1;
-        newSnakes[j].score = score2;
-        continue;
-      }
-
-      // Colisión con el cuerpo de otra serpiente
-      for (let k = 1; k < otherSnake.positions.length; k++) {
-        if (head.x === otherSnake.positions[k].x && head.y === otherSnake.positions[k].y) {
-          // La serpiente que colisiona pierde, la otra gana puntos basado en el tamaño
-          const deadSnakeLength = snake.positions.length;
-          const currentScoreDead = snake.score;
-          
-          // El ganador obtiene puntos basados en el tamaño del perdedor
-          otherSnake.score += deadSnakeLength;
-          
-          // El ganador crece según el tamaño del perdedor
-          for (let l = 0; l < deadSnakeLength; l++) {
-            otherSnake.positions.push({ ...otherSnake.positions[otherSnake.positions.length - 1] });
+      otherSnake.positions.forEach((segment, index) => {
+        if (head.x === segment.x && head.y === segment.y) {
+          if (index === 0) {
+            // Colisión cabeza con cabeza - ambas serpientes explotan y resetean
+            const [spawnX1, spawnY1, direction1, color1] = generateSnakeSpawnConfig(snake.id);
+            const [spawnX2, spawnY2, direction2, color2] = generateSnakeSpawnConfig(otherSnake.id);
+            
+            // Resetear ambas serpientes
+            newSnakes[i] = createSnake(snake.id, spawnX1, spawnY1, direction1, color1);
+            newSnakes[j] = createSnake(otherSnake.id, spawnX2, spawnY2, direction2, color2);
+          } else {
+            // Colisión con el cuerpo
+            otherSnake.score += snake.positions.length;
+            for (let k = 0; k < snake.positions.length; k++) {
+              otherSnake.positions.push({ ...otherSnake.positions[otherSnake.positions.length - 1] });
+            }
+            
+            // Respawnear la serpiente perdedora
+            const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(snake.id);
+            const respawnSnake = createSnake(snake.id, spawnX, spawnY, direction, color);
+            newSnakes[i] = respawnSnake;
           }
-
-          // Respawnear la serpiente perdedora
-          const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(snake.id);
-          newSnakes[i] = createSnake(snake.id, spawnX, spawnY, direction, color);
-          newSnakes[i].score = currentScoreDead; // Mantener el score del perdedor
-          break;
         }
-      }
-    }
-  }
+      });
+    });
+  });
 
   return { newSnakes, newApples };
 };
