@@ -22,7 +22,7 @@ export const useGameLogic = () => {
   });
 
   const [startTime, setStartTime] = useState(Date.now());
-  const isResetting = useRef(false);
+  const [isGameRunning, setIsGameRunning] = useState(true);
 
   const ensureMinimumApples = (apples: typeof gameState.apples) => {
     const minimumApples = 5;
@@ -51,95 +51,93 @@ export const useGameLogic = () => {
     });
 
     setStartTime(Date.now());
-    isResetting.current = false;
+    setIsGameRunning(true);
+  };
+
+  const endRound = () => {
+    setIsGameRunning(false);
+    
+    // Encontrar el puntaje más alto
+    const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
+    
+    // Actualizar victorias
+    const newVictories = { ...victories };
+    gameState.snakes.forEach(snake => {
+      if (snake.score === maxScore) {
+        newVictories[snake.id] = victories[snake.id] + 1;
+        console.log(`Snake ${snake.id} ganó con ${snake.score} puntos!`);
+      }
+    });
+    
+    setVictories(newVictories);
+    
+    // Iniciar nueva ronda después de un breve delay
+    setTimeout(initializeGame, 1000);
   };
 
   const updateGame = () => {
+    if (!isGameRunning) return;
+
     const currentTime = Date.now();
-    
-    // Verificar si ha pasado 1 minuto
     if (currentTime - startTime >= 60000) {
-      if (!isResetting.current) {
-        // 1. Marcar que estamos en proceso de reinicio
-        isResetting.current = true;
-
-        // 2. Calcular puntuaciones finales
-        const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
-        
-        // 3. Actualizar victorias
-        setVictories(prev => {
-          const newVictories = { ...prev };
-          gameState.snakes.forEach(snake => {
-            if (snake.score === maxScore) {
-              newVictories[snake.id] = prev[snake.id] + 1;
-              console.log(`Snake ${snake.id} ganó con ${snake.score} puntos!`);
-            }
-          });
-          return newVictories;
-        });
-
-        // 4. Iniciar nueva ronda
-        initializeGame();
-      }
+      endRound();
       return;
     }
 
-    if (!isResetting.current) {
-      setGameState(prevState => {
-        // Mover las serpientes usando la red neuronal
-        const newSnakes = prevState.snakes.map(snake => {
-          if (!snake.alive) return snake;
-          
-          const head = snake.positions[0];
-          const inputs = [
-            head.x / GRID_SIZE,
-            head.y / GRID_SIZE,
-            snake.direction === 'UP' ? 1 : 0,
-            snake.direction === 'DOWN' ? 1 : 0,
-            snake.direction === 'LEFT' ? 1 : 0,
-            snake.direction === 'RIGHT' ? 1 : 0,
-            prevState.apples.length > 0 ? prevState.apples[0].position.x / GRID_SIZE : 0,
-            prevState.apples.length > 0 ? prevState.apples[0].position.y / GRID_SIZE : 0,
-          ];
-
-          const prediction = snake.brain.predict(inputs);
-          return moveSnake(snake, prevState, prediction);
-        });
+    setGameState(prevState => {
+      // Mover las serpientes usando la red neuronal
+      const newSnakes = prevState.snakes.map(snake => {
+        if (!snake.alive) return snake;
         
-        // Verificar colisiones y obtener nuevas manzanas
-        const { newSnakes: snakesAfterCollisions, newApples } = checkCollisions(newSnakes, prevState.apples);
-        
-        // Asegurar mínimo de manzanas
-        let finalApples = ensureMinimumApples(newApples);
-        let snakesToUpdate = [...snakesAfterCollisions];
-        
-        snakesToUpdate.forEach(snake => {
-          if (!snake.alive) return;
+        const head = snake.positions[0];
+        const inputs = [
+          head.x / GRID_SIZE,
+          head.y / GRID_SIZE,
+          snake.direction === 'UP' ? 1 : 0,
+          snake.direction === 'DOWN' ? 1 : 0,
+          snake.direction === 'LEFT' ? 1 : 0,
+          snake.direction === 'RIGHT' ? 1 : 0,
+          prevState.apples.length > 0 ? prevState.apples[0].position.x / GRID_SIZE : 0,
+          prevState.apples.length > 0 ? prevState.apples[0].position.y / GRID_SIZE : 0,
+        ];
 
-          const head = snake.positions[0];
-          const appleIndex = finalApples.findIndex(apple => 
-            apple.position.x === head.x && apple.position.y === head.y
-          );
-
-          if (appleIndex !== -1) {
-            // Comer manzana
-            snake.score += 1;
-            snake.brain.learn(true);
-            snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
-            finalApples.splice(appleIndex, 1);
-          }
-        });
-
-        // Asegurar mínimo de manzanas nuevamente
-        finalApples = ensureMinimumApples(finalApples);
-
-        return {
-          ...prevState,
-          snakes: snakesToUpdate,
-          apples: finalApples
-        };
+        const prediction = snake.brain.predict(inputs);
+        return moveSnake(snake, prevState, prediction);
       });
-    }
+      
+      // Verificar colisiones y obtener nuevas manzanas
+      const { newSnakes: snakesAfterCollisions, newApples } = checkCollisions(newSnakes, prevState.apples);
+      
+      // Asegurar mínimo de manzanas
+      let finalApples = ensureMinimumApples(newApples);
+      let snakesToUpdate = [...snakesAfterCollisions];
+      
+      snakesToUpdate.forEach(snake => {
+        if (!snake.alive) return;
+
+        const head = snake.positions[0];
+        const appleIndex = finalApples.findIndex(apple => 
+          apple.position.x === head.x && apple.position.y === head.y
+        );
+
+        if (appleIndex !== -1) {
+          // Comer manzana
+          snake.score += 1;
+          snake.brain.learn(true);
+          snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
+          finalApples.splice(appleIndex, 1);
+        }
+      });
+
+      // Asegurar mínimo de manzanas nuevamente
+      finalApples = ensureMinimumApples(finalApples);
+
+      return {
+        ...prevState,
+        snakes: snakesToUpdate,
+        apples: finalApples
+      };
+    });
   };
 
   useEffect(() => {
