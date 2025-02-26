@@ -60,29 +60,24 @@ export const useGameLogic = () => {
     
     // Procesar los resultados de la ronda
     const livingSnakes = gameState.snakes.filter(snake => snake.alive);
-    if (livingSnakes.length === 0) {
-      // Si no hay serpientes vivas, simplemente reiniciar
-      setTimeout(initializeGame, 1000);
-      return;
-    }
     
-    // Obtener el puntaje más alto entre las serpientes vivas
-    const maxScore = Math.max(...livingSnakes.map(snake => snake.score));
+    // Obtener el puntaje más alto entre todas las serpientes (vivas o no)
+    const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
     
     // Solo asignar victoria si hay puntos
     if (maxScore > 0) {
-      // Encontrar todas las serpientes con el puntaje máximo
-      const winners = livingSnakes.filter(snake => snake.score === maxScore);
+      // Encontrar todas las serpientes con el puntaje máximo (vivas o no)
+      const winners = gameState.snakes.filter(snake => snake.score === maxScore);
       
-      // Actualizar las victorias
-      setVictories(prevVictories => {
-        const newVictories = { ...prevVictories };
-        winners.forEach(winner => {
-          console.log(`Snake ${winner.id} ganó con ${winner.score} puntos!`);
-          newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
-        });
-        return newVictories;
+      // Actualizar las victorias de forma síncrona
+      const newVictories = { ...victories };
+      winners.forEach(winner => {
+        console.log(`Snake ${winner.id} ganó con ${winner.score} puntos!`);
+        newVictories[winner.id] = (victories[winner.id] || 0) + 1;
       });
+      
+      // Actualizar el estado de las victorias
+      setVictories(newVictories);
     }
 
     // Reiniciar el juego después de un breve delay
