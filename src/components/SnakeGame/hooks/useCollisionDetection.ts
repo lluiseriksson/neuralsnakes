@@ -65,8 +65,14 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
             // Agregar las manzanas al juego
             newApples = [...newApples, ...explosionApples];
             
-            // La serpiente ganadora obtiene los puntos
+            // La serpiente ganadora obtiene los puntos y crece
             otherSnake.score += snake.score;
+            
+            // Añadir nuevos segmentos a la serpiente ganadora
+            const additionalSegments = snake.positions.length - 3; // Restamos el tamaño inicial
+            for (let k = 0; k < additionalSegments; k++) {
+              otherSnake.positions.push({ ...otherSnake.positions[otherSnake.positions.length - 1] });
+            }
             
             // Respawnear la serpiente perdedora
             const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(snake.id);
