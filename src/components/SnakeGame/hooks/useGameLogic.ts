@@ -55,25 +55,27 @@ export const useGameLogic = () => {
   };
 
   const endRound = () => {
-    // Detener el juego
     setIsGameRunning(false);
     
-    // Encontrar el puntaje más alto entre las serpientes vivas
-    const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
+    // Obtener el puntaje más alto
+    const scores = gameState.snakes.map(snake => snake.score);
+    const maxScore = Math.max(...scores);
     
-    // Actualizar victorias para todas las serpientes que alcanzaron el puntaje máximo
-    setVictories(prevVictories => {
-      const newVictories = { ...prevVictories };
-      gameState.snakes.forEach(snake => {
-        if (snake.score === maxScore) {
-          newVictories[snake.id] = (prevVictories[snake.id] || 0) + 1;
-          console.log(`Snake ${snake.id} ganó con ${snake.score} puntos!`);
-        }
+    // Solo si hay al menos un punto
+    if (maxScore > 0) {
+      // Encontrar las serpientes ganadoras (pueden ser varias con el mismo puntaje máximo)
+      const winners = gameState.snakes.filter(snake => snake.score === maxScore);
+      
+      setVictories(prevVictories => {
+        const newVictories = { ...prevVictories };
+        winners.forEach(winner => {
+          newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
+          console.log(`Snake ${winner.id} ganó con ${winner.score} puntos!`);
+        });
+        return newVictories;
       });
-      return newVictories;
-    });
+    }
 
-    // Esperar un segundo antes de iniciar una nueva ronda
     setTimeout(() => {
       initializeGame();
     }, 1000);
@@ -153,7 +155,7 @@ export const useGameLogic = () => {
   useEffect(() => {
     const gameLoop = setInterval(updateGame, 1000 / FPS);
     return () => clearInterval(gameLoop);
-  }, [isGameRunning]); // Añadido isGameRunning como dependencia
+  }, [isGameRunning]);
 
   return { gameState, victories, startTime };
 };
