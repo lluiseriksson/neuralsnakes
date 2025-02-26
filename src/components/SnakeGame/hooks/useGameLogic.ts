@@ -54,29 +54,35 @@ export const useGameLogic = () => {
     isResetting.current = false;
   };
 
+  const handleRoundEnd = () => {
+    // 1. Marcar que estamos en proceso de reinicio
+    isResetting.current = true;
+
+    // 2. Obtener los ganadores
+    const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
+    const winners = gameState.snakes.filter(snake => snake.score === maxScore);
+
+    // 3. Actualizar las victorias de todos los ganadores de una vez
+    setVictories(prevVictories => {
+      const newVictories = { ...prevVictories };
+      winners.forEach(winner => {
+        newVictories[winner.id] = prevVictories[winner.id] + 1;
+        console.log(`Snake ${winner.id} ganó con ${winner.score} puntos!`);
+      });
+      return newVictories;
+    });
+
+    // 4. Programar el reinicio para el siguiente frame
+    setTimeout(initializeGame, 0);
+  };
+
   const updateGame = () => {
     const currentTime = Date.now();
     
     // Verificar si ha pasado 1 minuto
     if (currentTime - startTime >= 60000) {
       if (!isResetting.current) {
-        isResetting.current = true;
-        
-        // Encontrar el score más alto y los ganadores
-        const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
-        const winners = gameState.snakes.filter(snake => snake.score === maxScore);
-        
-        // Actualizar victorias
-        winners.forEach(winner => {
-          setVictories(prev => ({
-            ...prev,
-            [winner.id]: prev[winner.id] + 1
-          }));
-          console.log(`Snake ${winner.id} won with ${winner.score} points`);
-        });
-
-        // Reiniciar el juego
-        initializeGame();
+        handleRoundEnd();
       }
       return;
     }
