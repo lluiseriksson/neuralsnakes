@@ -32,11 +32,12 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
     const maxIndex = predictions.reduce((iMax, x, i, arr) => x > arr[iMax] ? i : iMax, 0);
     const predictedDirection = directions[maxIndex];
     
+    // Solo permitir el cambio de dirección si no es opuesta
     if (!isOppositeDirection(snake.direction, predictedDirection)) {
       newDirection = predictedDirection;
     }
   } else {
-    // Comportamiento aleatorio de respaldo
+    // Comportamiento aleatorio de respaldo con restricción de dirección opuesta
     const directions: Direction[] = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
     if (Math.random() < 0.2) {
       const validDirections = directions.filter(dir => !isOppositeDirection(snake.direction, dir));
@@ -44,7 +45,7 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
     }
   }
 
-  // Mover en la dirección elegida
+  // Mover en la dirección elegida, manteniendo la dirección actual si la nueva es inválida
   switch (newDirection) {
     case 'UP':
       newHead.y = (newHead.y - 1 + GRID_SIZE) % GRID_SIZE;
