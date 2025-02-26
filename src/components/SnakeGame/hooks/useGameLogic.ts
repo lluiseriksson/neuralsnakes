@@ -58,8 +58,40 @@ export const useGameLogic = () => {
     // Verificar si ha pasado 1 minuto
     const currentTime = Date.now();
     if (currentTime - roundStartTime.current >= 60000) { // 60000ms = 1 minuto
-      console.log('1 minuto sin victoria - Reiniciando juego');
-      initializeGame();
+      setGameState(prevState => {
+        // Encontrar el score más alto
+        const maxScore = Math.max(...prevState.snakes.map(snake => snake.score));
+        
+        // Encontrar todas las serpientes con el score máximo
+        const winners = prevState.snakes.filter(snake => snake.score === maxScore);
+        
+        // Actualizar victorias para todas las serpientes ganadoras
+        winners.forEach(winner => {
+          setVictories(prev => ({
+            ...prev,
+            [winner.id]: prev[winner.id] + 1
+          }));
+
+          console.log(`Serpiente ${winner.id} ganó con ${winner.score} puntos`);
+        });
+
+        // Iniciar nueva ronda
+        const snakes = Array.from({ length: 4 }, (_, i) => {
+          const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(i);
+          return createSnake(i, spawnX, spawnY, direction, color);
+        });
+
+        const apples = Array.from({ length: APPLE_COUNT }, generateApple);
+        
+        // Resetear el tiempo para la nueva ronda
+        roundStartTime.current = Date.now();
+
+        return {
+          snakes,
+          apples,
+          gridSize: GRID_SIZE,
+        };
+      });
       return;
     }
 
@@ -108,29 +140,6 @@ export const useGameLogic = () => {
           snake.brain.learn(true);
           snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
           finalApples.splice(appleIndex, 1);
-        }
-
-        // Verificar victoria (100 puntos)
-        if (snake.score >= 100) {
-          // Guardar el cerebro exitoso
-          const successfulBrain = snake.brain.clone();
-          
-          setVictories(prev => ({
-            ...prev,
-            [snake.id]: prev[snake.id] + 1
-          }));
-
-          // Transferir el aprendizaje a la siguiente generación
-          initializeGame();
-          setGameState(prev => ({
-            ...prev,
-            snakes: prev.snakes.map(s => 
-              s.id === snake.id 
-                ? { ...s, brain: successfulBrain }
-                : s
-            )
-          }));
-          return;
         }
       });
 
