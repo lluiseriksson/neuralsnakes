@@ -57,14 +57,6 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
             newSnakes[j] = createSnake(otherSnake.id, spawnX2, spawnY2, direction2, color2);
           } else {
             // Colisión con el cuerpo
-            // Convertir todas las posiciones de la serpiente perdedora en manzanas
-            const explosionApples = snake.positions.map(position => ({
-              position: { ...position }
-            }));
-            
-            // Agregar las manzanas al juego
-            newApples = [...newApples, ...explosionApples];
-            
             // La serpiente ganadora obtiene los puntos y crece
             otherSnake.score += snake.score;
             
