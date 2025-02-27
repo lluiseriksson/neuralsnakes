@@ -57,7 +57,7 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
             newSnakes[j] = createSnake(otherSnake.id, spawnX2, spawnY2, direction2, color2);
           } else {
             // Colisión con el cuerpo
-            // Convertir la serpiente perdedora en manzanas
+            // Convertir todas las posiciones de la serpiente perdedora en manzanas
             const explosionApples = snake.positions.map(position => ({
               position: { ...position }
             }));
