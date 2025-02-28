@@ -60,9 +60,9 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
             // La serpiente ganadora obtiene los puntos y crece
             otherSnake.score += snake.score;
             
-            // Añadir nuevos segmentos a la serpiente ganadora
-            const additionalSegments = snake.positions.length - 3; // Restamos el tamaño inicial
-            for (let k = 0; k < additionalSegments; k++) {
+            // Añadir todos los segmentos de la serpiente perdedora a la ganadora
+            const totalSegmentsToAdd = snake.positions.length; // Todos los segmentos, incluida la cabeza
+            for (let k = 0; k < totalSegmentsToAdd; k++) {
               otherSnake.positions.push({ ...otherSnake.positions[otherSnake.positions.length - 1] });
             }
             
