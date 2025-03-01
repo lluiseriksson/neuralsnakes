@@ -74,23 +74,29 @@ export const useGameLogic = () => {
 
   // Initialize game when component mounts
   useEffect(() => {
+    console.log("useGameLogic: Inicializando juego al montar componente");
     initializeGame();
+    
     return () => {
       if (gameLoopRef.current) {
         clearInterval(gameLoopRef.current);
       }
       setIsGameRunning(false);
     };
-  }, [initializeGame]);
+  }, []);
 
   // Set up game loop
   useEffect(() => {
-    if (!isGameRunning) return;
+    if (!isGameRunning) {
+      console.log("Game loop pausado: el juego no está corriendo");
+      return;
+    }
     
     if (gameLoopRef.current) {
       clearInterval(gameLoopRef.current);
     }
     
+    console.log("Configurando game loop con FPS:", FPS);
     gameLoopRef.current = setInterval(updateGame, 1000 / FPS);
     
     return () => {
@@ -101,6 +107,6 @@ export const useGameLogic = () => {
     };
   }, [isGameRunning, updateGame]);
 
-  // Importante: Aquí es donde estaba el error, necesitamos incluir initializeGame en el objeto de retorno
+  // Importante: devolver initializeGame para que pueda ser accedido por otros componentes
   return { gameState, victories, startTime, generationInfo, initializeGame };
 };
