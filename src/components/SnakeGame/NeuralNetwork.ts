@@ -1,7 +1,10 @@
 
+import { NeuralNetwork as INeuralNetwork, NeuralNetworkModel } from "./types";
+import { sigmoid } from "./NeuralNetworkActivations";
+import { deserializeWeights, serializeWeights, generateRandomWeights } from "./NeuralNetworkMatrix";
 import { saveModel, saveTrainingData, fetchBestModel, fetchAllModels, combineModels } from "./neuralNetworkStorage";
 
-export class NeuralNetwork {
+export class NeuralNetwork implements INeuralNetwork {
   private inputSize: number;
   private hiddenSize: number;
   private outputSize: number;
@@ -29,17 +32,15 @@ export class NeuralNetwork {
     this.outputSize = outputSize;
     
     // Initialize weights matrices
-    this.weightsInputHidden = Array(hiddenSize).fill(0).map(() => 
-      Array(inputSize).fill(0).map(() => Math.random() * 2 - 1)
-    );
-    
-    this.weightsHiddenOutput = Array(outputSize).fill(0).map(() => 
-      Array(hiddenSize).fill(0).map(() => Math.random() * 2 - 1)
-    );
+    const initialWeights = generateRandomWeights(inputSize, hiddenSize, outputSize);
+    this.weightsInputHidden = initialWeights.weightsInputHidden;
+    this.weightsHiddenOutput = initialWeights.weightsHiddenOutput;
     
     // If weights are provided, deserialize them
     if (weights && weights.length === (inputSize * hiddenSize + hiddenSize * outputSize)) {
-      this.deserializeWeights(weights);
+      const deserialized = deserializeWeights(weights, inputSize, hiddenSize, outputSize);
+      this.weightsInputHidden = deserialized.weightsInputHidden;
+      this.weightsHiddenOutput = deserialized.weightsHiddenOutput;
     }
     
     // If an ID is provided, this is an existing model
@@ -50,11 +51,6 @@ export class NeuralNetwork {
       this.bestScore = bestScore || 0;
       this.gamesPlayed = gamesPlayed || 0;
     }
-  }
-
-  // Sigmoid activation function
-  private sigmoid(x: number): number {
-    return 1 / (1 + Math.exp(-x));
   }
 
   // Forward pass through the network
@@ -71,7 +67,7 @@ export class NeuralNetwork {
       for (let i = 0; i < this.inputSize; i++) {
         sum += weights[i] * inputs[i];
       }
-      return this.sigmoid(sum);
+      return sigmoid(sum);
     });
     
     // Calculate output layer activations
@@ -80,14 +76,14 @@ export class NeuralNetwork {
       for (let i = 0; i < this.hiddenSize; i++) {
         sum += weights[i] * hiddenOutputs[i];
       }
-      return this.sigmoid(sum);
+      return sigmoid(sum);
     });
     
     return outputs;
   }
 
   // Method to adjust weights based on success
-  learn(success: boolean, inputs: number[], outputs: number[], reward: number = 1) {
+  learn(success: boolean, inputs: number[] = [], outputs: number[] = [], reward: number = 1) {
     this.gamesPlayed++;
     
     // Higher reward for better performance
@@ -103,13 +99,13 @@ export class NeuralNetwork {
     );
     
     // Save training data for later analysis
-    if (this.id) {
+    if (this.id && inputs.length > 0) {
       this.saveTrainingData(inputs, outputs, success);
     }
   }
 
   // Method to clone the network with possible mutations
-  clone(mutationRate: number = 0.1): NeuralNetwork {
+  clone(mutationRate: number = 0.1): INeuralNetwork {
     const weights = this.serializeWeights();
     const clone = new NeuralNetwork(
       this.inputSize, 
@@ -164,42 +160,14 @@ export class NeuralNetwork {
 
   // Serialize weights to a flat array for storage
   serializeWeights(): number[] {
-    const flat: number[] = [];
-    
-    // Flatten input-hidden weights
-    this.weightsInputHidden.forEach(row => {
-      row.forEach(weight => flat.push(weight));
-    });
-    
-    // Flatten hidden-output weights
-    this.weightsHiddenOutput.forEach(row => {
-      row.forEach(weight => flat.push(weight));
-    });
-    
-    return flat;
+    return serializeWeights(this.weightsInputHidden, this.weightsHiddenOutput);
   }
   
   // Deserialize weights from a flat array
   deserializeWeights(flat: number[]): void {
-    let index = 0;
-    
-    // Deserialize input-hidden weights
-    for (let i = 0; i < this.hiddenSize; i++) {
-      for (let j = 0; j < this.inputSize; j++) {
-        if (index < flat.length) {
-          this.weightsInputHidden[i][j] = flat[index++];
-        }
-      }
-    }
-    
-    // Deserialize hidden-output weights
-    for (let i = 0; i < this.outputSize; i++) {
-      for (let j = 0; j < this.hiddenSize; j++) {
-        if (index < flat.length) {
-          this.weightsHiddenOutput[i][j] = flat[index++];
-        }
-      }
-    }
+    const deserialized = deserializeWeights(flat, this.inputSize, this.hiddenSize, this.outputSize);
+    this.weightsInputHidden = deserialized.weightsInputHidden;
+    this.weightsHiddenOutput = deserialized.weightsHiddenOutput;
   }
 
   // Method to get the weights for storage
@@ -259,25 +227,30 @@ export class NeuralNetwork {
 
   // Method to save training data
   async saveTrainingData(inputs: number[], outputs: number[], success: boolean): Promise<void> {
+    if (!this.id) return;
     await saveTrainingData(this.id, inputs, outputs, success);
   }
 
   // Static methods
-  static async loadBest(): Promise<NeuralNetwork | null> {
+  static async loadBest(): Promise<INeuralNetwork | null> {
     return fetchBestModel();
   }
 
-  static async combineModels(count: number = 5): Promise<NeuralNetwork | null> {
+  static async combineModels(count: number = 5): Promise<INeuralNetwork | null> {
     return combineModels(count);
   }
 
-  static async getAllModels(): Promise<NeuralNetwork[]> {
+  static async getAllModels(): Promise<INeuralNetwork[]> {
     try {
       const data = await fetchAllModels();
       
       return data.map(model => {
         // Ensure weights is treated as number[]
         const weightsArray = model.weights as unknown as number[];
+        
+        // Extract metadata if available
+        const bestScore = model.metadata?.best_score || model.score || 0;
+        const gamesPlayed = model.metadata?.games_played || 0;
         
         return new NeuralNetwork(
           8, 
@@ -287,8 +260,8 @@ export class NeuralNetwork {
           model.id, 
           model.score, 
           model.generation,
-          model.best_score,
-          model.games_played
+          bestScore,
+          gamesPlayed
         );
       });
     } catch (err) {

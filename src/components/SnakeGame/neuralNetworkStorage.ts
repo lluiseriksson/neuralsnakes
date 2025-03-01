@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { NeuralNetwork } from "./NeuralNetwork";
+import { NeuralNetworkModel } from "./types";
 import { combineWeights, mutateWeights } from "./neuralNetworkUtils";
 
 /**
@@ -23,7 +24,7 @@ export const fetchBestModel = async (): Promise<NeuralNetwork | null> => {
     // Ensure weights is treated as number[]
     const weightsArray = model.weights as unknown as number[];
     
-    // Extraer campos adicionales del modelo si existen
+    // Extract metadata if available
     const bestScore = model.metadata?.best_score || model.score || 0;
     const gamesPlayed = model.metadata?.games_played || 0;
     
@@ -58,7 +59,7 @@ export const saveModel = async (
     const id = network.getId();
     const generation = network.getGeneration();
     
-    // Crear metadata para almacenar campos adicionales
+    // Create metadata for storing additional fields
     const metadata = {
       best_score: bestScore || score,
       games_played: gamesPlayed || 0
@@ -139,12 +140,7 @@ export const saveTrainingData = async (
 /**
  * Fetches all neural network models from the database
  */
-export const fetchAllModels = async (): Promise<Array<{
-  id: string, 
-  weights: unknown, 
-  score: number | null, 
-  generation: number | null
-}>> => {
+export const fetchAllModels = async (): Promise<NeuralNetworkModel[]> => {
   try {
     const { data, error } = await supabase
       .from('neural_networks')
@@ -156,7 +152,7 @@ export const fetchAllModels = async (): Promise<Array<{
       return [];
     }
     
-    return data;
+    return data as NeuralNetworkModel[];
   } catch (err) {
     console.error('Exception loading all neural networks:', err);
     return [];

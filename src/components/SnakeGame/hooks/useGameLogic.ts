@@ -120,7 +120,7 @@ export const useGameLogic = () => {
 
     // Also save non-winners if they have a good score
     for (const snake of gameState.snakes) {
-      if (snake.score > 5 && !winningSnakes?.some(w => w.id === snake.id)) {
+      if (snake.score > 5 && maxScore > 0 && snake.score !== maxScore) {
         await snake.brain.save(snake.score);
       }
     }
