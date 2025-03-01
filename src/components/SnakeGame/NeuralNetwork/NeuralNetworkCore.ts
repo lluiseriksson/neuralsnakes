@@ -7,6 +7,7 @@ import {
   saveModelToDb, 
   saveTrainingDataToDb
 } from "../database/neuralNetworkDb";
+import { applyLearning, cloneNetwork, mutateNetwork } from "./NeuralNetworkLearning";
 
 export class NeuralNetworkCore implements INeuralNetwork {
   private inputSize: number;
@@ -163,5 +164,18 @@ export class NeuralNetworkCore implements INeuralNetwork {
     const deserialized = deserializeWeights(flat, this.inputSize, this.hiddenSize, this.outputSize);
     this.weightsInputHidden = deserialized.weightsInputHidden;
     this.weightsHiddenOutput = deserialized.weightsHiddenOutput;
+  }
+
+  // Implementing the required methods from INeuralNetwork interface
+  learn(success: boolean, inputs: number[] = [], outputs: number[] = [], reward: number = 1): void {
+    applyLearning(this, success, inputs, outputs, reward);
+  }
+
+  clone(mutationRate: number = 0.1): INeuralNetwork {
+    return cloneNetwork(this, mutationRate);
+  }
+
+  mutate(mutationRate: number = 0.1): void {
+    mutateNetwork(this, mutationRate);
   }
 }

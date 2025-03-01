@@ -1,6 +1,6 @@
 
 import { NeuralNetwork as INeuralNetwork } from "../types";
-import { NeuralNetworkCore } from "./NeuralNetworkCore";
+import { NeuralNetwork } from "../NeuralNetwork";
 import { fetchBestModelFromDb, fetchAllModelsFromDb } from "../database/neuralNetworkDb";
 import { combineModels } from "../evolution/modelEvolution";
 
@@ -17,7 +17,7 @@ export const loadBestModel = async (): Promise<INeuralNetwork | null> => {
     const bestScore = metadata.best_score || model.score || 0;
     const gamesPlayed = metadata.games_played || 0;
     
-    return new NeuralNetworkCore(
+    return new NeuralNetwork(
       8, 
       12, 
       4, 
@@ -47,7 +47,7 @@ export const loadAllModels = async (): Promise<INeuralNetwork[]> => {
       const bestScore = metadata.best_score || model.score || 0;
       const gamesPlayed = metadata.games_played || 0;
       
-      return new NeuralNetworkCore(
+      return new NeuralNetwork(
         8, 
         12, 
         4, 
