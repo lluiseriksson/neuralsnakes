@@ -1,4 +1,3 @@
-
 import { Snake, Position, Direction, GameState } from "./types";
 import { GRID_SIZE } from "./constants";
 
@@ -144,6 +143,23 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
     return snake;
   }
   
+  // Initialize movesWithoutEating if it doesn't exist
+  if (snake.movesWithoutEating === undefined) {
+    snake.movesWithoutEating = 0;
+  } else {
+    snake.movesWithoutEating++;
+  }
+  
+  // Initialize decision metrics if they don't exist
+  if (!snake.decisionMetrics) {
+    snake.decisionMetrics = {
+      applesEaten: 0,
+      applesIgnored: 0,
+      badDirections: 0,
+      goodDirections: 0
+    };
+  }
+  
   // Make a deep copy of positions to avoid accidental modifications
   const positions = [...snake.positions.map(pos => ({ ...pos }))];
   const head = positions[0];
@@ -153,101 +169,113 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
   // Use the snake's gridSize or fall back to GRID_SIZE constant
   const gridSize = snake.gridSize || GRID_SIZE;
 
-  if (predictions && predictions.length === 4) {
-    // Use neural network predictions for movement
-    // Reduced randomness for more deterministic behavior
-    const randomFactor = 0.02; // Reduced from 0.05 for more deterministic behavior
-    
-    // Apply apple detection for immediate apple priority
-    // Check if there's an apple in any adjacent cell
-    const adjacentApples: {direction: Direction, hasApple: boolean}[] = [
-      { direction: 'UP', hasApple: isAppleInDirection(head, 'UP', gameState, gridSize) },
-      { direction: 'RIGHT', hasApple: isAppleInDirection(head, 'RIGHT', gameState, gridSize) },
-      { direction: 'DOWN', hasApple: isAppleInDirection(head, 'DOWN', gameState, gridSize) },
-      { direction: 'LEFT', hasApple: isAppleInDirection(head, 'LEFT', gameState, gridSize) }
-    ];
-    
-    // Check if there's an apple in any direction where we can move (not opposite to current)
-    const possibleAppleDirections = adjacentApples.filter(d => 
-      d.hasApple && !isOppositeDirection(snake.direction, d.direction)
-    );
-    
-    if (possibleAppleDirections.length > 0) {
-      // Si hay una manzana adyacente, muévete hacia ella independientemente de las predicciones
-      newDirection = possibleAppleDirections[0].direction;
+  // PASO 1: Buscar manzanas adyacentes, esta es la máxima prioridad
+  const adjacentCells = [
+    { pos: { x: head.x, y: (head.y - 1 + gridSize) % gridSize }, dir: 'UP' as Direction },
+    { pos: { x: (head.x + 1) % gridSize, y: head.y }, dir: 'RIGHT' as Direction },
+    { pos: { x: head.x, y: (head.y + 1) % gridSize }, dir: 'DOWN' as Direction },
+    { pos: { x: (head.x - 1 + gridSize) % gridSize, y: head.y }, dir: 'LEFT' as Direction }
+  ];
+  
+  // Identificar celdas con manzanas
+  const adjacentApples = adjacentCells.filter(cell => 
+    gameState.apples.some(apple => 
+      apple.position.x === cell.pos.x && apple.position.y === cell.pos.y
+    )
+  );
+  
+  // Identificar celdas con obstáculos (otras serpientes o a sí misma)
+  const adjacentObstacles = adjacentCells.filter(cell => {
+    // Evitar colisión con cualquier segmento de cualquier serpiente (incluida ella misma)
+    for (const otherSnake of gameState.snakes) {
+      if (!otherSnake.alive) continue;
       
-      // Si habría colisión, busca otra dirección
-      let wouldHaveCollision = false;
-      let tempHead = { ...head };
-      
-      switch (newDirection) {
-        case 'UP':
-          tempHead.y = (tempHead.y - 1 + gridSize) % gridSize;
-          break;
-        case 'DOWN':
-          tempHead.y = (tempHead.y + 1) % gridSize;
-          break;
-        case 'LEFT':
-          tempHead.x = (tempHead.x - 1 + gridSize) % gridSize;
-          break;
-        case 'RIGHT':
-          tempHead.x = (tempHead.x + 1) % gridSize;
-          break;
-      }
-      
-      wouldHaveCollision = wouldCollide(tempHead, snake, gameState);
-      
-      if (wouldHaveCollision) {
-        // If moving toward the apple would cause collision, use neural network
-        // with boosted weights for apple directions
-        const adjustedPredictions = [...predictions];
-        // Find index of apple direction and boost its prediction value
-        const dirIndex = ['UP', 'RIGHT', 'DOWN', 'LEFT'].indexOf(newDirection);
-        if (dirIndex >= 0 && dirIndex < 4) {
-          // Use normal neural network decision but with slightly random adjustment
-          const adjustedPredictions = predictions.map(p => p + Math.random() * randomFactor);
-          newDirection = findSafeDirection(snake, gameState, adjustedPredictions);
+      for (let i = 0; i < otherSnake.positions.length; i++) {
+        // Si es la propia serpiente, no evitar la cola (último segmento) pues se moverá
+        if (otherSnake.id === snake.id && i === otherSnake.positions.length - 1) continue;
+        
+        if (cell.pos.x === otherSnake.positions[i].x && cell.pos.y === otherSnake.positions[i].y) {
+          return true;
         }
       }
-    } else {
-      // No adjacent apples - use neural network with slightly random adjustment
-      const adjustedPredictions = predictions.map(p => p + Math.random() * randomFactor);
-      
-      // Find the direction with the highest prediction value
-      const directions: Direction[] = ['UP', 'RIGHT', 'DOWN', 'LEFT'];
-      const maxIndex = adjustedPredictions.reduce((iMax, x, i, arr) => x > arr[iMax] ? i : iMax, 0);
-      const predictedDirection = directions[maxIndex];
-      
-      // Only allow direction change if not opposite to current direction
-      if (!isOppositeDirection(snake.direction, predictedDirection)) {
-        newDirection = predictedDirection;
-        
-        // Create a temporary new head to check if it would result in collision
-        let tempHead = { ...head };
-        switch (newDirection) {
-          case 'UP':
-            tempHead.y = (tempHead.y - 1 + gridSize) % gridSize;
-            break;
-          case 'DOWN':
-            tempHead.y = (tempHead.y + 1) % gridSize;
-            break;
-          case 'LEFT':
-            tempHead.x = (tempHead.x - 1 + gridSize) % gridSize;
-            break;
-          case 'RIGHT':
-            tempHead.x = (tempHead.x + 1) % gridSize;
-            break;
+    }
+    return false;
+  });
+  
+  // Filtrar direcciones de manzanas que no sean opuestas y no tengan obstáculos
+  const safeAppleDirections = adjacentApples.filter(cell => 
+    !isOppositeDirection(snake.direction, cell.dir) && 
+    !adjacentObstacles.some(obstacle => 
+      obstacle.pos.x === cell.pos.x && obstacle.pos.y === cell.pos.y
+    )
+  );
+  
+  // DECISIÓN PRINCIPAL: Ir hacia una manzana adyacente si es seguro
+  if (safeAppleDirections.length > 0) {
+    // Manzana adyacente disponible y segura - máxima prioridad
+    newDirection = safeAppleDirections[0].dir;
+    console.log(`Snake ${snake.id} eligió comer manzana adyacente en dirección ${newDirection}`);
+    snake.decisionMetrics.applesEaten++;
+    
+    // Aplicar aprendizaje intenso con esta decisión correcta
+    if (snake.lastInputs && snake.lastOutputs) {
+      const reward = 3.0; // Recompensa muy alta por comer manzana
+      console.log(`Snake ${snake.id} aprende de éxito al comer manzana, reward=${reward}`);
+      snake.brain.learn(true, snake.lastInputs, snake.lastOutputs, reward);
+    }
+  } 
+  // Si hay manzanas adyacentes pero están bloqueadas, registrarlas
+  else if (adjacentApples.length > 0) {
+    snake.decisionMetrics.applesIgnored++;
+    console.log(`Snake ${snake.id} ignoró manzana bloqueada`);
+  }
+  // Usar el modelo neuronal solo si no hay manzanas adyacentes seguras
+  else if (predictions && predictions.length === 4) {
+    // Almacenar inputs actuales para aprendizaje posterior
+    if (snake.lastInputs) {
+      // Si hay manzana, pero no la tomó, aprendizaje negativo
+      if (adjacentApples.length > 0) {
+        console.log(`Snake ${snake.id} penalizada por no tomar manzana disponible`);
+        const penalty = 1.5;
+        snake.brain.learn(false, snake.lastInputs, snake.lastOutputs || [], penalty);
+      }
+    }
+    
+    // Encontrar la dirección con mayor valor de predicción que no sea peligrosa
+    const directions: Direction[] = ['UP', 'RIGHT', 'DOWN', 'LEFT'];
+    
+    // Ordenar direcciones por valor de predicción (mayor a menor)
+    const sortedPredictions = directions.map((dir, index) => ({
+      direction: dir,
+      value: predictions[index],
+      isOpposite: isOppositeDirection(snake.direction, dir),
+      isObstacle: adjacentObstacles.some(obs => obs.dir === dir)
+    })).sort((a, b) => b.value - a.value);
+    
+    // Primero intentar la dirección más prometedora si es segura
+    for (const pred of sortedPredictions) {
+      if (!pred.isOpposite && !pred.isObstacle) {
+        newDirection = pred.direction;
+        if (pred.value > 0.6) {
+          snake.decisionMetrics.goodDirections++;
+        } else {
+          snake.decisionMetrics.badDirections++;
         }
-        
-        // If the predicted move would result in collision, try to find a safer direction
-        if (wouldCollide(tempHead, snake, gameState)) {
-          console.log(`Snake ${snake.id} avoiding collision, changing direction`);
-          newDirection = findSafeDirection(snake, gameState, adjustedPredictions);
-        }
+        break;
+      }
+    }
+    
+    // Si todas las direcciones son peligrosas, elegir la menos mala
+    if (newDirection === snake.direction && sortedPredictions.length > 0) {
+      // Primero evitar direcciones opuestas
+      const nonOppositeChoices = sortedPredictions.filter(p => !p.isOpposite);
+      if (nonOppositeChoices.length > 0) {
+        newDirection = nonOppositeChoices[0].direction;
       } else {
-        // Si la dirección elegida es opuesta, usar la función findSafeDirection
-        newDirection = findSafeDirection(snake, gameState, adjustedPredictions);
+        // Si todas son opuestas, elegir la de mayor valor
+        newDirection = sortedPredictions[0].direction;
       }
+      console.log(`Snake ${snake.id} eligió dirección peligrosa: ${newDirection}`);
     }
   }
 
@@ -280,10 +308,16 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
     outputs[directionIndex] = 1;
   }
 
+  // Guardar inputs actuales para aprendizaje
+  const inputs = [...(snake.lastInputs || [])];
+
   return {
     ...snake,
     positions: newPositions,
     direction: newDirection,
-    lastOutputs: outputs  // Add this to snake for learning purposes
+    lastOutputs: outputs,  // Guardar outputs para aprendizaje
+    lastInputs: inputs,    // Guardar inputs para aprendizaje
+    movesWithoutEating: snake.movesWithoutEating,
+    decisionMetrics: snake.decisionMetrics
   };
 };

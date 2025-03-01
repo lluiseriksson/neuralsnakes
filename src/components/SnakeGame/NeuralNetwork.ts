@@ -1,4 +1,3 @@
-
 import { NeuralNetwork as INeuralNetwork } from "./types";
 import { NeuralNetworkCore } from "./NeuralNetwork/NeuralNetworkCore";
 import { applyLearning, cloneNetwork, mutateNetwork } from "./NeuralNetwork/NeuralNetworkLearning";
@@ -95,6 +94,11 @@ export class NeuralNetwork implements INeuralNetwork {
 
   getProgressPercentage(): number {
     return this.core.getProgressPercentage();
+  }
+
+  // Performance stats
+  getPerformanceStats(): { learningAttempts: number, successfulMoves: number, failedMoves: number } {
+    return this.core.getPerformanceStats();
   }
 
   // Database operations

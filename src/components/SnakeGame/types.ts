@@ -21,6 +21,8 @@ export interface NeuralNetwork {
   mutate: (mutationRate?: number) => void;
   getProgressPercentage: () => number;
   saveTrainingData: (inputs: number[], outputs: number[], success: boolean) => Promise<void>;
+  // Añadimos la propiedad getPerformanceStats para análisis
+  getPerformanceStats: () => { learningAttempts: number, successfulMoves: number, failedMoves: number };
 }
 
 export type Snake = {
@@ -32,7 +34,15 @@ export type Snake = {
   brain: NeuralNetwork;
   alive: boolean;
   gridSize: number;
-  lastOutputs?: number[]; // Añadimos esta propiedad para rastrear las últimas decisiones
+  lastOutputs?: number[]; // Outputs de la última decisión para aprendizaje
+  lastInputs?: number[];  // Inputs de la última decisión para aprendizaje
+  movesWithoutEating?: number; // Contador de movimientos sin comer
+  decisionMetrics?: {
+    applesEaten: number;
+    applesIgnored: number;
+    badDirections: number;
+    goodDirections: number;
+  }; // Métricas para análisis
 };
 
 export type Apple = {

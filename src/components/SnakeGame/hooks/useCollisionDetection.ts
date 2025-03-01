@@ -15,8 +15,10 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
     // Verificar colisión con sí misma
     for (let j = 1; j < snake.positions.length; j++) {
       if (head.x === snake.positions[j].x && head.y === snake.positions[j].y) {
-        // Antes de morir, aprender del error
-        const lastInputs = [
+        console.log(`Snake ${snake.id} colisionó consigo misma en (${head.x}, ${head.y})`);
+        
+        // Antes de morir, aprender del error con una penalización MUCHO mayor
+        const lastInputs = snake.lastInputs || [
           head.x / snake.gridSize,
           head.y / snake.gridSize,
           // Valores aproximados para los demás inputs
@@ -24,8 +26,8 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
           1, 0, 0, 0 // Obstáculo detectado en la dirección que causó la muerte
         ];
         
-        // Aplicar aprendizaje negativo - la serpiente aprendió que esta acción fue mala
-        snake.brain.learn(false, lastInputs, [], 0.5);
+        // Aplicar aprendizaje negativo extremo
+        snake.brain.learn(false, lastInputs, snake.lastOutputs || [], 2.0);
         
         // Convertir todas las posiciones de la serpiente en manzanas cuando colisiona consigo misma
         const explosionApples = snake.positions.map(position => ({
@@ -57,6 +59,29 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
     // Si ya no está viva, continuar con la siguiente serpiente
     if (!snake.alive) continue;
 
+    // Verificar si la serpiente comió una manzana
+    const appleIndex = newApples.findIndex(apple => 
+      apple.position.x === head.x && apple.position.y === head.y
+    );
+
+    if (appleIndex !== -1) {
+      console.log(`Snake ${snake.id} comió una manzana en (${head.x}, ${head.y})`);
+      
+      // Recompensa positiva extrema por comer manzanas
+      if (snake.lastInputs && snake.lastOutputs) {
+        const reward = 3.0; // Recompensa muy alta
+        snake.brain.learn(true, snake.lastInputs, snake.lastOutputs, reward);
+      }
+      
+      // Restablecer contador de movimientos sin comer
+      snake.movesWithoutEating = 0;
+      
+      // Incrementar métricas
+      if (snake.decisionMetrics) {
+        snake.decisionMetrics.applesEaten++;
+      }
+    }
+    
     // Colisión con otras serpientes
     for (let j = 0; j < newSnakes.length; j++) {
       if (i === j || !newSnakes[j].alive) continue;
@@ -67,10 +92,12 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
         const segment = otherSnake.positions[k];
         
         if (head.x === segment.x && head.y === segment.y) {
+          console.log(`Snake ${snake.id} colisionó con snake ${otherSnake.id} en (${head.x}, ${head.y})`);
+          
           if (k === 0) {
             // Colisión cabeza con cabeza
-            // Aplicar aprendizaje negativo para ambas serpientes
-            const lastInputs = [
+            // Aplicar aprendizaje negativo extremo para ambas serpientes
+            const lastInputs = snake.lastInputs || [
               head.x / snake.gridSize,
               head.y / snake.gridSize,
               // Valores aproximados
@@ -78,8 +105,8 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
               1, 0, 0, 0 // Obstáculo que causó la muerte
             ];
             
-            snake.brain.learn(false, lastInputs, [], 0.5);
-            otherSnake.brain.learn(false, lastInputs, [], 0.5);
+            snake.brain.learn(false, lastInputs, snake.lastOutputs || [], 2.0);
+            otherSnake.brain.learn(false, otherSnake.lastInputs || [], otherSnake.lastOutputs || [], 2.0);
             
             // Convertir todas las posiciones de ambas serpientes en manzanas
             const explosionApples1 = snake.positions.map(position => ({
@@ -117,8 +144,8 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
             
           } else {
             // Colisión con el cuerpo
-            // Aplicar aprendizaje negativo para la serpiente que murió
-            const lastInputs = [
+            // Aplicar aprendizaje negativo extremo para la serpiente que murió
+            const lastInputs = snake.lastInputs || [
               head.x / snake.gridSize,
               head.y / snake.gridSize,
               // Valores aproximados
@@ -126,7 +153,7 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
               1, 0, 0, 0 // Obstáculo que causó la muerte
             ];
             
-            snake.brain.learn(false, lastInputs, [], 0.5);
+            snake.brain.learn(false, lastInputs, snake.lastOutputs || [], 2.0);
             
             // La serpiente ganadora obtiene los puntos
             const totalSegmentsToAdd = snake.positions.length;

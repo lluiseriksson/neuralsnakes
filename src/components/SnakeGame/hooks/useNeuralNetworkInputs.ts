@@ -1,4 +1,3 @@
-
 import { Position, Snake, Apple, GameState } from '../types';
 
 /**
@@ -194,8 +193,9 @@ export const detectNearbyApples = (head: Position, apples: Apple[], gridSize: nu
       for (let step = 0; step < 3; step++) {
         const position = lookAheadPositions[dir][step];
         if (position.x === apple.position.x && position.y === apple.position.y) {
-          // Signal strength depends on distance: 1.0 for 1 step, 0.8 for 2 steps, 0.6 for 3 steps
-          const strength = 1.0 - (step * 0.2);
+          // Señal MUCHO más fuerte para manzanas cercanas: 
+          // 1.0 para 1 paso (manzana inmediata), 0.85 para 2 pasos, 0.7 para 3 pasos
+          const strength = 1.0 - (step * 0.15);
           // Update if stronger signal
           if (strength > appleSignals[dir]) {
             appleSignals[dir] = strength;
@@ -203,6 +203,14 @@ export const detectNearbyApples = (head: Position, apples: Apple[], gridSize: nu
           break; // Once we found an apple in this direction at a particular step, no need to check further steps
         }
       }
+    }
+  }
+  
+  // Boost signals for immediate apples (1 step away) to make them much more enticing
+  for (let dir = 0; dir < 4; dir++) {
+    const immediatePos = lookAheadPositions[dir][0];
+    if (apples.some(apple => apple.position.x === immediatePos.x && apple.position.y === immediatePos.y)) {
+      appleSignals[dir] = 1.0; // Máxima señal para manzanas inmediatas
     }
   }
   
@@ -214,31 +222,34 @@ export const detectNearbyApples = (head: Position, apples: Apple[], gridSize: nu
  */
 export const generateNeuralNetworkInputs = (snake: Snake, gameState: GameState): number[] => {
   const head = snake.positions[0];
-  const closestApple = findClosestApple(head, gameState.apples);
   const obstacles = detectObstacles(head, snake, gameState);
-  const appleDirections = calculateDirectionVectors(head, closestApple.position, snake.gridSize);
   
-  // Detect apples in immediate vicinity for stronger directional signals
+  // Direct detection of nearby apples (especially adjacent ones)
   const nearbyApples = detectNearbyApples(head, gameState.apples, snake.gridSize);
   
-  // Combine distant apple directions with nearby apple signals (prioritize nearby)
-  const combinedAppleSignals = appleDirections.map((signal, i) => 
-    Math.max(signal, nearbyApples[i] * 1.2) // Boost nearby apple signals by 20%
-  );
-  
   // Create inputs for neural network - EXACT 8 INPUTS
-  return [
-    // Apple direction inputs (where is the apple relative to the snake)
-    combinedAppleSignals[0],                    // Apple is UP
-    combinedAppleSignals[1],                    // Apple is RIGHT 
-    combinedAppleSignals[2],                    // Apple is DOWN
-    combinedAppleSignals[3],                    // Apple is LEFT
+  const inputs = [
+    // Apple direction inputs (where is the apple relative to the snake) - MUY REFORZADOS
+    nearbyApples[0] * 1.5,                    // Apple is UP (signal amplified)
+    nearbyApples[1] * 1.5,                    // Apple is RIGHT (signal amplified)
+    nearbyApples[2] * 1.5,                    // Apple is DOWN (signal amplified)
+    nearbyApples[3] * 1.5,                    // Apple is LEFT (signal amplified)
     // Obstacle detection inputs (what's blocking the snake)
     obstacles[0],                               // Obstacle UP
     obstacles[1],                               // Obstacle RIGHT
     obstacles[2],                               // Obstacle DOWN
     obstacles[3]                                // Obstacle LEFT
   ];
+  
+  // Save these inputs to the snake for future learning
+  if (snake.lastInputs === undefined) {
+    snake.lastInputs = [...inputs];
+  } else {
+    // Update lastInputs with current inputs for next iteration
+    snake.lastInputs = [...inputs];
+  }
+  
+  return inputs;
 };
 
 /**

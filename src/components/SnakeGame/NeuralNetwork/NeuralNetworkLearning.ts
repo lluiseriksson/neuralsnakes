@@ -9,13 +9,19 @@ export const applyLearning = (
   reward: number = 1
 ): void => {
   // Skip learning if we don't have inputs (no context for learning)
-  if (inputs.length === 0) return;
+  if (inputs.length === 0) {
+    console.log("Skipping learning: no inputs provided");
+    return;
+  }
+  
+  // Track learning attempt
+  network.trackLearningAttempt(success);
   
   // Calculate learning rate based on context
-  // Más agresivo: aumentamos el aprendizaje general
+  // MUCHO más agresivo: aprendizaje muy amplificado
   const learningRate = success 
-    ? 0.15 * Math.min(reward, 2.5) // Cap at 0.375 for success (más alto que antes)
-    : 0.2 * Math.min(reward, 2.0); // Cap at 0.4 for failure (más alto que antes)
+    ? 0.3 * Math.min(reward, 3.0) // Cap at 0.9 for success (mucho más alto)
+    : 0.4 * Math.min(reward, 2.5); // Cap at 1.0 for failure (mucho más alto)
   
   // Get current weights
   const currentWeights = network.getWeights();
@@ -31,13 +37,13 @@ export const applyLearning = (
       const inputValue = inputs[inputIndex];
       
       // Ajuste de peso proporcional al valor de entrada y resultado del aprendizaje
-      // Más fuerte para entradas significativas (mayor valor absoluto)
-      const inputStrength = Math.abs(inputValue) > 0.5 ? 1.5 : 1.0;
+      // Mucho más fuerte para entradas significativas
+      const inputStrength = Math.abs(inputValue) > 0.5 ? 2.0 : 1.5;
       const adjustment = inputValue * learningRate * inputStrength * (success ? 1 : -1);
       
-      // Para éxitos, reforzamos más los pesos asociados a la dirección elegida
+      // Para éxitos, reforzamos MUCHO MÁS los pesos asociados a la dirección elegida
       if (success && outputs.length > 0 && outputs[outputIndex] > 0.5) {
-        return weight + (adjustment * 1.5); // 50% más de refuerzo para la acción elegida
+        return weight + (adjustment * 3.0); // 300% más de refuerzo para la acción elegida
       }
       
       return weight + adjustment;
@@ -45,7 +51,7 @@ export const applyLearning = (
     
     // Para pesos no relacionados con entradas, hacer ajustes aleatorios más pequeños
     // Pero lo suficientemente significativos para explorar nuevas soluciones
-    const randomFactor = (Math.random() * 0.15 - 0.075) * (success ? 1 : -1);
+    const randomFactor = (Math.random() * 0.2 - 0.1) * (success ? 1 : -1);
     return weight + (randomFactor * learningRate);
   });
   
@@ -68,8 +74,8 @@ export const mutateNetwork = (
     // Aplicar mutación con probabilidad mutationRate
     if (Math.random() < mutationRate) {
       // Mutación: ya sea un pequeño ajuste o un reinicio completo
-      if (Math.random() < 0.85) { // Más probabilidad para ajustes pequeños
-        // Ajuste normal pequeño - siguiendo una curva de campana para mutaciones más naturales
+      if (Math.random() < 0.8) { // Más probabilidad para ajustes medianos
+        // Ajuste normal mediano - siguiendo una curva de campana para mutaciones más naturales
         const gaussianRandom = () => {
           let u = 0, v = 0;
           while(u === 0) u = Math.random(); 
@@ -77,10 +83,10 @@ export const mutateNetwork = (
           return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
         };
         
-        // Ajustes más grandes para una exploración más amplia
-        return weight + gaussianRandom() * 0.5; 
+        // Ajustes mucho más grandes para una exploración más amplia
+        return weight + gaussianRandom() * 0.8; 
       } else {
-        // Reinicio completo (rara vez) - permite explorar soluciones completamente nuevas
+        // Reinicio completo (20% de las veces) - permite explorar soluciones completamente nuevas
         return Math.random() * 2 - 1;
       }
     }
