@@ -1,24 +1,44 @@
 
-import React, { useCallback, useMemo, useEffect } from "react";
+import React, { useCallback, useMemo, useEffect, useState } from "react";
 import { useGameLogic } from "../components/SnakeGame/hooks/useGameLogic";
 import GameCanvas from "../components/SnakeGame/GameCanvas";
 import ScoreBoard from "../components/SnakeGame/ScoreBoard";
 import VictoryDisplay from "../components/SnakeGame/components/VictoryDisplay";
 import Timer from "../components/SnakeGame/components/Timer";
+import { Button } from "../components/ui/button";
 
 const Index = () => {
-  // Usar useGameLogic para manejar la lógica del juego
+  const [isInitializing, setIsInitializing] = useState(false);
   const { gameState, victories, startTime, generationInfo, initializeGame } = useGameLogic();
+  
+  // Función segura para inicializar el juego
+  const handleInitializeGame = useCallback(async () => {
+    if (isInitializing) return;
+    
+    setIsInitializing(true);
+    console.log("Solicitando inicialización del juego desde Index...");
+    
+    try {
+      await initializeGame();
+      console.log("Inicialización completada desde Index");
+    } catch (error) {
+      console.error("Error en la inicialización desde Index:", error);
+    } finally {
+      setIsInitializing(false);
+    }
+  }, [initializeGame, isInitializing]);
   
   // Inicializar el juego al cargar el componente
   useEffect(() => {
-    // Solo inicializar si no hay serpientes o si todas están muertas
+    console.log("Componente Index montado, verificando si hay que inicializar el juego");
     if (!gameState.snakes || gameState.snakes.length === 0 || 
         gameState.snakes.every(snake => !snake.alive)) {
-      console.log("Inicializando juego desde el componente Index");
-      initializeGame();
+      console.log("No hay serpientes activas, iniciando juego");
+      handleInitializeGame();
+    } else {
+      console.log(`Hay ${gameState.snakes.length} serpientes, no es necesario inicializar el juego`);
     }
-  }, [gameState.snakes, initializeGame]);
+  }, []);
   
   // Memorizar componentes para evitar re-renders innecesarios
   const timerComponent = useMemo(() => (
@@ -29,15 +49,16 @@ const Index = () => {
     <VictoryDisplay victories={victories} />
   ), [victories]);
   
-  const canvasComponent = useCallback(() => (
-    <GameCanvas gameState={gameState} />
-  ), [gameState]);
+  const canvasComponent = useCallback(() => {
+    console.log(`Renderizando canvas con ${gameState.snakes?.length || 0} serpientes`);
+    return <GameCanvas gameState={gameState} />;
+  }, [gameState]);
   
   const scoreBoardComponent = useMemo(() => (
     <ScoreBoard snakes={gameState.snakes} generationInfo={generationInfo} />
   ), [gameState.snakes, generationInfo]);
 
-  // Verificar que gameState.snakes existe y mostrar información
+  // Debug: Mostrar información sobre las serpientes en cada render
   useEffect(() => {
     if (gameState.snakes) {
       console.log(`Cantidad de serpientes: ${gameState.snakes.length}`);
@@ -66,12 +87,20 @@ const Index = () => {
       {scoreBoardComponent}
       
       {/* Botón para reiniciar el juego si es necesario */}
-      <button 
-        onClick={() => initializeGame()} 
+      <Button 
+        onClick={handleInitializeGame} 
+        disabled={isInitializing}
         className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
       >
-        Reiniciar Juego
-      </button>
+        {isInitializing ? 'Iniciando...' : 'Reiniciar Juego'}
+      </Button>
+      
+      {/* Indicador de estado */}
+      <div className="mt-2 text-sm text-white">
+        {gameState.snakes && gameState.snakes.length > 0 
+          ? `${gameState.snakes.filter(s => s.alive).length} serpientes activas` 
+          : 'No hay serpientes activas'}
+      </div>
     </div>
   );
 };

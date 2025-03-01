@@ -18,7 +18,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
 
-    // Limpiar el canvas de manera más eficiente
+    // Limpiar el canvas de manera eficiente
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -53,23 +53,24 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
     }
 
     // Verificar que gameState.snakes existe y es un array
-    if (gameState.snakes && Array.isArray(gameState.snakes)) {
+    if (gameState.snakes && Array.isArray(gameState.snakes) && gameState.snakes.length > 0) {
+      console.log(`Dibujando ${gameState.snakes.length} serpientes`);
+      
       // Dibujar serpientes - optimizado por color
       gameState.snakes.forEach(snake => {
-        // Verificar que snake y snake.positions existen
-        if (!snake || !snake.positions || !Array.isArray(snake.positions)) {
-          console.log('Snake o sus posiciones no existen:', snake);
+        // Verificar que snake y snake.positions existen y son válidos
+        if (!snake || !snake.positions || !Array.isArray(snake.positions) || snake.positions.length === 0) {
+          console.log('Serpiente inválida o sin posiciones:', snake);
           return;
         }
 
-        // Dibujar solo si la serpiente está viva
-        if (!snake.alive) return;
-        
-        // Verificar que hay posiciones para dibujar
-        if (snake.positions.length === 0) {
-          console.log('Snake sin posiciones:', snake);
+        // Solo dibujar si la serpiente está viva
+        if (!snake.alive) {
+          console.log(`Serpiente ${snake.id} está muerta, no se dibuja`);
           return;
         }
+        
+        console.log(`Dibujando serpiente ${snake.id} con ${snake.positions.length} segmentos, color: ${snake.color}`);
         
         // Dibujar cuerpo - agrupar por color para menos cambios de contexto
         ctx.fillStyle = snake.color || '#ffffff'; // Color predeterminado si no hay color
@@ -77,7 +78,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
         snake.positions.forEach((position, index) => {
           // Verificar que la posición es válida
           if (position === undefined || position.x === undefined || position.y === undefined) {
-            console.log('Posición inválida en snake:', index, position);
+            console.log(`Posición inválida en serpiente ${snake.id}:`, index, position);
             return;
           }
 
@@ -115,7 +116,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
         });
       });
     } else {
-      console.log('gameState.snakes no es un array válido:', gameState.snakes);
+      console.log('No hay serpientes válidas para dibujar:', gameState.snakes);
     }
 
     // Incrementar contador de frames para efectos visuales
@@ -130,7 +131,10 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
     canvas.width = GRID_SIZE * CELL_SIZE;
     canvas.height = GRID_SIZE * CELL_SIZE;
 
-    // Dibujar el juego usando requestAnimationFrame para optimizar
+    // Dibujar el juego inicialmente
+    drawGame();
+
+    // Configurar loop de animación
     let animationFrameId: number;
     const render = () => {
       drawGame();
@@ -139,7 +143,11 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
     
     render();
     
-    return () => cancelAnimationFrame(animationFrameId);
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
   }, []);  // Solo ejecutar una vez al montar
 
   // Actualizar el juego cuando cambia el estado
