@@ -9,7 +9,71 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      neural_networks: {
+        Row: {
+          created_at: string | null
+          generation: number | null
+          id: string
+          metadata: Json | null
+          score: number | null
+          updated_at: string | null
+          weights: Json
+        }
+        Insert: {
+          created_at?: string | null
+          generation?: number | null
+          id?: string
+          metadata?: Json | null
+          score?: number | null
+          updated_at?: string | null
+          weights: Json
+        }
+        Update: {
+          created_at?: string | null
+          generation?: number | null
+          id?: string
+          metadata?: Json | null
+          score?: number | null
+          updated_at?: string | null
+          weights?: Json
+        }
+        Relationships: []
+      }
+      training_data: {
+        Row: {
+          created_at: string | null
+          id: string
+          inputs: Json
+          neural_network_id: string | null
+          outputs: Json
+          success: boolean
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          inputs: Json
+          neural_network_id?: string | null
+          outputs: Json
+          success: boolean
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          inputs?: Json
+          neural_network_id?: string | null
+          outputs?: Json
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_data_neural_network_id_fkey"
+            columns: ["neural_network_id"]
+            isOneToOne: false
+            referencedRelation: "neural_networks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
