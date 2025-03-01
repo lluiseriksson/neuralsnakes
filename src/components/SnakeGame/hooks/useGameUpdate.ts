@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { GameState } from '../types';
-import { moveSnake } from '../snakeMovement';
+import { moveSnake } from '../movement';
 import { checkCollisions } from './useCollisionDetection';
 import { generateNeuralNetworkInputs, validateInputs } from './neuralNetworkInputs';
 
