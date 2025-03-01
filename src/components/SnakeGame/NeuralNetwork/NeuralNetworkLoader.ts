@@ -1,8 +1,7 @@
-
 import { NeuralNetwork as INeuralNetwork } from "../types";
 import { NeuralNetwork } from "../NeuralNetwork";
-import { fetchBestModelFromDb, fetchAllModelsFromDb } from "../database/neuralNetworkDb";
-import { combineModels } from "../evolution/modelEvolution";
+import { fetchBestModelFromDb, fetchAllModelsFromDb } from "../database/modelFetching";
+import { combineModels } from "../evolution/combineModels";
 
 // Cache loaded models to prevent repeated loading failures
 let bestModelCache: INeuralNetwork | null = null;
@@ -117,7 +116,7 @@ export const getCombinedModel = async (count: number = 5): Promise<INeuralNetwor
     
     // Try to combine the models
     try {
-      // Fix: Pass the array of models to combineModels
+      // Fixed import to use combineModels from the new location
       return combineModels(topModels);
     } catch (combineErr) {
       console.error("Error combining models:", combineErr);
