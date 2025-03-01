@@ -25,8 +25,9 @@ export const fetchBestModel = async (): Promise<NeuralNetwork | null> => {
     const weightsArray = model.weights as unknown as number[];
     
     // Extract metadata if available
-    const bestScore = model.metadata?.best_score || model.score || 0;
-    const gamesPlayed = model.metadata?.games_played || 0;
+    const metadata = model.metadata as Record<string, any> || {};
+    const bestScore = metadata.best_score || model.score || 0;
+    const gamesPlayed = metadata.games_played || 0;
     
     return new NeuralNetwork(
       8, 
