@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { GameState } from '../types';
-import { moveSnake } from '../snakeMovement';
+import { moveSnake, wouldCollide } from '../snakeMovement';
 import { checkCollisions } from './useCollisionDetection';
 import { generateNeuralNetworkInputs, validateInputs } from './useNeuralNetworkInputs';
 
@@ -15,64 +15,64 @@ export const useGameUpdate = (
 ) => {
   const updateGame = useCallback(() => {
     if (!isGameRunning || isProcessingUpdate.current) {
-      console.log("Saltando actualización: isGameRunning =", isGameRunning, "isProcessing =", isProcessingUpdate.current);
+      console.log("Skipping update: isGameRunning =", isGameRunning, "isProcessing =", isProcessingUpdate.current);
       return;
     }
 
     isProcessingUpdate.current = true;
-    console.log("Iniciando actualización del juego");
+    console.log("Starting game update");
 
     const currentTime = Date.now();
     const timeElapsed = currentTime - startTime;
     
     if (timeElapsed >= 60000) {
-      console.log("Tiempo de ronda excedido, finalizando");
+      console.log("Round time exceeded, ending");
       endRound();
       return;
     }
 
     setGameState(prevState => {
-      // Verifica si hay serpientes vivas
+      // Check if there are living snakes
       const hasLivingSnakes = prevState.snakes.some(snake => snake.alive);
       
       if (!hasLivingSnakes && prevState.snakes.length > 0) {
-        console.log("No hay serpientes vivas, terminando ronda");
+        console.log("No living snakes, ending round");
         setTimeout(endRound, 0);
         return prevState;
       }
 
-      // Forzar movimiento de todas las serpientes vivas
+      // Force movement of all living snakes
       const newSnakes = prevState.snakes.map(snake => {
         if (!snake.alive) return snake;
         
-        console.log(`Actualizando serpiente ${snake.id}, dirección: ${snake.direction}`);
+        console.log(`Updating snake ${snake.id}, direction: ${snake.direction}`);
         
         // Generate neural network inputs
         const inputs = generateNeuralNetworkInputs(snake, prevState);
         
         // Validate inputs
         if (!validateInputs(inputs)) {
-          console.log(`Entradas no válidas para la serpiente ${snake.id}`, inputs);
+          console.log(`Invalid inputs for snake ${snake.id}`, inputs);
           return snake;
         }
 
         // Get prediction from neural network
         const prediction = snake.brain.predict(inputs);
-        console.log(`Predicción para serpiente ${snake.id}:`, prediction);
+        console.log(`Prediction for snake ${snake.id}:`, prediction);
         
-        // Aplicar movimiento con la predicción
+        // Apply movement with prediction
         const movedSnake = moveSnake(snake, prevState, prediction);
-        console.log(`Nueva posición cabeza serpiente ${snake.id}: (${movedSnake.positions[0].x}, ${movedSnake.positions[0].y})`);
+        console.log(`New head position for snake ${snake.id}: (${movedSnake.positions[0].x}, ${movedSnake.positions[0].y})`);
         
         return movedSnake;
       });
       
-      // Comprobar colisiones después de mover todas las serpientes
+      // Check collisions after moving all snakes
       const { newSnakes: snakesAfterCollisions, newApples } = checkCollisions(newSnakes, prevState.apples);
       let finalApples = ensureMinimumApples(newApples);
       let snakesToUpdate = [...snakesAfterCollisions];
       
-      // Procesar colisiones con manzanas
+      // Process collisions with apples
       snakesToUpdate.forEach(snake => {
         if (!snake.alive) return;
 
@@ -82,11 +82,12 @@ export const useGameUpdate = (
         );
 
         if (appleIndex !== -1) {
-          console.log(`Serpiente ${snake.id} comió una manzana en (${head.x}, ${head.y})`);
+          console.log(`Snake ${snake.id} ate an apple at (${head.x}, ${head.y})`);
           snake.score += 1;
           
           // Learning with reward proportional to score
-          const reward = 1 + (snake.score * 0.1);
+          // Increased reward to reinforce apple-eating behavior
+          const reward = 1.5 + (snake.score * 0.15);
           
           // Generate inputs for learning
           const inputs = generateNeuralNetworkInputs(snake, {
@@ -103,6 +104,19 @@ export const useGameUpdate = (
           
           // Remove the eaten apple
           finalApples.splice(appleIndex, 1);
+        } else {
+          // Penalize slightly for not finding apples
+          // This encourages exploration toward apples
+          const inputs = generateNeuralNetworkInputs(snake, prevState);
+          const smallPenalty = 0.05;
+          snake.brain.learn(false, inputs, [], smallPenalty);
+        }
+        
+        // Extra learning for avoiding suicide
+        // If snake made a move that didn't kill it, give a small reward
+        if (snake.alive) {
+          const verySmallReward = 0.01;
+          snake.brain.learn(true, [], [], verySmallReward);
         }
       });
 
@@ -110,8 +124,8 @@ export const useGameUpdate = (
 
       isProcessingUpdate.current = false;
       
-      // Log state summary para depuración
-      console.log(`Estado actualizado: ${snakesToUpdate.filter(s => s.alive).length} serpientes vivas, ${finalApples.length} manzanas`);
+      // Log state summary for debugging
+      console.log(`Updated state: ${snakesToUpdate.filter(s => s.alive).length} living snakes, ${finalApples.length} apples`);
       
       return {
         ...prevState,

@@ -16,8 +16,13 @@ export const combineModels = async (count: number = 5): Promise<NeuralNetwork | 
       return null;
     }
     
+    // Sort models by score (best first)
+    const sortedModels = [...data].sort((a, b) => (b.score || 0) - (a.score || 0));
+    
     // Limit to the requested count
-    const topModels = data.slice(0, count);
+    const topModels = sortedModels.slice(0, count);
+    
+    console.log(`Combining top ${topModels.length} models with scores:`, topModels.map(m => m.score));
     
     // Get the weight size from the first model
     const weightsArray = topModels[0].weights as unknown as number[];
@@ -30,7 +35,8 @@ export const combineModels = async (count: number = 5): Promise<NeuralNetwork | 
     const combinedModel = new NeuralNetwork(8, 12, 4, combinedWeights, null, 0, newGeneration);
     
     // Add some mutation to explore new solutions
-    const mutatedWeights = mutateWeights(combinedModel.getWeights());
+    // Higher mutation rate to avoid local optima
+    const mutatedWeights = mutateWeights(combinedModel.getWeights(), 0.2, 0.3);
     combinedModel.setWeights(mutatedWeights);
     
     // Save the combined model

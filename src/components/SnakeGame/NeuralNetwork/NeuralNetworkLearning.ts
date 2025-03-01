@@ -12,7 +12,8 @@ export const applyLearning = (
   const gamesPlayed = network.getGamesPlayed() + 1;
   
   // Higher reward for better performance, stronger negative feedback for failures
-  const learningRate = success ? 0.1 * reward : 0.15;
+  // Increased learning rate to accelerate learning
+  const learningRate = success ? 0.15 * reward : 0.2;
   
   // Get current weights
   const currentWeights = network.getWeights();
@@ -35,7 +36,7 @@ export const applyLearning = (
 
 export const mutateNetwork = (
   network: NeuralNetworkCore, 
-  mutationRate: number = 0.1
+  mutationRate: number = 0.15  // Increased from 0.1 to promote more exploration
 ): void => {
   const weights = network.getWeights();
   
@@ -44,7 +45,7 @@ export const mutateNetwork = (
     if (Math.random() < mutationRate) {
       // Mutation: either small adjustment or complete reset
       if (Math.random() < 0.8) {
-        return weight + (Math.random() * 0.4 - 0.2); // Small adjustment
+        return weight + (Math.random() * 0.5 - 0.25); // Larger adjustment (was 0.4-0.2)
       } else {
         return Math.random() * 2 - 1; // Complete reset
       }
@@ -57,7 +58,7 @@ export const mutateNetwork = (
 
 export const cloneNetwork = (
   network: NeuralNetworkCore, 
-  mutationRate: number = 0.1
+  mutationRate: number = 0.15  // Increased from 0.1 to promote more exploration
 ): NeuralNetworkCore => {
   const inputSize = 8; // Assuming standard input size 
   const hiddenSize = 12; // Assuming standard hidden size
