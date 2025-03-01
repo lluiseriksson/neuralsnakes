@@ -15,7 +15,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d', { alpha: false }); // Optimización: desactivar alpha
+    const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
 
     // Limpiar el canvas de manera más eficiente
@@ -52,46 +52,71 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
       });
     }
 
-    // Dibujar serpientes - optimizado por color
-    gameState.snakes.forEach(snake => {
-      if (!snake.alive) return;
-      
-      // Dibujar cuerpo - agrupar por color para menos cambios de contexto
-      ctx.fillStyle = snake.color;
-      snake.positions.forEach((position, index) => {
-        ctx.beginPath();
-        ctx.arc(
-          position.x * CELL_SIZE + CELL_SIZE / 2,
-          position.y * CELL_SIZE + CELL_SIZE / 2,
-          CELL_SIZE / 2 - 1,
-          0,
-          2 * Math.PI
-        );
-        ctx.fill();
+    // Verificar que gameState.snakes existe y es un array
+    if (gameState.snakes && Array.isArray(gameState.snakes)) {
+      // Dibujar serpientes - optimizado por color
+      gameState.snakes.forEach(snake => {
+        // Verificar que snake y snake.positions existen
+        if (!snake || !snake.positions || !Array.isArray(snake.positions)) {
+          console.log('Snake o sus posiciones no existen:', snake);
+          return;
+        }
 
-        // Dibujar ojos solo en la cabeza y solo cada 2 frames para optimizar
-        if (index === 0 && frameCount % 2 === 0) {
-          ctx.fillStyle = 'white';
+        // Dibujar solo si la serpiente está viva
+        if (!snake.alive) return;
+        
+        // Verificar que hay posiciones para dibujar
+        if (snake.positions.length === 0) {
+          console.log('Snake sin posiciones:', snake);
+          return;
+        }
+        
+        // Dibujar cuerpo - agrupar por color para menos cambios de contexto
+        ctx.fillStyle = snake.color || '#ffffff'; // Color predeterminado si no hay color
+        
+        snake.positions.forEach((position, index) => {
+          // Verificar que la posición es válida
+          if (position === undefined || position.x === undefined || position.y === undefined) {
+            console.log('Posición inválida en snake:', index, position);
+            return;
+          }
+
           ctx.beginPath();
           ctx.arc(
-            position.x * CELL_SIZE + CELL_SIZE / 3,
-            position.y * CELL_SIZE + CELL_SIZE / 3,
-            3,
-            0,
-            2 * Math.PI
-          );
-          ctx.arc(
-            position.x * CELL_SIZE + 2 * CELL_SIZE / 3,
-            position.y * CELL_SIZE + CELL_SIZE / 3,
-            3,
+            position.x * CELL_SIZE + CELL_SIZE / 2,
+            position.y * CELL_SIZE + CELL_SIZE / 2,
+            CELL_SIZE / 2 - 1,
             0,
             2 * Math.PI
           );
           ctx.fill();
-          ctx.fillStyle = snake.color; // Restaurar color para siguientes iteraciones
-        }
+
+          // Dibujar ojos solo en la cabeza y solo cada 2 frames para optimizar
+          if (index === 0 && frameCount % 2 === 0) {
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(
+              position.x * CELL_SIZE + CELL_SIZE / 3,
+              position.y * CELL_SIZE + CELL_SIZE / 3,
+              3,
+              0,
+              2 * Math.PI
+            );
+            ctx.arc(
+              position.x * CELL_SIZE + 2 * CELL_SIZE / 3,
+              position.y * CELL_SIZE + CELL_SIZE / 3,
+              3,
+              0,
+              2 * Math.PI
+            );
+            ctx.fill();
+            ctx.fillStyle = snake.color || '#ffffff'; // Restaurar color para siguientes iteraciones
+          }
+        });
       });
-    });
+    } else {
+      console.log('gameState.snakes no es un array válido:', gameState.snakes);
+    }
 
     // Incrementar contador de frames para efectos visuales
     setFrameCount(prev => (prev + 1) % 30);
