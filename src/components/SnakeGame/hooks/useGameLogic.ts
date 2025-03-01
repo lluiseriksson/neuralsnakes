@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { GameState } from '../types';
 import { GRID_SIZE, APPLE_COUNT, FPS } from '../constants';
 import { generateApple } from './useAppleGeneration';
@@ -33,7 +33,7 @@ export const useGameLogic = () => {
   });
 
   const [startTime, setStartTime] = useState(Date.now());
-  const [isGameRunning, setIsGameRunning] = useState(true);
+  const [isGameRunning, setIsGameRunning] = useState(false);
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingUpdate = useRef(false);
   const gamesPlayedRef = useRef(0);
@@ -73,34 +73,50 @@ export const useGameLogic = () => {
     ensureMinimumApples
   );
 
-  // Initialize game when component mounts
+  // Inicialización inicial - convertida a useCallback para evitar recreaciones
+  const startGame = useCallback(async () => {
+    console.log("useGameLogic: Solicitando inicialización inicial del juego");
+    await initializeGame();
+    console.log("useGameLogic: Inicialización inicial completada");
+  }, [initializeGame]);
+
+  // Initialize game when component mounts - only once
   useEffect(() => {
-    console.log("useGameLogic: Inicializando juego al montar componente");
-    initializeGame();
+    console.log("useGameLogic: Efecto de montaje ejecutado");
+    startGame().catch(error => {
+      console.error("Error en la inicialización inicial:", error);
+    });
     
     return () => {
       if (gameLoopRef.current) {
         clearInterval(gameLoopRef.current);
+        gameLoopRef.current = null;
       }
-      setIsGameRunning(false);
+      console.log("useGameLogic: Limpieza al desmontar");
     };
-  }, []);
+  }, [startGame]);
 
-  // Set up game loop
+  // Set up game loop whenever isGameRunning changes
   useEffect(() => {
     if (!isGameRunning) {
       console.log("Game loop pausado: el juego no está corriendo");
+      if (gameLoopRef.current) {
+        clearInterval(gameLoopRef.current);
+        gameLoopRef.current = null;
+      }
       return;
     }
     
+    console.log("Configurando game loop con FPS:", FPS);
     if (gameLoopRef.current) {
       clearInterval(gameLoopRef.current);
     }
     
-    console.log("Configurando game loop con FPS:", FPS);
     gameLoopRef.current = setInterval(() => {
       frameCountRef.current += 1;
-      console.log(`Frame #${frameCountRef.current}`);
+      if (frameCountRef.current % 10 === 0) {
+        console.log(`Frame #${frameCountRef.current}`);
+      }
       updateGame();
     }, 1000 / FPS);
     
@@ -113,7 +129,7 @@ export const useGameLogic = () => {
   }, [isGameRunning, updateGame]);
 
   // Método para reiniciar el juego manualmente
-  const restartGame = () => {
+  const restartGame = useCallback(() => {
     console.log("Reiniciando juego manualmente");
     
     // Limpiar el intervalo existente
@@ -124,18 +140,20 @@ export const useGameLogic = () => {
     
     // Resetear el estado de procesamiento
     isProcessingUpdate.current = false;
+    setIsGameRunning(false);
     
     // Inicializar el juego
-    initializeGame();
-  };
+    return initializeGame();
+  }, [initializeGame]);
 
-  // Importante: devolver initializeGame para que pueda ser accedido por otros componentes
+  // Devolver tanto initializeGame como restartGame
   return { 
     gameState, 
     victories, 
     startTime, 
     generationInfo, 
     initializeGame, 
-    restartGame 
+    restartGame,
+    isGameRunning
   };
 };

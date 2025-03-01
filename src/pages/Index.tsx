@@ -1,15 +1,17 @@
 
-import React, { useCallback, useMemo, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useGameLogic } from "../components/SnakeGame/hooks/useGameLogic";
 import GameCanvas from "../components/SnakeGame/GameCanvas";
 import ScoreBoard from "../components/SnakeGame/ScoreBoard";
 import VictoryDisplay from "../components/SnakeGame/components/VictoryDisplay";
 import Timer from "../components/SnakeGame/components/Timer";
 import { Button } from "../components/ui/button";
+import { useToast } from "../components/ui/use-toast";
 
 const Index = () => {
   const [isInitializing, setIsInitializing] = useState(false);
-  const { gameState, victories, startTime, generationInfo, initializeGame } = useGameLogic();
+  const { gameState, victories, startTime, generationInfo, initializeGame, restartGame } = useGameLogic();
+  const { toast } = useToast();
   
   // Función segura para inicializar el juego
   const handleInitializeGame = useCallback(async () => {
@@ -19,72 +21,63 @@ const Index = () => {
     console.log("Solicitando inicialización del juego desde Index...");
     
     try {
+      toast({
+        title: "Iniciando juego",
+        description: "Generando serpientes y preparando el tablero..."
+      });
+      
       await initializeGame();
       console.log("Inicialización completada desde Index");
+      
+      toast({
+        title: "¡Juego iniciado!",
+        description: `${gameState.snakes?.length || 0} serpientes están listas para competir`
+      });
     } catch (error) {
       console.error("Error en la inicialización desde Index:", error);
+      toast({
+        title: "Error al inicializar",
+        description: "Hubo un problema al iniciar el juego. Intenta de nuevo.",
+        variant: "destructive"
+      });
     } finally {
       setIsInitializing(false);
     }
-  }, [initializeGame, isInitializing]);
+  }, [initializeGame, isInitializing, gameState.snakes, toast]);
   
   // Inicializar el juego al cargar el componente
   useEffect(() => {
-    console.log("Componente Index montado, verificando si hay que inicializar el juego");
-    if (!gameState.snakes || gameState.snakes.length === 0 || 
-        gameState.snakes.every(snake => !snake.alive)) {
-      console.log("No hay serpientes activas, iniciando juego");
+    console.log("Componente Index montado");
+    
+    const timer = setTimeout(() => {
+      console.log("Iniciando juego automáticamente después de time out");
       handleInitializeGame();
-    } else {
-      console.log(`Hay ${gameState.snakes.length} serpientes, no es necesario inicializar el juego`);
-    }
-  }, []);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [handleInitializeGame]);
   
-  // Memorizar componentes para evitar re-renders innecesarios
-  const timerComponent = useMemo(() => (
-    <Timer startTime={startTime} />
-  ), [startTime]);
-  
-  const victoryComponent = useMemo(() => (
-    <VictoryDisplay victories={victories} />
-  ), [victories]);
-  
-  const canvasComponent = useCallback(() => {
-    console.log(`Renderizando canvas con ${gameState.snakes?.length || 0} serpientes`);
-    return <GameCanvas gameState={gameState} />;
-  }, [gameState]);
-  
-  const scoreBoardComponent = useMemo(() => (
-    <ScoreBoard snakes={gameState.snakes} generationInfo={generationInfo} />
-  ), [gameState.snakes, generationInfo]);
-
-  // Debug: Mostrar información sobre las serpientes en cada render
-  useEffect(() => {
-    if (gameState.snakes) {
-      console.log(`Cantidad de serpientes: ${gameState.snakes.length}`);
-      gameState.snakes.forEach((snake, index) => {
-        if (snake && snake.positions) {
-          console.log(`Serpiente ${index} - Posiciones: ${snake.positions.length}, Viva: ${snake.alive}`);
-        } else {
-          console.log(`Serpiente ${index} inválida:`, snake);
-        }
-      });
-    } else {
-      console.log("No hay serpientes en el estado del juego");
-    }
-  }, [gameState.snakes]);
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
       <h1 className="text-2xl font-bold mb-4 text-white">Snake AI Battle</h1>
-      {victoryComponent}
+      
+      <VictoryDisplay victories={victories} />
+      
       <div className="relative">
-        {timerComponent}
-        <React.Suspense fallback={<div className="text-white">Cargando juego...</div>}>
-          {canvasComponent()}
-        </React.Suspense>
+        <Timer startTime={startTime} />
+        
+        <div className="border-2 border-gray-700 rounded-lg overflow-hidden">
+          {gameState.snakes && gameState.snakes.length > 0 ? (
+            <GameCanvas gameState={gameState} />
+          ) : (
+            <div className="w-[600px] h-[600px] flex items-center justify-center bg-gray-900 text-white">
+              Cargando juego...
+            </div>
+          )}
+        </div>
       </div>
-      {scoreBoardComponent}
+      
+      <ScoreBoard snakes={gameState.snakes || []} generationInfo={generationInfo} />
       
       {/* Botón para reiniciar el juego si es necesario */}
       <Button 
@@ -98,12 +91,11 @@ const Index = () => {
       {/* Indicador de estado */}
       <div className="mt-2 text-sm text-white">
         {gameState.snakes && gameState.snakes.length > 0 
-          ? `${gameState.snakes.filter(s => s.alive).length} serpientes activas` 
+          ? `${gameState.snakes.filter(s => s && s.alive).length} serpientes activas` 
           : 'No hay serpientes activas'}
       </div>
     </div>
   );
 };
 
-// Exportar como componente memorizado para evitar re-renders innecesarios
-export default React.memo(Index);
+export default Index;

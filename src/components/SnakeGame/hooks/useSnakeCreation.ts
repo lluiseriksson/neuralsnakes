@@ -9,13 +9,14 @@ let combinedModelCache: INeuralNetwork | null = null;
 
 export const createSnake = async (id: number, x: number, y: number, direction: Direction, color: string): Promise<Snake> => {
   try {
+    console.log(`Creando serpiente ${id} en posición (${x},${y})`);
     let brain: INeuralNetwork;
     
     // Usar cache para optimizar la carga de modelos
     if (id === 0) {
       // Primera serpiente: intentar usar el modelo en cache o cargar el mejor
       if (bestModelCache) {
-        console.log(`Usando modelo en cache (generación ${bestModelCache.getGeneration()}, puntuación: ${bestModelCache.getBestScore()})`);
+        console.log(`Usando modelo en cache (generación ${bestModelCache.getGeneration()})`);
         brain = bestModelCache.clone(0.1);
       } else {
         console.log("Cargando el mejor modelo...");
@@ -23,7 +24,7 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
           const bestModel = await NeuralNetwork.loadBest();
           if (bestModel) {
             bestModelCache = bestModel; // Almacenar en cache
-            console.log(`Modelo cargado (generación ${bestModel.getGeneration()}, puntuación: ${bestModel.getBestScore()})`);
+            console.log(`Modelo cargado (generación ${bestModel.getGeneration()})`);
             brain = bestModel.clone(0.1);
           } else {
             console.log("No se encontró un modelo existente, creando uno nuevo");
@@ -42,37 +43,18 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
         console.log(`Usando modelo combinado en cache (generación ${combinedModelCache.getGeneration()})`);
         brain = combinedModelCache.clone(0.05);
       } else {
-        console.log("Combinando modelos...");
-        try {
-          const combinedModel = await NeuralNetwork.combineModels(3);
-          if (combinedModel) {
-            combinedModelCache = combinedModel; // Almacenar en cache
-            console.log(`Modelo combinado (generación ${combinedModel.getGeneration()})`);
-            brain = combinedModel;
-          } else {
-            console.log("No hay suficientes modelos para combinar, creando uno nuevo");
-            brain = new NeuralNetwork(8, 12, 4);
-            combinedModelCache = brain; // Cache el modelo nuevo
-          }
-        } catch (combineError) {
-          console.error("Error combinando modelos:", combineError);
-          brain = new NeuralNetwork(8, 12, 4);
-          combinedModelCache = brain;
-        }
+        console.log("Creando un nuevo modelo para la serpiente 1");
+        brain = new NeuralNetwork(8, 12, 4);
+        combinedModelCache = brain; // Cache el modelo nuevo
       }
     } else {
       // Crear una red neuronal nueva con mutaciones aleatorias
       console.log(`Creando un nuevo modelo para la serpiente ${id}`);
-      if (bestModelCache) {
-        // Usar el mejor modelo como base y mutarlo para mayor eficiencia
-        brain = bestModelCache.clone(0.2);
-      } else {
-        brain = new NeuralNetwork(8, 12, 4);
-        brain.mutate(0.2);
-      }
+      brain = new NeuralNetwork(8, 12, 4);
+      brain.mutate(0.2);
     }
 
-    // Asegurarse de que las posiciones iniciales son válidas
+    // Generar posiciones iniciales
     const positions = generateInitialSnake(x, y);
     
     if (!positions || positions.length === 0) {
@@ -83,7 +65,7 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
         { x, y: y + 1 },
         { x, y: y + 2 }
       ];
-      console.log(`Usando posiciones de respaldo para serpiente ${id}:`, fallbackPositions);
+      console.log(`Usando posiciones de respaldo para serpiente ${id}`);
       
       return {
         id,
@@ -97,7 +79,7 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       };
     }
     
-    console.log(`Serpiente ${id} creada en (${x}, ${y}) con dirección ${direction} y ${positions.length} segmentos`);
+    console.log(`Serpiente ${id} creada en (${x}, ${y}) con ${positions.length} segmentos`);
 
     return {
       id,
@@ -117,7 +99,7 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       { x, y: y + 1 },
       { x, y: y + 2 }
     ];
-    console.log(`Usando posiciones de respaldo para serpiente ${id} después de error:`, fallbackPositions);
+    console.log(`Creando serpiente fallback para ${id}`);
     
     return {
       id,

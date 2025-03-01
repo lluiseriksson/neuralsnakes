@@ -3,6 +3,7 @@ import { Snake, Position, Direction, GameState } from "./types";
 import { GRID_SIZE } from "./constants";
 
 export const generateInitialSnake = (x: number, y: number): Position[] => {
+  // Create initial snake with three segments
   return [
     { x, y },
     { x, y: y + 1 },
@@ -20,13 +21,17 @@ const isOppositeDirection = (current: Direction, next: Direction): boolean => {
 };
 
 export const moveSnake = (snake: Snake, gameState: GameState, predictions?: number[]): Snake => {
-  if (!snake.alive) {
-    console.log(`No moviendo serpiente ${snake.id}: está muerta`);
+  // Safety check - if snake is not alive, don't move it
+  if (!snake || !snake.alive) {
     return snake;
   }
   
-  console.log(`Moviendo serpiente ${snake.id} en dirección ${snake.direction}`);
-
+  // Safety check - ensure snake has positions
+  if (!snake.positions || snake.positions.length === 0) {
+    console.error(`Serpiente ${snake.id} sin posiciones válidas:`, snake);
+    return snake;
+  }
+  
   // Hacer una copia profunda de las posiciones para evitar modificaciones accidentales
   const positions = [...snake.positions.map(pos => ({ ...pos }))];
   const head = positions[0];
@@ -49,13 +54,8 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
     
     // Only allow direction change if not opposite to current direction
     if (!isOppositeDirection(snake.direction, predictedDirection)) {
-      console.log(`Serpiente ${snake.id} cambia dirección de ${snake.direction} a ${predictedDirection}`);
       newDirection = predictedDirection;
-    } else {
-      console.log(`Serpiente ${snake.id} intentó ir en dirección opuesta ${predictedDirection}, manteniendo ${snake.direction}`);
     }
-  } else {
-    console.log(`Serpiente ${snake.id} sin predicciones o predicciones inválidas:`, predictions);
   }
 
   // Move in the chosen direction
@@ -73,22 +73,14 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
       newHead.x = (newHead.x + 1) % gridSize;
       break;
   }
-  
-  console.log(`Serpiente ${snake.id} nueva posición cabeza: (${newHead.x}, ${newHead.y})`);
 
   // Create new positions array with the new head at index 0
-  // Mover cada segmento a la posición del segmento anterior, y la cabeza a la nueva posición
   const newPositions = [newHead];
   for (let i = 0; i < positions.length - 1; i++) {
     newPositions.push({ ...positions[i] });
   }
 
-  // Ensure there's always at least one segment (head)
-  if (newPositions.length === 0) {
-    console.log(`Serpiente ${snake.id} sin segmentos, añadiendo cabeza`);
-    newPositions.push(newHead);
-  }
-
+  // Return updated snake
   return {
     ...snake,
     positions: newPositions,
