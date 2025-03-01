@@ -5,6 +5,9 @@ import { GameState } from '../types';
 import { generateApple } from './useAppleGeneration';
 import { createSnake, generateSnakeSpawnConfig } from './useSnakeCreation';
 
+// Cache para apples iniciales
+const cachedInitialApples = Array.from({ length: APPLE_COUNT }, generateApple);
+
 export const useGameInitialization = (
   setGameState: React.Dispatch<React.SetStateAction<GameState>>,
   setStartTime: React.Dispatch<React.SetStateAction<number>>,
@@ -27,17 +30,29 @@ export const useGameInitialization = (
     gamesPlayedRef.current++;
     console.log(`Iniciando partida #${gamesPlayedRef.current}`);
 
-    // Create snakes with neural networks
+    // Configuración inicial mientras las serpientes cargan
+    setGameState(prevState => ({
+      ...prevState,
+      apples: [...cachedInitialApples],
+      gridSize: GRID_SIZE,
+    }));
+
+    // Crear serpientes en paralelo para mejor rendimiento
     const snakePromises = Array.from({ length: 4 }, async (_, i) => {
       const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(i);
-      console.log(`Creando serpiente ${i} en posición (${spawnX}, ${spawnY}) con dirección ${direction}`);
       return await createSnake(i, spawnX, spawnY, direction, color);
     });
     
     const snakes = await Promise.all(snakePromises);
-    console.log(`Serpientes creadas:`, snakes.map(s => ({ id: s.id, alive: s.alive, positions: s.positions })));
     
-    // Update generation info
+    // Actualizar estado del juego con las serpientes creadas
+    setGameState({
+      snakes,
+      apples: [...cachedInitialApples],
+      gridSize: GRID_SIZE,
+    });
+    
+    // Actualizar información de generación
     const highestGeneration = Math.max(...snakes.map(s => s.brain.getGeneration()));
     const highestScore = Math.max(...snakes.map(s => s.brain.getBestScore()));
     const highestProgress = Math.max(...snakes.map(s => s.brain.getProgressPercentage()));
@@ -46,14 +61,6 @@ export const useGameInitialization = (
       generation: highestGeneration,
       bestScore: highestScore,
       progress: highestProgress
-    });
-
-    const apples = Array.from({ length: APPLE_COUNT }, generateApple);
-
-    setGameState({
-      snakes,
-      apples,
-      gridSize: GRID_SIZE,
     });
 
     setStartTime(Date.now());
