@@ -35,18 +35,31 @@ export const useRoundManagement = (
       
       // Save the winning models
       for (const winner of winningSnakes) {
-        await winner.brain.save(winner.score);
+        try {
+          await winner.brain.save(winner.score);
+          console.log(`Saved winning model for snake ${winner.id} with score ${winner.score} (gen: ${winner.brain.getGeneration()})`);
+        } catch (saveError) {
+          console.error(`Error saving winning model for snake ${winner.id}:`, saveError);
+        }
       }
     }
 
     // Also save non-winners if they have a good score
     for (const snake of gameState.snakes) {
       if (snake.score > 5 && maxScore > 0 && snake.score !== maxScore) {
-        await snake.brain.save(snake.score);
+        try {
+          await snake.brain.save(snake.score);
+          console.log(`Saved model for snake ${snake.id} with score ${snake.score} (gen: ${snake.brain.getGeneration()})`);
+        } catch (saveError) {
+          console.error(`Error saving model for snake ${snake.id}:`, saveError);
+        }
       }
     }
 
-    setTimeout(initializeGame, 2000);
+    // Force a delay to ensure all saves have completed
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    setTimeout(initializeGame, 1500);
   }, [gameState.snakes, initializeGame, gameLoopRef, setIsGameRunning, isProcessingUpdate, setVictories]);
 
   return { endRound };
