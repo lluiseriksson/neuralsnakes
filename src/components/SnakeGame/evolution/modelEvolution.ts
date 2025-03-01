@@ -1,46 +1,46 @@
 
 import { NeuralNetwork } from "../NeuralNetwork";
-import { NeuralNetworkModel } from "../types";
+import { NeuralNetwork as INeuralNetwork } from "../types";
 import { combineWeights, mutateWeights } from "../neuralNetworkUtils";
 import { fetchAllModelsFromDb, saveModelToDb } from "../database/neuralNetworkDb";
 
 /**
  * Combines multiple models to create a new evolved model
  */
-export const combineModels = async (count: number = 5): Promise<NeuralNetwork | null> => {
+export const combineModels = (models: INeuralNetwork[]): INeuralNetwork | null => {
   try {
-    const data = await fetchAllModelsFromDb();
-    
-    if (!data || data.length === 0) {
-      console.error('Error loading models for combination: No models found');
+    if (!models || models.length === 0) {
+      console.error('Error combining models: No models provided');
       return null;
     }
     
-    // Sort models by score (best first)
-    const sortedModels = [...data].sort((a, b) => (b.score || 0) - (a.score || 0));
-    
-    // Limit to the requested count
-    const topModels = sortedModels.slice(0, count);
-    
-    console.log(`Combining top ${topModels.length} models with scores:`, topModels.map(m => m.score));
+    console.log(`Combining ${models.length} models`);
     
     // Get the weight size from the first model
-    const weightsArray = topModels[0].weights as unknown as number[];
+    const weightsArray = models[0].getWeights();
     const weightsLength = weightsArray.length;
     
-    // Calculate combined weights
-    const { combinedWeights, newGeneration } = combineWeights(topModels, weightsLength);
+    // Calculate average weights
+    const combinedWeights = new Array(weightsLength).fill(0);
+    let maxGeneration = 0;
     
-    // Create a new model with the combined weights
+    for (const model of models) {
+      const weights = model.getWeights();
+      maxGeneration = Math.max(maxGeneration, model.getGeneration());
+      
+      for (let i = 0; i < weightsLength; i++) {
+        combinedWeights[i] += weights[i] / models.length;
+      }
+    }
+    
+    // Create a new model with the combined weights and incremented generation
+    const newGeneration = maxGeneration + 1;
     const combinedModel = new NeuralNetwork(8, 12, 4, combinedWeights, null, 0, newGeneration);
     
     // Add some mutation to explore new solutions
     // Higher mutation rate to avoid local optima
     const mutatedWeights = mutateWeights(combinedModel.getWeights(), 0.2, 0.3);
     combinedModel.setWeights(mutatedWeights);
-    
-    // Save the combined model
-    await combinedModel.save(0);
     
     return combinedModel;
   } catch (err) {

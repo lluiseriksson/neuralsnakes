@@ -117,6 +117,7 @@ export const getCombinedModel = async (count: number = 5): Promise<INeuralNetwor
     
     // Try to combine the models
     try {
+      // Fix: Pass the array of models to combineModels
       return combineModels(topModels);
     } catch (combineErr) {
       console.error("Error combining models:", combineErr);

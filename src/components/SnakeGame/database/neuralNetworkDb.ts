@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { NeuralNetworkModel } from "../types";
 
@@ -123,14 +122,13 @@ export const saveModelToDb = async (
     
     // Always save to localStorage as backup
     try {
+      // Fix: Only use properties defined in NeuralNetworkModel type
       const model: NeuralNetworkModel = {
         id: modelId,
         weights: weights,
         score: score,
         generation: generation,
-        metadata: metadata,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        metadata: metadata
       };
       
       // Save in all models collection
