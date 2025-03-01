@@ -1,9 +1,8 @@
-
 import { useCallback } from 'react';
 import { GameState } from '../types';
 import { moveSnake } from '../snakeMovement';
 import { checkCollisions } from './useCollisionDetection';
-import { generateNeuralNetworkInputs, validateInputs } from './useNeuralNetworkInputs';
+import { generateNeuralNetworkInputs, validateInputs } from './neuralNetworkInputs';
 
 export const useGameUpdate = (
   isGameRunning: boolean,
