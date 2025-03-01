@@ -10,16 +10,17 @@ export interface NeuralNetwork {
   predict: (inputs: number[]) => number[];
   learn: (success: boolean, inputs?: number[], outputs?: number[], reward?: number) => void;
   clone: (mutationRate?: number) => NeuralNetwork;
-  getGeneration: () => number;
-  getBestScore: () => number;
-  getProgressPercentage: () => number;
   save: (score: number) => Promise<string | null>;
   getId: () => string | null;
   getWeights: () => number[];
   setWeights: (weights: number[]) => void;
+  getGeneration: () => number;
+  getBestScore: () => number;
   getGamesPlayed: () => number;
   updateBestScore: (score: number) => void;
   mutate: (mutationRate?: number) => void;
+  getProgressPercentage: () => number;
+  saveTrainingData: (inputs: number[], outputs: number[], success: boolean) => Promise<void>;
 }
 
 export type Snake = {
@@ -47,8 +48,5 @@ export type NeuralNetworkModel = {
   weights: unknown;
   score: number;
   generation: number;
-  metadata?: {
-    best_score?: number;
-    games_played?: number;
-  };
+  metadata?: unknown;
 };

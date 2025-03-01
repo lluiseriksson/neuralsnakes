@@ -1,10 +1,10 @@
 
-import { Direction, Snake } from '../types';
+import { Direction, Snake, NeuralNetwork as INeuralNetwork } from '../types';
 import { NeuralNetwork } from '../NeuralNetwork';
 import { generateInitialSnake } from '../snakeMovement';
 
 export const createSnake = async (id: number, x: number, y: number, direction: Direction, color: string): Promise<Snake> => {
-  let brain: NeuralNetwork;
+  let brain: INeuralNetwork;
   
   // Try to load the best model or combine existing models if available
   if (id === 0) {

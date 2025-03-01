@@ -2,7 +2,13 @@
 import { NeuralNetwork as INeuralNetwork, NeuralNetworkModel } from "./types";
 import { sigmoid } from "./NeuralNetworkActivations";
 import { deserializeWeights, serializeWeights, generateRandomWeights } from "./NeuralNetworkMatrix";
-import { saveModel, saveTrainingData, fetchBestModel, fetchAllModels, combineModels } from "./neuralNetworkStorage";
+import { 
+  fetchBestModelFromDb, 
+  saveModelToDb, 
+  saveTrainingDataToDb, 
+  fetchAllModelsFromDb 
+} from "./database/neuralNetworkDb";
+import { combineModels } from "./evolution/modelEvolution";
 
 export class NeuralNetwork implements INeuralNetwork {
   private inputSize: number;
@@ -21,7 +27,7 @@ export class NeuralNetwork implements INeuralNetwork {
     hiddenSize: number, 
     outputSize: number, 
     weights?: number[], 
-    id?: string, 
+    id?: string | null, 
     score?: number, 
     generation?: number,
     bestScore?: number,
@@ -215,12 +221,18 @@ export class NeuralNetwork implements INeuralNetwork {
     return Math.min(100, (this.bestScore / perfectScore) * 100);
   }
 
-  // Method to save the model to Supabase
+  // Method to save the model to database
   async save(score: number): Promise<string | null> {
     this.score = score;
     this.updateBestScore(score);
     
-    const id = await saveModel(this, score, this.bestScore, this.gamesPlayed);
+    // Create metadata for storing additional fields
+    const metadata = {
+      best_score: this.bestScore,
+      games_played: this.gamesPlayed
+    };
+    
+    const id = await saveModelToDb(this.id, this.getWeights(), score, this.generation, metadata);
     if (id) this.id = id;
     return id;
   }
@@ -228,29 +240,58 @@ export class NeuralNetwork implements INeuralNetwork {
   // Method to save training data
   async saveTrainingData(inputs: number[], outputs: number[], success: boolean): Promise<void> {
     if (!this.id) return;
-    await saveTrainingData(this.id, inputs, outputs, success);
+    await saveTrainingDataToDb(this.id, inputs, outputs, success);
   }
 
-  // Static methods
+  // Static method to load the best neural network model
   static async loadBest(): Promise<INeuralNetwork | null> {
-    return fetchBestModel();
+    try {
+      const model = await fetchBestModelFromDb();
+      if (!model) return null;
+      
+      // Ensure weights is treated as number[]
+      const weightsArray = model.weights as unknown as number[];
+      
+      // Extract metadata if available
+      const metadata = model.metadata as Record<string, any> || {};
+      const bestScore = metadata.best_score || model.score || 0;
+      const gamesPlayed = metadata.games_played || 0;
+      
+      return new NeuralNetwork(
+        8, 
+        12, 
+        4, 
+        weightsArray, 
+        model.id, 
+        model.score, 
+        model.generation,
+        bestScore,
+        gamesPlayed
+      );
+    } catch (err) {
+      console.error('Exception loading best neural network:', err);
+      return null;
+    }
   }
 
+  // Static method to combine models
   static async combineModels(count: number = 5): Promise<INeuralNetwork | null> {
     return combineModels(count);
   }
 
+  // Static method to get all models
   static async getAllModels(): Promise<INeuralNetwork[]> {
     try {
-      const data = await fetchAllModels();
+      const data = await fetchAllModelsFromDb();
       
       return data.map(model => {
         // Ensure weights is treated as number[]
         const weightsArray = model.weights as unknown as number[];
         
         // Extract metadata if available
-        const bestScore = model.metadata?.best_score || model.score || 0;
-        const gamesPlayed = model.metadata?.games_played || 0;
+        const metadata = model.metadata as Record<string, any> || {};
+        const bestScore = metadata.best_score || model.score || 0;
+        const gamesPlayed = metadata.games_played || 0;
         
         return new NeuralNetwork(
           8, 
