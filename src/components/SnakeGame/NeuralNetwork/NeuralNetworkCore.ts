@@ -60,10 +60,16 @@ export class NeuralNetworkCore implements INeuralNetwork {
 
   // Forward pass through the network
   predict(inputs: number[]): number[] {
-    if (inputs.length !== this.inputSize) {
-      console.error(`Expected ${this.inputSize} inputs, got ${inputs.length}`);
-      // Pad or truncate inputs if necessary
-      inputs = inputs.slice(0, this.inputSize).concat(Array(Math.max(0, this.inputSize - inputs.length)).fill(0));
+    // Adjust inputs to match expected input size
+    // If we have more inputs than expected, truncate
+    if (inputs.length > this.inputSize) {
+      console.log(`Truncating inputs from ${inputs.length} to ${this.inputSize}`);
+      inputs = inputs.slice(0, this.inputSize);
+    } 
+    // If we have fewer inputs than expected, pad with zeros
+    else if (inputs.length < this.inputSize) {
+      console.error(`Expected ${this.inputSize} inputs, got ${inputs.length}. Padding with zeros.`);
+      inputs = [...inputs, ...Array(this.inputSize - inputs.length).fill(0)];
     }
     
     // Calculate hidden layer activations

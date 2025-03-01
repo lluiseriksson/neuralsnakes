@@ -147,14 +147,6 @@ export const useGameLogic = () => {
         
         const head = snake.positions[0];
         
-        // Gather more information about the environment for better decision making
-        const distanceToWalls = [
-          head.x,                    // Distance to left wall
-          GRID_SIZE - head.x,        // Distance to right wall
-          head.y,                    // Distance to top wall
-          GRID_SIZE - head.y         // Distance to bottom wall
-        ];
-        
         // Find closest apple
         let closestApple = prevState.apples[0];
         let minDistance = Number.MAX_VALUE;
@@ -180,28 +172,22 @@ export const useGameLogic = () => {
           if (head.x - 1 === segment.x && head.y === segment.y) obstacles[3] = 1; // LEFT
         }
         
-        // Other snakes detection
-        for (const otherSnake of prevState.snakes) {
-          if (otherSnake.id === snake.id) continue;
-          
-          for (const segment of otherSnake.positions) {
-            if (head.x === segment.x && head.y - 1 === segment.y) obstacles[0] = 1;
-            if (head.x + 1 === segment.x && head.y === segment.y) obstacles[1] = 1;
-            if (head.x === segment.x && head.y + 1 === segment.y) obstacles[2] = 1;
-            if (head.x - 1 === segment.x && head.y === segment.y) obstacles[3] = 1;
-          }
-        }
-        
-        // Create inputs for neural network
+        // Create inputs for neural network - EXACT 8 INPUTS
         const inputs = [
-          // Normalized inputs for better learning
           head.x / GRID_SIZE,                          // Normalized x position
           head.y / GRID_SIZE,                          // Normalized y position
           closestApple.position.x / GRID_SIZE,         // Normalized apple x
           closestApple.position.y / GRID_SIZE,         // Normalized apple y
-          ...distanceToWalls.map(d => d / GRID_SIZE),  // Normalized distances to walls
-          ...obstacles                                 // Obstacle indicators
+          obstacles[0],                                // Obstacle UP
+          obstacles[1],                                // Obstacle RIGHT
+          obstacles[2],                                // Obstacle DOWN
+          obstacles[3]                                 // Obstacle LEFT
         ];
+        
+        // Ensure we have exactly 8 inputs
+        if (inputs.length !== 8) {
+          console.error(`Invalid input length: ${inputs.length}, expected 8`);
+        }
 
         const prediction = snake.brain.predict(inputs);
         return moveSnake(snake, prevState, prediction);
