@@ -19,7 +19,6 @@ export const useGameUpdate = (
     }
 
     isProcessingUpdate.current = true;
-    console.log("Starting game update");
 
     const currentTime = Date.now();
     const timeElapsed = currentTime - startTime;
@@ -66,8 +65,6 @@ export const useGameUpdate = (
       const newSnakes = prevState.snakes.map(snake => {
         if (!snake.alive) return snake;
         
-        console.log(`Updating snake ${snake.id}, direction: ${snake.direction}`);
-        
         // Generate neural network inputs
         const inputs = generateNeuralNetworkInputs(snake, prevState);
         
@@ -79,11 +76,9 @@ export const useGameUpdate = (
 
         // Get prediction from neural network
         const prediction = snake.brain.predict(inputs);
-        console.log(`Prediction for snake ${snake.id}:`, prediction);
         
         // Apply movement with prediction
         const movedSnake = moveSnake(snake, prevState, prediction);
-        console.log(`New head position for snake ${snake.id}: (${movedSnake.positions[0].x}, ${movedSnake.positions[0].y})`);
         
         return movedSnake;
       });
@@ -110,10 +105,10 @@ export const useGameUpdate = (
           
           // Significant positive reinforcement for eating apples
           const inputs = generateNeuralNetworkInputs(snake, prevState);
-          const reward = 1.5 + (Math.min(snake.score, 10) * 0.1); // Higher reward as score increases, but capped
+          const reward = 2.0 + (Math.min(snake.score, 10) * 0.1); // Higher reward as score increases, but capped
           
-          // Learn from the successful move
-          snake.brain.learn(true, inputs, [], reward);
+          // Learn from the successful move using the last outputs that led to this position
+          snake.brain.learn(true, inputs, snake.lastOutputs || [], reward);
           
           // Add a new segment to the snake
           const lastSegment = snake.positions[snake.positions.length - 1];
@@ -135,24 +130,48 @@ export const useGameUpdate = (
           
           // Calculate if snake is moving closer to apple
           const previousDistance = previousDistances[index];
-          const movingCloserToApple = currentMinDistance < previousDistance;
+          const distanceDelta = previousDistance - currentMinDistance;
           
           const inputs = generateNeuralNetworkInputs(snake, prevState);
           
-          if (movingCloserToApple) {
-            // Small positive reward for moving toward apple
-            const smallReward = 0.2;
-            snake.brain.learn(true, inputs, [], smallReward);
+          if (distanceDelta > 0) {
+            // Moving toward apple - reward proportional to improvement
+            const reward = 0.3 + Math.min(distanceDelta * 0.1, 0.2);
+            snake.brain.learn(true, inputs, snake.lastOutputs || [], reward);
+          } else if (distanceDelta === 0) {
+            // Not making progress toward apple, but not moving away either
+            // Very mild negative reinforcement
+            const penalty = 0.1;
+            snake.brain.learn(false, inputs, snake.lastOutputs || [], penalty);
           } else {
-            // Small negative feedback for moving away from apple
-            const smallPenalty = 0.1;
-            snake.brain.learn(false, inputs, [], smallPenalty);
+            // Moving away from apple - penalty proportional to regression
+            const penalty = 0.2 + Math.min(Math.abs(distanceDelta) * 0.1, 0.3);
+            snake.brain.learn(false, inputs, snake.lastOutputs || [], penalty);
+          }
+          
+          // Bonus checks for nearby apples that were missed
+          // Check if there are apples adjacent to the snake that it didn't take
+          const adjacentCells = [
+            { x: (head.x + 1) % snake.gridSize, y: head.y },                    // Right
+            { x: (head.x - 1 + snake.gridSize) % snake.gridSize, y: head.y },   // Left
+            { x: head.x, y: (head.y + 1) % snake.gridSize },                    // Down
+            { x: head.x, y: (head.y - 1 + snake.gridSize) % snake.gridSize }    // Up
+          ];
+          
+          const missedApples = finalApples.filter(apple => 
+            adjacentCells.some(cell => cell.x === apple.position.x && cell.y === apple.position.y)
+          );
+          
+          if (missedApples.length > 0) {
+            // Snake missed an adjacent apple - apply stronger negative reinforcement
+            const missedPenalty = 0.5; // Higher penalty for missing adjacent apples
+            snake.brain.learn(false, inputs, snake.lastOutputs || [], missedPenalty);
           }
         }
       });
 
       finalApples = ensureMinimumApples(finalApples);
-
+      
       isProcessingUpdate.current = false;
       
       return {

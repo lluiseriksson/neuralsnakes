@@ -1,3 +1,4 @@
+
 import { Position, Snake, Apple, GameState } from '../types';
 
 /**
@@ -27,6 +28,7 @@ export const findClosestApple = (head: Position, apples: Apple[]): Apple => {
 
 /**
  * Calculates direction vectors from head to target with distance weighting
+ * Ahora con señales más fuertes para manzanas cercanas
  */
 export const calculateDirectionVectors = (head: Position, target: Position, gridSize: number): number[] => {
   // Direction vectors [UP, RIGHT, DOWN, LEFT]
@@ -46,14 +48,22 @@ export const calculateDirectionVectors = (head: Position, target: Position, grid
   const effectiveDx = Math.abs(directDx) <= Math.abs(wraparoundDx) ? directDx : wraparoundDx;
   const effectiveDy = Math.abs(directDy) <= Math.abs(wraparoundDy) ? directDy : wraparoundDy;
   
-  // Add distance weighting - closer targets have stronger signal
-  const distanceWeight = 1.0 - (Math.min(Math.abs(effectiveDx) + Math.abs(effectiveDy), gridSize) / gridSize) * 0.5;
+  // Calculate Manhattan distance
+  const manhattanDistance = Math.abs(effectiveDx) + Math.abs(effectiveDy);
   
-  // Set direction vectors based on the relative position with distance weighting
-  if (effectiveDy < 0) directionVectors[0] = 1 * distanceWeight; // UP
-  if (effectiveDx > 0) directionVectors[1] = 1 * distanceWeight; // RIGHT
-  if (effectiveDy > 0) directionVectors[2] = 1 * distanceWeight; // DOWN
-  if (effectiveDx < 0) directionVectors[3] = 1 * distanceWeight; // LEFT
+  // Calculate distance weight - now with stronger signal for closer apples
+  // Weightings: 1.0 for adjacent, 0.9 for 2 steps, 0.8 for 3 steps, etc.
+  const distanceWeight = Math.max(0.3, 1.0 - (manhattanDistance / (gridSize * 1.5)) * 0.7);
+  
+  // Signal boost for very close apples (within 3 steps)
+  const proximityBoost = manhattanDistance <= 3 ? (4 - manhattanDistance) * 0.2 : 0;
+  const finalWeight = distanceWeight + proximityBoost;
+  
+  // Set direction vectors based on the relative position with adjusted weighting
+  if (effectiveDy < 0) directionVectors[0] = Math.min(1, finalWeight * 1.2); // UP - slightly favor vertical/horizontal
+  if (effectiveDx > 0) directionVectors[1] = Math.min(1, finalWeight * 1.2); // RIGHT
+  if (effectiveDy > 0) directionVectors[2] = Math.min(1, finalWeight * 1.2); // DOWN
+  if (effectiveDx < 0) directionVectors[3] = Math.min(1, finalWeight * 1.2); // LEFT
   
   return directionVectors;
 };
@@ -96,7 +106,7 @@ export const detectObstacles = (head: Position, snake: Snake, gameState: GameSta
   ];
   
   // Self-collision detection (avoid its own body)
-  for (let i = 1; i < snake.positions.length; i++) {
+  for (let i = 0; i < snake.positions.length; i++) {
     const segment = snake.positions[i];
     
     // Check all directions for each distance
@@ -143,6 +153,63 @@ export const detectObstacles = (head: Position, snake: Snake, gameState: GameSta
 };
 
 /**
+ * Verifica si hay una manzana en alguna dirección cercana (1-3 pasos)
+ * para generar señales directas sobre manzanas cercanas
+ */
+export const detectNearbyApples = (head: Position, apples: Apple[], gridSize: number): number[] => {
+  // Initialize directional apple signals [UP, RIGHT, DOWN, LEFT]
+  const appleSignals = [0, 0, 0, 0];
+  
+  // Look-ahead positions for apple detection (3 steps in each direction)
+  const lookAheadPositions = [
+    // UP: 1, 2, 3 steps
+    [
+      { x: head.x, y: (head.y - 1 + gridSize) % gridSize },
+      { x: head.x, y: (head.y - 2 + gridSize) % gridSize },
+      { x: head.x, y: (head.y - 3 + gridSize) % gridSize }
+    ],
+    // RIGHT: 1, 2, 3 steps
+    [
+      { x: (head.x + 1) % gridSize, y: head.y },
+      { x: (head.x + 2) % gridSize, y: head.y },
+      { x: (head.x + 3) % gridSize, y: head.y }
+    ],
+    // DOWN: 1, 2, 3 steps
+    [
+      { x: head.x, y: (head.y + 1) % gridSize },
+      { x: head.x, y: (head.y + 2) % gridSize },
+      { x: head.x, y: (head.y + 3) % gridSize }
+    ],
+    // LEFT: 1, 2, 3 steps
+    [
+      { x: (head.x - 1 + gridSize) % gridSize, y: head.y },
+      { x: (head.x - 2 + gridSize) % gridSize, y: head.y },
+      { x: (head.x - 3 + gridSize) % gridSize, y: head.y }
+    ]
+  ];
+  
+  // Search for apples in each direction
+  for (const apple of apples) {
+    for (let dir = 0; dir < 4; dir++) {
+      for (let step = 0; step < 3; step++) {
+        const position = lookAheadPositions[dir][step];
+        if (position.x === apple.position.x && position.y === apple.position.y) {
+          // Signal strength depends on distance: 1.0 for 1 step, 0.8 for 2 steps, 0.6 for 3 steps
+          const strength = 1.0 - (step * 0.2);
+          // Update if stronger signal
+          if (strength > appleSignals[dir]) {
+            appleSignals[dir] = strength;
+          }
+          break; // Once we found an apple in this direction at a particular step, no need to check further steps
+        }
+      }
+    }
+  }
+  
+  return appleSignals;
+};
+
+/**
  * Generates neural network inputs for a snake based on its state
  */
 export const generateNeuralNetworkInputs = (snake: Snake, gameState: GameState): number[] => {
@@ -151,18 +218,26 @@ export const generateNeuralNetworkInputs = (snake: Snake, gameState: GameState):
   const obstacles = detectObstacles(head, snake, gameState);
   const appleDirections = calculateDirectionVectors(head, closestApple.position, snake.gridSize);
   
+  // Detect apples in immediate vicinity for stronger directional signals
+  const nearbyApples = detectNearbyApples(head, gameState.apples, snake.gridSize);
+  
+  // Combine distant apple directions with nearby apple signals (prioritize nearby)
+  const combinedAppleSignals = appleDirections.map((signal, i) => 
+    Math.max(signal, nearbyApples[i] * 1.2) // Boost nearby apple signals by 20%
+  );
+  
   // Create inputs for neural network - EXACT 8 INPUTS
   return [
     // Apple direction inputs (where is the apple relative to the snake)
-    appleDirections[0],                         // Apple is UP
-    appleDirections[1],                         // Apple is RIGHT 
-    appleDirections[2],                         // Apple is DOWN
-    appleDirections[3],                         // Apple is LEFT
+    combinedAppleSignals[0],                    // Apple is UP
+    combinedAppleSignals[1],                    // Apple is RIGHT 
+    combinedAppleSignals[2],                    // Apple is DOWN
+    combinedAppleSignals[3],                    // Apple is LEFT
     // Obstacle detection inputs (what's blocking the snake)
-    obstacles[0],                              // Obstacle UP
-    obstacles[1],                              // Obstacle RIGHT
-    obstacles[2],                              // Obstacle DOWN
-    obstacles[3]                               // Obstacle LEFT
+    obstacles[0],                               // Obstacle UP
+    obstacles[1],                               // Obstacle RIGHT
+    obstacles[2],                               // Obstacle DOWN
+    obstacles[3]                                // Obstacle LEFT
   ];
 };
 

@@ -79,14 +79,24 @@ const Index = () => {
       
       <ScoreBoard snakes={gameState.snakes || []} generationInfo={generationInfo} />
       
-      {/* Información de generación */}
-      <div className="mt-4 p-2 bg-gray-800 rounded text-white">
-        <p>Generación: {generationInfo.generation} | Mejor puntuación: {generationInfo.bestScore}</p>
-        <div className="w-full bg-gray-700 h-2 mt-1 rounded-full">
+      {/* Información de generación mejorada */}
+      <div className="mt-4 p-3 bg-gray-800 rounded text-white">
+        <div className="flex justify-between items-center mb-1">
+          <p className="text-lg">Generación: {generationInfo.generation}</p>
+          <p className="text-lg">Mejor puntuación: {generationInfo.bestScore}</p>
+        </div>
+        
+        <div className="w-full bg-gray-700 h-3 mt-1 rounded-full overflow-hidden">
           <div 
-            className="bg-blue-500 h-2 rounded-full" 
+            className="bg-blue-500 h-3 rounded-full transition-all duration-300" 
             style={{ width: `${Math.min(generationInfo.progress * 100, 100)}%` }}
           ></div>
+        </div>
+        
+        <div className="mt-2 text-xs text-gray-300 flex justify-between">
+          <span>Progreso IA: {Math.round(generationInfo.progress * 100)}%</span>
+          <span>{gameState.snakes?.filter(s => s.alive).length || 0} serpientes activas</span>
+          <span>Manzanas: {gameState.apples?.length || 0}</span>
         </div>
       </div>
       
@@ -109,11 +119,15 @@ const Index = () => {
         </Button>
       </div>
       
-      {/* Indicador de estado */}
-      <div className="mt-2 text-sm text-white">
-        {gameState.snakes && gameState.snakes.length > 0 
-          ? `${gameState.snakes.filter(s => s && s.alive).length} serpientes activas` 
-          : 'No hay serpientes activas'}
+      {/* Estado del aprendizaje */}
+      <div className="mt-4 p-2 bg-gray-800 rounded text-white text-sm max-w-lg">
+        <p>Estado del aprendizaje:</p>
+        <ul className="list-disc list-inside mt-1 text-xs">
+          <li>Serpiente roja: modelo óptimo (mutación baja)</li>
+          <li>Serpiente azul: modelo combinado (mutación media)</li>
+          <li>Otras serpientes: modelos experimentales (mutación alta)</li>
+        </ul>
+        <p className="mt-2 text-xs text-gray-300">Las serpientes aprenden continuamente de sus éxitos y errores. Las decisiones más efectivas se refuerzan para futuras generaciones.</p>
       </div>
     </div>
   );
