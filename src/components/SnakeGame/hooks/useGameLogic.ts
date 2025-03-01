@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { GameState } from '../types';
 import { GRID_SIZE, APPLE_COUNT, FPS } from '../constants';
-import { moveSnake } from '../snakeMovement';
-import { createSnake, generateSnakeSpawnConfig } from './useSnakeCreation';
 import { generateApple } from './useAppleGeneration';
-import { checkCollisions } from './useCollisionDetection';
+import { useGameInitialization } from './useGameInitialization';
+import { useGameUpdate } from './useGameUpdate';
+import { useRoundManagement } from './useRoundManagement';
+import { useAppleManagement } from './useAppleManagement';
 
 export const useGameLogic = () => {
   const [gameState, setGameState] = useState<GameState>({
@@ -36,213 +38,41 @@ export const useGameLogic = () => {
   const isProcessingUpdate = useRef(false);
   const gamesPlayedRef = useRef(0);
 
-  const ensureMinimumApples = useCallback((apples: typeof gameState.apples) => {
-    const minimumApples = 5;
-    if (apples.length < minimumApples) {
-      const newApples = Array.from(
-        { length: minimumApples - apples.length },
-        generateApple
-      );
-      return [...apples, ...newApples];
-    }
-    return apples;
-  }, []);
+  // Extract apple management logic
+  const { ensureMinimumApples } = useAppleManagement();
 
-  const initializeGame = useCallback(async () => {
-    if (gameLoopRef.current) {
-      clearInterval(gameLoopRef.current);
-      gameLoopRef.current = null;
-    }
+  // Extract game initialization logic
+  const { initializeGame } = useGameInitialization(
+    setGameState,
+    setStartTime,
+    setIsGameRunning,
+    setGenerationInfo,
+    gameLoopRef,
+    isProcessingUpdate,
+    gamesPlayedRef
+  );
 
-    gamesPlayedRef.current++;
-    console.log(`Iniciando partida #${gamesPlayedRef.current}`);
+  // Extract round management logic
+  const { endRound } = useRoundManagement(
+    gameState,
+    setVictories,
+    setIsGameRunning,
+    isProcessingUpdate,
+    gameLoopRef,
+    initializeGame
+  );
 
-    // Create snakes with neural networks
-    const snakePromises = Array.from({ length: 4 }, async (_, i) => {
-      const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(i);
-      return await createSnake(i, spawnX, spawnY, direction, color);
-    });
-    
-    const snakes = await Promise.all(snakePromises);
-    
-    // Update generation info
-    const highestGeneration = Math.max(...snakes.map(s => s.brain.getGeneration()));
-    const highestScore = Math.max(...snakes.map(s => s.brain.getBestScore()));
-    const highestProgress = Math.max(...snakes.map(s => s.brain.getProgressPercentage()));
-    
-    setGenerationInfo({
-      generation: highestGeneration,
-      bestScore: highestScore,
-      progress: highestProgress
-    });
+  // Extract game update logic
+  const { updateGame } = useGameUpdate(
+    isGameRunning,
+    startTime,
+    isProcessingUpdate,
+    setGameState,
+    endRound,
+    ensureMinimumApples
+  );
 
-    const apples = Array.from({ length: APPLE_COUNT }, generateApple);
-
-    setGameState({
-      snakes,
-      apples,
-      gridSize: GRID_SIZE,
-    });
-
-    setStartTime(Date.now());
-    setIsGameRunning(true);
-    isProcessingUpdate.current = false;
-  }, []);
-
-  const endRound = useCallback(async () => {
-    if (gameLoopRef.current) {
-      clearInterval(gameLoopRef.current);
-      gameLoopRef.current = null;
-    }
-
-    setIsGameRunning(false);
-    isProcessingUpdate.current = false;
-
-    const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
-    
-    if (maxScore > 0) {
-      const winningSnakes = gameState.snakes.filter(snake => snake.score === maxScore);
-      
-      setVictories(prevVictories => {
-        const newVictories = { ...prevVictories };
-        winningSnakes.forEach(winner => {
-          console.log(`Snake ${winner.id} ganó con ${winner.score} puntos!`);
-          newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
-        });
-        return newVictories;
-      });
-      
-      // Save the winning models
-      for (const winner of winningSnakes) {
-        await winner.brain.save(winner.score);
-      }
-    }
-
-    // Also save non-winners if they have a good score
-    for (const snake of gameState.snakes) {
-      if (snake.score > 5 && maxScore > 0 && snake.score !== maxScore) {
-        await snake.brain.save(snake.score);
-      }
-    }
-
-    setTimeout(initializeGame, 2000);
-  }, [gameState.snakes, initializeGame]);
-
-  const updateGame = useCallback(() => {
-    if (!isGameRunning || isProcessingUpdate.current) return;
-
-    isProcessingUpdate.current = true;
-
-    const currentTime = Date.now();
-    const timeElapsed = currentTime - startTime;
-    
-    if (timeElapsed >= 60000) {
-      endRound();
-      return;
-    }
-
-    setGameState(prevState => {
-      const newSnakes = prevState.snakes.map(snake => {
-        if (!snake.alive) return snake;
-        
-        const head = snake.positions[0];
-        
-        // Find closest apple
-        let closestApple = prevState.apples[0];
-        let minDistance = Number.MAX_VALUE;
-        
-        for (const apple of prevState.apples) {
-          const distance = Math.abs(head.x - apple.position.x) + Math.abs(head.y - apple.position.y);
-          if (distance < minDistance) {
-            minDistance = distance;
-            closestApple = apple;
-          }
-        }
-        
-        // Check for obstacles in each direction
-        const obstacles = [0, 0, 0, 0]; // UP, RIGHT, DOWN, LEFT
-        
-        // Self-collision detection (avoid its own body)
-        for (let i = 1; i < snake.positions.length; i++) {
-          const segment = snake.positions[i];
-          
-          if (head.x === segment.x && head.y - 1 === segment.y) obstacles[0] = 1; // UP
-          if (head.x + 1 === segment.x && head.y === segment.y) obstacles[1] = 1; // RIGHT
-          if (head.x === segment.x && head.y + 1 === segment.y) obstacles[2] = 1; // DOWN
-          if (head.x - 1 === segment.x && head.y === segment.y) obstacles[3] = 1; // LEFT
-        }
-        
-        // Create inputs for neural network - EXACT 8 INPUTS
-        const inputs = [
-          head.x / GRID_SIZE,                          // Normalized x position
-          head.y / GRID_SIZE,                          // Normalized y position
-          closestApple.position.x / GRID_SIZE,         // Normalized apple x
-          closestApple.position.y / GRID_SIZE,         // Normalized apple y
-          obstacles[0],                                // Obstacle UP
-          obstacles[1],                                // Obstacle RIGHT
-          obstacles[2],                                // Obstacle DOWN
-          obstacles[3]                                 // Obstacle LEFT
-        ];
-        
-        // Ensure we have exactly 8 inputs
-        if (inputs.length !== 8) {
-          console.error(`Invalid input length: ${inputs.length}, expected 8`);
-        }
-
-        const prediction = snake.brain.predict(inputs);
-        return moveSnake(snake, prevState, prediction);
-      });
-      
-      const { newSnakes: snakesAfterCollisions, newApples } = checkCollisions(newSnakes, prevState.apples);
-      let finalApples = ensureMinimumApples(newApples);
-      let snakesToUpdate = [...snakesAfterCollisions];
-      
-      snakesToUpdate.forEach(snake => {
-        if (!snake.alive) return;
-
-        const head = snake.positions[0];
-        const appleIndex = finalApples.findIndex(apple => 
-          apple.position.x === head.x && apple.position.y === head.y
-        );
-
-        if (appleIndex !== -1) {
-          snake.score += 1;
-          
-          // Learning with reward proportional to score (encourages longer-term strategies)
-          const reward = 1 + (snake.score * 0.1); // Increasing reward for consecutive apples
-          
-          // The inputs used in the last prediction
-          const lastInputs = [
-            head.x / GRID_SIZE,
-            head.y / GRID_SIZE,
-            finalApples[appleIndex].position.x / GRID_SIZE, 
-            finalApples[appleIndex].position.y / GRID_SIZE,
-            // Add other inputs as used in the prediction above
-          ];
-          
-          // Now pass the inputs and empty outputs to learn
-          snake.brain.learn(true, lastInputs, [], reward);
-          
-          // Aseguramos que la serpiente tenga el tamaño correcto: 3 (inicial) + score (manzanas comidas)
-          while (snake.positions.length < 3 + snake.score) {
-            snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
-          }
-          
-          finalApples.splice(appleIndex, 1);
-        }
-      });
-
-      finalApples = ensureMinimumApples(finalApples);
-
-      isProcessingUpdate.current = false;
-      return {
-        ...prevState,
-        snakes: snakesToUpdate,
-        apples: finalApples
-      };
-    });
-  }, [isGameRunning, startTime, endRound, ensureMinimumApples]);
-
+  // Initialize game when component mounts
   useEffect(() => {
     initializeGame();
     return () => {
@@ -253,6 +83,7 @@ export const useGameLogic = () => {
     };
   }, [initializeGame]);
 
+  // Set up game loop
   useEffect(() => {
     if (!isGameRunning) return;
     
