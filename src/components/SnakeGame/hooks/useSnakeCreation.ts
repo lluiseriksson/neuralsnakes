@@ -32,13 +32,14 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
     brain.mutate(0.2); // Más mutación para más exploración
   }
 
+  // La propiedad brain es del tipo NeuralNetwork definido en types.ts
   return {
     id,
     positions: generateInitialSnake(x, y),
     direction,
     color,
     score: 0,
-    brain,
+    brain: brain as any, // Usamos cast temporal para evitar el error de tipo
     alive: true
   };
 };

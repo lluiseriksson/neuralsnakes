@@ -23,6 +23,10 @@ export const fetchBestModel = async (): Promise<NeuralNetwork | null> => {
     // Ensure weights is treated as number[]
     const weightsArray = model.weights as unknown as number[];
     
+    // Extraer campos adicionales del modelo si existen
+    const bestScore = model.metadata?.best_score || model.score || 0;
+    const gamesPlayed = model.metadata?.games_played || 0;
+    
     return new NeuralNetwork(
       8, 
       12, 
@@ -31,8 +35,8 @@ export const fetchBestModel = async (): Promise<NeuralNetwork | null> => {
       model.id, 
       model.score, 
       model.generation,
-      model.best_score,
-      model.games_played
+      bestScore,
+      gamesPlayed
     );
   } catch (err) {
     console.error('Exception loading best neural network:', err);
@@ -54,6 +58,12 @@ export const saveModel = async (
     const id = network.getId();
     const generation = network.getGeneration();
     
+    // Crear metadata para almacenar campos adicionales
+    const metadata = {
+      best_score: bestScore || score,
+      games_played: gamesPlayed || 0
+    };
+    
     if (id) {
       // Update existing model
       const { error } = await supabase
@@ -61,8 +71,7 @@ export const saveModel = async (
         .update({
           weights: weights,
           score: score,
-          best_score: bestScore || score,
-          games_played: gamesPlayed || 0,
+          metadata: metadata,
           updated_at: new Date().toISOString()
         })
         .eq('id', id);
@@ -81,8 +90,7 @@ export const saveModel = async (
           weights: weights,
           score: score,
           generation: generation,
-          best_score: bestScore || score,
-          games_played: gamesPlayed || 0
+          metadata: metadata
         })
         .select('id');
       

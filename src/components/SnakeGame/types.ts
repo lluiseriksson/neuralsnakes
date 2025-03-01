@@ -6,6 +6,16 @@ export type Position = {
 
 export type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 
+export interface NeuralNetwork {
+  predict: (inputs: number[]) => number[];
+  learn: (success: boolean, inputs?: number[], outputs?: number[], reward?: number) => void;
+  clone: (mutationRate?: number) => NeuralNetwork;
+  getGeneration: () => number;
+  getBestScore: () => number;
+  getProgressPercentage: () => number;
+  save: (score: number) => Promise<string | null>;
+}
+
 export type Snake = {
   id: number;
   positions: Position[];
@@ -24,10 +34,4 @@ export type GameState = {
   snakes: Snake[];
   apples: Apple[];
   gridSize: number;
-};
-
-export type NeuralNetwork = {
-  predict: (inputs: number[]) => number[];
-  learn: (success: boolean) => void;
-  clone: () => NeuralNetwork;
 };

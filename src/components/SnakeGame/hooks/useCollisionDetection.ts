@@ -6,8 +6,9 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
   const newSnakes = [...snakes];
   let newApples = [...currentApples];
 
-  newSnakes.forEach((snake, i) => {
-    if (!snake.alive) return;
+  for (let i = 0; i < newSnakes.length; i++) {
+    const snake = newSnakes[i];
+    if (!snake.alive) continue;
     
     const head = snake.positions[0];
 
@@ -22,21 +23,39 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
         // Agregar las manzanas al juego
         newApples = [...newApples, ...explosionApples];
 
-        // Respawnear la serpiente
+        // Respawnear la serpiente - Marcamos como no viva mientras se regenera
+        snake.alive = false;
+        
+        // Generamos los datos para el respawn
         const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(snake.id);
-        const respawnSnake = createSnake(snake.id, spawnX, spawnY, direction, color);
-        newSnakes[i] = respawnSnake;
-        return;
+        
+        // Actualizamos la configuración de la serpiente existente en lugar de crear una nueva promesa
+        setTimeout(() => {
+          createSnake(snake.id, spawnX, spawnY, direction, color)
+            .then(newSnake => {
+              Object.assign(newSnakes[i], newSnake);
+              newSnakes[i].alive = true;
+            });
+        }, 1000);
+        
+        break;
       }
     }
 
-    // Colisión con otras serpientes
-    newSnakes.forEach((otherSnake, j) => {
-      if (i === j || !otherSnake.alive) return;
+    // Si ya no está viva, continuar con la siguiente serpiente
+    if (!snake.alive) continue;
 
-      otherSnake.positions.forEach((segment, index) => {
+    // Colisión con otras serpientes
+    for (let j = 0; j < newSnakes.length; j++) {
+      if (i === j || !newSnakes[j].alive) continue;
+      
+      const otherSnake = newSnakes[j];
+      
+      for (let k = 0; k < otherSnake.positions.length; k++) {
+        const segment = otherSnake.positions[k];
+        
         if (head.x === segment.x && head.y === segment.y) {
-          if (index === 0) {
+          if (k === 0) {
             // Colisión cabeza con cabeza
             // Convertir todas las posiciones de ambas serpientes en manzanas
             const explosionApples1 = snake.positions.map(position => ({
@@ -49,12 +68,29 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
             // Agregar todas las manzanas al juego
             newApples = [...newApples, ...explosionApples1, ...explosionApples2];
             
-            // Respawnear ambas serpientes
+            // Marcamos ambas serpientes como no vivas mientras se regeneran
+            snake.alive = false;
+            otherSnake.alive = false;
+            
+            // Generamos los datos para los respawns
             const [spawnX1, spawnY1, direction1, color1] = generateSnakeSpawnConfig(snake.id);
             const [spawnX2, spawnY2, direction2, color2] = generateSnakeSpawnConfig(otherSnake.id);
             
-            newSnakes[i] = createSnake(snake.id, spawnX1, spawnY1, direction1, color1);
-            newSnakes[j] = createSnake(otherSnake.id, spawnX2, spawnY2, direction2, color2);
+            // Actualizamos la configuración de las serpientes existentes en lugar de crear nuevas promesas
+            setTimeout(() => {
+              createSnake(snake.id, spawnX1, spawnY1, direction1, color1)
+                .then(newSnake => {
+                  Object.assign(newSnakes[i], newSnake);
+                  newSnakes[i].alive = true;
+                });
+                
+              createSnake(otherSnake.id, spawnX2, spawnY2, direction2, color2)
+                .then(newSnake => {
+                  Object.assign(newSnakes[j], newSnake);
+                  newSnakes[j].alive = true;
+                });
+            }, 1000);
+            
           } else {
             // Colisión con el cuerpo
             // La serpiente ganadora obtiene los puntos
@@ -62,18 +98,34 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
             otherSnake.score += totalSegmentsToAdd;
             
             // Añadir todos los segmentos de la serpiente perdedora a la ganadora
-            for (let k = 0; k < totalSegmentsToAdd; k++) {
+            for (let n = 0; n < totalSegmentsToAdd; n++) {
               otherSnake.positions.push({ ...otherSnake.positions[otherSnake.positions.length - 1] });
             }
             
             // Respawnear la serpiente perdedora
+            snake.alive = false;
+            
+            // Generamos los datos para el respawn
             const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(snake.id);
-            newSnakes[i] = createSnake(snake.id, spawnX, spawnY, direction, color);
+            
+            // Actualizamos la configuración de la serpiente existente en lugar de crear una nueva promesa
+            setTimeout(() => {
+              createSnake(snake.id, spawnX, spawnY, direction, color)
+                .then(newSnake => {
+                  Object.assign(newSnakes[i], newSnake);
+                  newSnakes[i].alive = true;
+                });
+            }, 1000);
           }
+          
+          break;
         }
-      });
-    });
-  });
+      }
+      
+      // Si ya no está viva, salir del bucle de colisiones con otras serpientes
+      if (!snake.alive) break;
+    }
+  }
 
   return { newSnakes, newApples };
 };

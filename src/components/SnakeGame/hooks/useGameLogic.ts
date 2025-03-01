@@ -101,11 +101,11 @@ export const useGameLogic = () => {
     const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
     
     if (maxScore > 0) {
-      const winners = gameState.snakes.filter(snake => snake.score === maxScore);
+      const winningSnakes = gameState.snakes.filter(snake => snake.score === maxScore);
       
       setVictories(prevVictories => {
         const newVictories = { ...prevVictories };
-        winners.forEach(winner => {
+        winningSnakes.forEach(winner => {
           console.log(`Snake ${winner.id} ganó con ${winner.score} puntos!`);
           newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
         });
@@ -113,14 +113,14 @@ export const useGameLogic = () => {
       });
       
       // Save the winning models
-      for (const winner of winners) {
+      for (const winner of winningSnakes) {
         await winner.brain.save(winner.score);
       }
     }
 
     // Also save non-winners if they have a good score
     for (const snake of gameState.snakes) {
-      if (snake.score > 5 && !winners?.some(w => w.id === snake.id)) {
+      if (snake.score > 5 && !winningSnakes?.some(w => w.id === snake.id)) {
         await snake.brain.save(snake.score);
       }
     }
@@ -234,6 +234,7 @@ export const useGameLogic = () => {
             // Add other inputs as used in the prediction above
           ];
           
+          // Now pass the inputs and empty outputs to learn
           snake.brain.learn(true, lastInputs, [], reward);
           
           // Aseguramos que la serpiente tenga el tamaño correcto: 3 (inicial) + score (manzanas comidas)
