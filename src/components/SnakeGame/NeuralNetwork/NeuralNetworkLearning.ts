@@ -11,15 +11,17 @@ export const applyLearning = (
   // Increment games played counter
   const gamesPlayed = network.getGamesPlayed() + 1;
   
-  // Higher reward for better performance
-  const learningRate = success ? 0.1 * reward : 0.05;
+  // Higher reward for better performance, stronger negative feedback for failures
+  const learningRate = success ? 0.1 * reward : 0.15;
   
   // Get current weights
   const currentWeights = network.getWeights();
   
-  // Apply small random adjustments based on current game results
+  // Apply adjustments based on game results
+  // For success, move weights in the positive direction that led to success
+  // For failure, move weights in the opposite direction that led to failure
   const newWeights = currentWeights.map(weight => 
-    weight + (success ? 1 : -1) * learningRate * (Math.random() * 0.2 - 0.1)
+    weight + (success ? 1 : -1) * learningRate * (Math.random() * 0.2 - (success ? 0.1 : 0))
   );
   
   // Set new weights
