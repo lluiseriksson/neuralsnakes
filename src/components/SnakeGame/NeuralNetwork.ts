@@ -142,11 +142,14 @@ export class NeuralNetwork {
       }
       
       const model = data[0];
+      // Ensure weights is treated as number[]
+      const weightsArray = model.weights as unknown as number[];
+      
       return new NeuralNetwork(
         8, 
         12, 
         4, 
-        model.weights, 
+        weightsArray, 
         model.id, 
         model.score, 
         model.generation
@@ -172,25 +175,27 @@ export class NeuralNetwork {
       }
       
       // Tomar el tamaño de pesos del primer modelo
-      const weightsLength = data[0].weights.length;
+      const weightsArray = data[0].weights as unknown as number[];
+      const weightsLength = weightsArray.length;
       
       // Calcular nuevos pesos combinando los mejores modelos
       // Los modelos con mejor puntuación tienen más influencia
       const combinedWeights = new Array(weightsLength).fill(0);
       
-      let totalScore = data.reduce((sum, model) => sum + model.score, 0);
+      let totalScore = data.reduce((sum, model) => sum + (model.score || 0), 0);
       if (totalScore === 0) totalScore = data.length; // Evitar división por cero
       
       for (const model of data) {
-        const influence = model.score / totalScore;
+        const influence = (model.score || 0) / totalScore;
+        const modelWeights = model.weights as unknown as number[];
         
         for (let i = 0; i < weightsLength; i++) {
-          combinedWeights[i] += model.weights[i] * influence;
+          combinedWeights[i] += modelWeights[i] * influence;
         }
       }
       
       // Crear un nuevo modelo con los pesos combinados
-      const newGeneration = Math.max(...data.map(model => model.generation)) + 1;
+      const newGeneration = Math.max(...data.map(model => model.generation || 1)) + 1;
       const combinedModel = new NeuralNetwork(8, 12, 4, combinedWeights, null, 0, newGeneration);
       
       // Añadir algo de mutación para explorar nuevas soluciones
@@ -227,15 +232,20 @@ export class NeuralNetwork {
         return [];
       }
       
-      return data.map(model => new NeuralNetwork(
-        8, 
-        12, 
-        4, 
-        model.weights, 
-        model.id, 
-        model.score, 
-        model.generation
-      ));
+      return data.map(model => {
+        // Ensure weights is treated as number[]
+        const weightsArray = model.weights as unknown as number[];
+        
+        return new NeuralNetwork(
+          8, 
+          12, 
+          4, 
+          weightsArray, 
+          model.id, 
+          model.score, 
+          model.generation
+        );
+      });
     } catch (err) {
       console.error('Exception loading all neural networks:', err);
       return [];

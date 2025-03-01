@@ -109,10 +109,10 @@ export const fetchBestModel = async (): Promise<any | null> => {
 };
 
 // New function to save a trained neural network model to Supabase
-export const saveModel = async (model: any, score: number) => {
+export const saveModel = async (model: number[], score: number) => {
   try {
     const { error } = await supabase.from('neural_networks').insert({
-      model_data: model,
+      weights: model,
       score: score,
       created_at: new Date().toISOString()
     });
