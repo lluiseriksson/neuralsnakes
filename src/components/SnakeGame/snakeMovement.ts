@@ -25,6 +25,9 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
   const head = snake.positions[0];
   let newHead = { ...head };
   let newDirection = snake.direction;
+  
+  // Use the snake's gridSize or fall back to GRID_SIZE constant
+  const gridSize = snake.gridSize || GRID_SIZE;
 
   if (predictions) {
     // Usar predicciones de la red neuronal
@@ -48,16 +51,16 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
   // Mover en la dirección elegida, manteniendo la dirección actual si la nueva es inválida
   switch (newDirection) {
     case 'UP':
-      newHead.y = (newHead.y - 1 + GRID_SIZE) % GRID_SIZE;
+      newHead.y = (newHead.y - 1 + gridSize) % gridSize;
       break;
     case 'DOWN':
-      newHead.y = (newHead.y + 1) % GRID_SIZE;
+      newHead.y = (newHead.y + 1) % gridSize;
       break;
     case 'LEFT':
-      newHead.x = (newHead.x - 1 + GRID_SIZE) % GRID_SIZE;
+      newHead.x = (newHead.x - 1 + gridSize) % gridSize;
       break;
     case 'RIGHT':
-      newHead.x = (newHead.x + 1) % GRID_SIZE;
+      newHead.x = (newHead.x + 1) % gridSize;
       break;
   }
 
