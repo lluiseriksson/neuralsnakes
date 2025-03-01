@@ -31,6 +31,7 @@ export type Snake = {
   score: number;
   brain: NeuralNetwork;
   alive: boolean;
+  gridSize: number; // Añadido para corregir el error de TypeScript
 };
 
 export type Apple = {

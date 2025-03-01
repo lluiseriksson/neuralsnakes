@@ -39,7 +39,8 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
     color,
     score: 0,
     brain,
-    alive: true
+    alive: true,
+    gridSize: 30 // Valor predeterminado para el tamaño de la cuadrícula
   };
 };
 
