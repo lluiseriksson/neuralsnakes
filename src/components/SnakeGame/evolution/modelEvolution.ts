@@ -2,7 +2,7 @@
 import { NeuralNetwork } from "../NeuralNetwork";
 import { NeuralNetwork as INeuralNetwork } from "../types";
 import { combineWeights, mutateWeights } from "../neuralNetworkUtils";
-import { fetchAllModelsFromDb, saveModelToDb } from "../database/neuralNetworkDb";
+import { fetchAllModelsFromDb } from "../database/neuralNetworkDb";
 
 /**
  * Combines multiple models to create a new evolved model
