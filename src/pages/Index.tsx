@@ -6,7 +6,7 @@ import VictoryDisplay from "../components/SnakeGame/components/VictoryDisplay";
 import Timer from "../components/SnakeGame/components/Timer";
 
 const Index = () => {
-  const { gameState, victories, startTime } = useGameLogic();
+  const { gameState, victories, startTime, generationInfo } = useGameLogic();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
@@ -16,7 +16,7 @@ const Index = () => {
         <Timer startTime={startTime} />
         <GameCanvas gameState={gameState} />
       </div>
-      <ScoreBoard snakes={gameState.snakes} />
+      <ScoreBoard snakes={gameState.snakes} generationInfo={generationInfo} />
     </div>
   );
 };

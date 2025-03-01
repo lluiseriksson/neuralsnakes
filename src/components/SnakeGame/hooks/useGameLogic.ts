@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState } from '../types';
 import { GRID_SIZE, APPLE_COUNT, FPS } from '../constants';
@@ -20,11 +19,22 @@ export const useGameLogic = () => {
     2: 0,
     3: 0,
   });
+  
+  const [generationInfo, setGenerationInfo] = useState<{ 
+    generation: number, 
+    bestScore: number, 
+    progress: number 
+  }>({
+    generation: 1,
+    bestScore: 0,
+    progress: 0
+  });
 
   const [startTime, setStartTime] = useState(Date.now());
   const [isGameRunning, setIsGameRunning] = useState(true);
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingUpdate = useRef(false);
+  const gamesPlayedRef = useRef(0);
 
   const ensureMinimumApples = useCallback((apples: typeof gameState.apples) => {
     const minimumApples = 5;
@@ -38,15 +48,32 @@ export const useGameLogic = () => {
     return apples;
   }, []);
 
-  const initializeGame = useCallback(() => {
+  const initializeGame = useCallback(async () => {
     if (gameLoopRef.current) {
       clearInterval(gameLoopRef.current);
       gameLoopRef.current = null;
     }
 
-    const snakes = Array.from({ length: 4 }, (_, i) => {
+    gamesPlayedRef.current++;
+    console.log(`Iniciando partida #${gamesPlayedRef.current}`);
+
+    // Create snakes with neural networks
+    const snakePromises = Array.from({ length: 4 }, async (_, i) => {
       const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(i);
-      return createSnake(i, spawnX, spawnY, direction, color);
+      return await createSnake(i, spawnX, spawnY, direction, color);
+    });
+    
+    const snakes = await Promise.all(snakePromises);
+    
+    // Update generation info
+    const highestGeneration = Math.max(...snakes.map(s => s.brain.getGeneration()));
+    const highestScore = Math.max(...snakes.map(s => s.brain.getBestScore()));
+    const highestProgress = Math.max(...snakes.map(s => s.brain.getProgressPercentage()));
+    
+    setGenerationInfo({
+      generation: highestGeneration,
+      bestScore: highestScore,
+      progress: highestProgress
     });
 
     const apples = Array.from({ length: APPLE_COUNT }, generateApple);
@@ -62,7 +89,7 @@ export const useGameLogic = () => {
     isProcessingUpdate.current = false;
   }, []);
 
-  const endRound = useCallback(() => {
+  const endRound = useCallback(async () => {
     if (gameLoopRef.current) {
       clearInterval(gameLoopRef.current);
       gameLoopRef.current = null;
@@ -84,6 +111,18 @@ export const useGameLogic = () => {
         });
         return newVictories;
       });
+      
+      // Save the winning models
+      for (const winner of winners) {
+        await winner.brain.save(winner.score);
+      }
+    }
+
+    // Also save non-winners if they have a good score
+    for (const snake of gameState.snakes) {
+      if (snake.score > 5 && !winners?.some(w => w.id === snake.id)) {
+        await snake.brain.save(snake.score);
+      }
     }
 
     setTimeout(initializeGame, 2000);
@@ -107,15 +146,61 @@ export const useGameLogic = () => {
         if (!snake.alive) return snake;
         
         const head = snake.positions[0];
+        
+        // Gather more information about the environment for better decision making
+        const distanceToWalls = [
+          head.x,                    // Distance to left wall
+          GRID_SIZE - head.x,        // Distance to right wall
+          head.y,                    // Distance to top wall
+          GRID_SIZE - head.y         // Distance to bottom wall
+        ];
+        
+        // Find closest apple
+        let closestApple = prevState.apples[0];
+        let minDistance = Number.MAX_VALUE;
+        
+        for (const apple of prevState.apples) {
+          const distance = Math.abs(head.x - apple.position.x) + Math.abs(head.y - apple.position.y);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestApple = apple;
+          }
+        }
+        
+        // Check for obstacles in each direction
+        const obstacles = [0, 0, 0, 0]; // UP, RIGHT, DOWN, LEFT
+        
+        // Self-collision detection (avoid its own body)
+        for (let i = 1; i < snake.positions.length; i++) {
+          const segment = snake.positions[i];
+          
+          if (head.x === segment.x && head.y - 1 === segment.y) obstacles[0] = 1; // UP
+          if (head.x + 1 === segment.x && head.y === segment.y) obstacles[1] = 1; // RIGHT
+          if (head.x === segment.x && head.y + 1 === segment.y) obstacles[2] = 1; // DOWN
+          if (head.x - 1 === segment.x && head.y === segment.y) obstacles[3] = 1; // LEFT
+        }
+        
+        // Other snakes detection
+        for (const otherSnake of prevState.snakes) {
+          if (otherSnake.id === snake.id) continue;
+          
+          for (const segment of otherSnake.positions) {
+            if (head.x === segment.x && head.y - 1 === segment.y) obstacles[0] = 1;
+            if (head.x + 1 === segment.x && head.y === segment.y) obstacles[1] = 1;
+            if (head.x === segment.x && head.y + 1 === segment.y) obstacles[2] = 1;
+            if (head.x - 1 === segment.x && head.y === segment.y) obstacles[3] = 1;
+          }
+        }
+        
+        // Create inputs for neural network
         const inputs = [
-          head.x / GRID_SIZE,
-          head.y / GRID_SIZE,
-          snake.direction === 'UP' ? 1 : 0,
-          snake.direction === 'DOWN' ? 1 : 0,
-          snake.direction === 'LEFT' ? 1 : 0,
-          snake.direction === 'RIGHT' ? 1 : 0,
-          prevState.apples.length > 0 ? prevState.apples[0].position.x / GRID_SIZE : 0,
-          prevState.apples.length > 0 ? prevState.apples[0].position.y / GRID_SIZE : 0,
+          // Normalized inputs for better learning
+          head.x / GRID_SIZE,                          // Normalized x position
+          head.y / GRID_SIZE,                          // Normalized y position
+          closestApple.position.x / GRID_SIZE,         // Normalized apple x
+          closestApple.position.y / GRID_SIZE,         // Normalized apple y
+          ...distanceToWalls.map(d => d / GRID_SIZE),  // Normalized distances to walls
+          ...obstacles                                 // Obstacle indicators
         ];
 
         const prediction = snake.brain.predict(inputs);
@@ -136,7 +221,20 @@ export const useGameLogic = () => {
 
         if (appleIndex !== -1) {
           snake.score += 1;
-          snake.brain.learn(true);
+          
+          // Learning with reward proportional to score (encourages longer-term strategies)
+          const reward = 1 + (snake.score * 0.1); // Increasing reward for consecutive apples
+          
+          // The inputs used in the last prediction
+          const lastInputs = [
+            head.x / GRID_SIZE,
+            head.y / GRID_SIZE,
+            finalApples[appleIndex].position.x / GRID_SIZE, 
+            finalApples[appleIndex].position.y / GRID_SIZE,
+            // Add other inputs as used in the prediction above
+          ];
+          
+          snake.brain.learn(true, lastInputs, [], reward);
           
           // Aseguramos que la serpiente tenga el tamaño correcto: 3 (inicial) + score (manzanas comidas)
           while (snake.positions.length < 3 + snake.score) {
@@ -185,5 +283,5 @@ export const useGameLogic = () => {
     };
   }, [isGameRunning, updateGame]);
 
-  return { gameState, victories, startTime };
+  return { gameState, victories, startTime, generationInfo };
 };

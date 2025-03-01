@@ -30,7 +30,9 @@ export const fetchBestModel = async (): Promise<NeuralNetwork | null> => {
       weightsArray, 
       model.id, 
       model.score, 
-      model.generation
+      model.generation,
+      model.best_score,
+      model.games_played
     );
   } catch (err) {
     console.error('Exception loading best neural network:', err);
@@ -43,7 +45,9 @@ export const fetchBestModel = async (): Promise<NeuralNetwork | null> => {
  */
 export const saveModel = async (
   network: NeuralNetwork, 
-  score: number
+  score: number,
+  bestScore?: number,
+  gamesPlayed?: number
 ): Promise<string | null> => {
   try {
     const weights = network.getWeights();
@@ -57,6 +61,8 @@ export const saveModel = async (
         .update({
           weights: weights,
           score: score,
+          best_score: bestScore || score,
+          games_played: gamesPlayed || 0,
           updated_at: new Date().toISOString()
         })
         .eq('id', id);
@@ -74,7 +80,9 @@ export const saveModel = async (
         .insert({
           weights: weights,
           score: score,
-          generation: generation
+          generation: generation,
+          best_score: bestScore || score,
+          games_played: gamesPlayed || 0
         })
         .select('id');
       
