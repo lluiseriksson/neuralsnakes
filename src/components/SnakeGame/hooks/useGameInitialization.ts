@@ -1,9 +1,8 @@
-
 import { useCallback } from 'react';
 import { GRID_SIZE, APPLE_COUNT } from '../constants';
 import { GameState } from '../types';
 import { generateApple } from './useAppleGeneration';
-import { createSnake, generateSnakeSpawnConfig } from './useSnakeCreation';
+import { createSnake, generateSnakeSpawnConfig } from './snakeCreation';
 
 // Cache para apples iniciales
 const cachedInitialApples = Array.from({ length: APPLE_COUNT }, generateApple);
