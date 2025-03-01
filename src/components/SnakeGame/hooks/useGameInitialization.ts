@@ -30,10 +30,12 @@ export const useGameInitialization = (
     // Create snakes with neural networks
     const snakePromises = Array.from({ length: 4 }, async (_, i) => {
       const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(i);
+      console.log(`Creando serpiente ${i} en posición (${spawnX}, ${spawnY}) con dirección ${direction}`);
       return await createSnake(i, spawnX, spawnY, direction, color);
     });
     
     const snakes = await Promise.all(snakePromises);
+    console.log(`Serpientes creadas:`, snakes.map(s => ({ id: s.id, alive: s.alive, positions: s.positions })));
     
     // Update generation info
     const highestGeneration = Math.max(...snakes.map(s => s.brain.getGeneration()));

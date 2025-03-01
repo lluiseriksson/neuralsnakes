@@ -27,6 +27,14 @@ export const useGameUpdate = (
     }
 
     setGameState(prevState => {
+      // Verifica si hay serpientes vivas
+      const hasLivingSnakes = prevState.snakes.some(snake => snake.alive);
+      if (!hasLivingSnakes && prevState.snakes.length > 0) {
+        console.log("No hay serpientes vivas, terminando ronda");
+        setTimeout(endRound, 0);
+        return prevState;
+      }
+
       const newSnakes = prevState.snakes.map(snake => {
         if (!snake.alive) return snake;
         
@@ -35,12 +43,15 @@ export const useGameUpdate = (
         
         // Validate inputs
         if (!validateInputs(inputs)) {
+          console.log(`Entradas no válidas para la serpiente ${snake.id}`, inputs);
           return snake;
         }
 
         // Get prediction from neural network
         const prediction = snake.brain.predict(inputs);
-        return moveSnake(snake, prevState, prediction);
+        const movedSnake = moveSnake(snake, prevState, prediction);
+        
+        return movedSnake;
       });
       
       const { newSnakes: snakesAfterCollisions, newApples } = checkCollisions(newSnakes, prevState.apples);
@@ -58,8 +69,8 @@ export const useGameUpdate = (
         if (appleIndex !== -1) {
           snake.score += 1;
           
-          // Learning with reward proportional to score (encourages longer-term strategies)
-          const reward = 1 + (snake.score * 0.1); // Increasing reward for consecutive apples
+          // Learning with reward proportional to score
+          const reward = 1 + (snake.score * 0.1);
           
           // Generate inputs for learning
           const inputs = generateNeuralNetworkInputs(snake, {
@@ -67,14 +78,14 @@ export const useGameUpdate = (
             apples: finalApples
           });
           
-          // Now pass the inputs and empty outputs to learn
+          // Learn from the successful move
           snake.brain.learn(true, inputs, [], reward);
           
-          // Ensure the snake has the correct length: 3 (initial) + score (eaten apples)
-          while (snake.positions.length < 3 + snake.score) {
-            snake.positions.push({ ...snake.positions[snake.positions.length - 1] });
-          }
+          // Add a new segment to the snake
+          const lastSegment = snake.positions[snake.positions.length - 1];
+          snake.positions.push({ ...lastSegment });
           
+          // Remove the eaten apple
           finalApples.splice(appleIndex, 1);
         }
       });

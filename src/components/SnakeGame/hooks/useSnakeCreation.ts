@@ -15,6 +15,7 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       // Clone with mutations to evolve
       brain = bestModel.clone(0.1);
     } else {
+      console.log("No se encontró un modelo existente, creando uno nuevo");
       brain = new NeuralNetwork(8, 12, 4);
     }
   } else if (id === 1) {
@@ -24,10 +25,12 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       console.log(`Usando modelo combinado (generación ${combinedModel.getGeneration()})`);
       brain = combinedModel;
     } else {
+      console.log("No hay suficientes modelos para combinar, creando uno nuevo");
       brain = new NeuralNetwork(8, 12, 4);
     }
   } else {
     // Crear una red neuronal nueva con mutaciones aleatorias para probar estrategias diferentes
+    console.log(`Creando un nuevo modelo con mutaciones para la serpiente ${id}`);
     brain = new NeuralNetwork(8, 12, 4);
     brain.mutate(0.2); // Más mutación para más exploración
   }

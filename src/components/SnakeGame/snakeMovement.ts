@@ -43,26 +43,6 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
     // Only allow direction change if not opposite to current direction
     if (!isOppositeDirection(snake.direction, predictedDirection)) {
       newDirection = predictedDirection;
-    } else {
-      // If predicted direction is opposite, choose a valid perpendicular direction
-      // This helps the snake avoid getting stuck in back-and-forth patterns
-      const validDirections = directions.filter(dir => !isOppositeDirection(snake.direction, dir) && dir !== snake.direction);
-      if (validDirections.length > 0) {
-        // Choose the perpendicular direction with the highest prediction value
-        const perpMaxIndex = validDirections.reduce((iMax, dir) => {
-          const dirIndex = directions.indexOf(dir);
-          return adjustedPredictions[dirIndex] > adjustedPredictions[directions.indexOf(validDirections[iMax])] 
-            ? dirIndex : iMax;
-        }, 0);
-        newDirection = validDirections[perpMaxIndex % validDirections.length];
-      }
-    }
-  } else {
-    // Fallback to more intelligent random behavior
-    const directions: Direction[] = ['UP', 'RIGHT', 'DOWN', 'LEFT'];
-    if (Math.random() < 0.3) { // Increased probability for direction change
-      const validDirections = directions.filter(dir => !isOppositeDirection(snake.direction, dir));
-      newDirection = validDirections[Math.floor(Math.random() * validDirections.length)];
     }
   }
 
@@ -82,9 +62,17 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
       break;
   }
 
+  // Create new positions array with the new head at index 0
+  const newPositions = [newHead, ...snake.positions.slice(0, -1)];
+
+  // Ensure there's always at least one segment (head)
+  if (newPositions.length === 0) {
+    newPositions.push(newHead);
+  }
+
   return {
     ...snake,
-    positions: [newHead, ...snake.positions.slice(0, -1)],
+    positions: newPositions,
     direction: newDirection
   };
 };
