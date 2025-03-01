@@ -1,7 +1,6 @@
-
 import { Direction, Snake } from '../types';
 import { NeuralNetwork } from '../NeuralNetwork';
-import { generateInitialSnake } from '../utils';
+import { generateInitialSnake } from '../snakeMovement';
 
 export const createSnake = (id: number, x: number, y: number, direction: Direction, color: string): Snake => ({
   id,

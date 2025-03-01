@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState } from '../types';
 import { GRID_SIZE, APPLE_COUNT, FPS } from '../constants';
-import { moveSnake } from '../utils';
+import { moveSnake } from '../snakeMovement';
 import { createSnake, generateSnakeSpawnConfig } from './useSnakeCreation';
 import { generateApple } from './useAppleGeneration';
 import { checkCollisions } from './useCollisionDetection';
