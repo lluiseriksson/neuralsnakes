@@ -1,7 +1,7 @@
 
 import { NeuralNetwork } from "../NeuralNetwork";
 import { NeuralNetwork as INeuralNetwork } from "../types";
-import { mutateWeights } from "../neuralNetworkUtils";
+import { mutateWeights, combineWeights } from "../neuralNetworkUtils";
 
 /**
  * Combines multiple models to create a new evolved model
@@ -19,28 +19,25 @@ export const combineModels = (models: INeuralNetwork[]): INeuralNetwork | null =
     const weightsArray = models[0].getWeights();
     const weightsLength = weightsArray.length;
     
-    // Calculate average weights
-    const combinedWeights = new Array(weightsLength).fill(0);
-    let maxGeneration = 0;
+    // Prepare models with their scores for weighted combination
+    const modelData = models.map(model => ({
+      weights: model.getWeights(),
+      score: model.getBestScore(),
+      generation: model.getGeneration()
+    }));
     
-    for (const model of models) {
-      const weights = model.getWeights();
-      maxGeneration = Math.max(maxGeneration, model.getGeneration());
-      
-      for (let i = 0; i < weightsLength; i++) {
-        combinedWeights[i] += weights[i] / models.length;
-      }
-    }
+    // Use weighted combination based on scores
+    const { combinedWeights, newGeneration } = combineWeights(modelData, weightsLength);
     
     // Create a new model with the combined weights and incremented generation
-    const newGeneration = maxGeneration + 1;
     const combinedModel = new NeuralNetwork(8, 12, 4, combinedWeights, null, 0, newGeneration);
     
     // Add some mutation to explore new solutions
     // Higher mutation rate to avoid local optima
-    const mutatedWeights = mutateWeights(combinedModel.getWeights(), 0.2, 0.3);
+    const mutatedWeights = mutateWeights(combinedModel.getWeights(), 0.15, 0.25);
     combinedModel.setWeights(mutatedWeights);
     
+    console.log(`Created combined model with generation ${newGeneration}`);
     return combinedModel;
   } catch (err) {
     console.error('Exception combining models:', err);

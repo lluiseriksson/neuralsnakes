@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { GameState } from '../types';
-import { moveSnake, wouldCollide } from '../snakeMovement';
+import { moveSnake } from '../snakeMovement';
 import { checkCollisions } from './useCollisionDetection';
 import { generateNeuralNetworkInputs, validateInputs } from './useNeuralNetworkInputs';
 
@@ -15,7 +15,6 @@ export const useGameUpdate = (
 ) => {
   const updateGame = useCallback(() => {
     if (!isGameRunning || isProcessingUpdate.current) {
-      console.log("Skipping update: isGameRunning =", isGameRunning, "isProcessing =", isProcessingUpdate.current);
       return;
     }
 
@@ -40,6 +39,28 @@ export const useGameUpdate = (
         setTimeout(endRound, 0);
         return prevState;
       }
+
+      // Store previous positions for each snake to measure improvement
+      const previousPositions = prevState.snakes.map(snake => 
+        snake.alive ? { ...snake.positions[0] } : null
+      );
+      
+      // Store previous distances to closest apples
+      const previousDistances = prevState.snakes.map(snake => {
+        if (!snake.alive || !prevState.apples.length) return Infinity;
+        
+        const head = snake.positions[0];
+        let minDistance = Infinity;
+        
+        for (const apple of prevState.apples) {
+          const distance = Math.abs(head.x - apple.position.x) + Math.abs(head.y - apple.position.y);
+          if (distance < minDistance) {
+            minDistance = distance;
+          }
+        }
+        
+        return minDistance;
+      });
 
       // Force movement of all living snakes
       const newSnakes = prevState.snakes.map(snake => {
@@ -72,11 +93,13 @@ export const useGameUpdate = (
       let finalApples = ensureMinimumApples(newApples);
       let snakesToUpdate = [...snakesAfterCollisions];
       
-      // Process collisions with apples
-      snakesToUpdate.forEach(snake => {
+      // Process learning for each snake
+      snakesToUpdate.forEach((snake, index) => {
         if (!snake.alive) return;
 
         const head = snake.positions[0];
+        
+        // Check if snake ate an apple
         const appleIndex = finalApples.findIndex(apple => 
           apple.position.x === head.x && apple.position.y === head.y
         );
@@ -85,15 +108,9 @@ export const useGameUpdate = (
           console.log(`Snake ${snake.id} ate an apple at (${head.x}, ${head.y})`);
           snake.score += 1;
           
-          // Learning with reward proportional to score
-          // Increased reward to reinforce apple-eating behavior
-          const reward = 1.5 + (snake.score * 0.15);
-          
-          // Generate inputs for learning
-          const inputs = generateNeuralNetworkInputs(snake, {
-            ...prevState,
-            apples: finalApples
-          });
+          // Significant positive reinforcement for eating apples
+          const inputs = generateNeuralNetworkInputs(snake, prevState);
+          const reward = 1.5 + (Math.min(snake.score, 10) * 0.1); // Higher reward as score increases, but capped
           
           // Learn from the successful move
           snake.brain.learn(true, inputs, [], reward);
@@ -105,27 +122,38 @@ export const useGameUpdate = (
           // Remove the eaten apple
           finalApples.splice(appleIndex, 1);
         } else {
-          // Penalize slightly for not finding apples
-          // This encourages exploration toward apples
+          // No apple eaten - evaluate if snake is making progress
+          
+          // Calculate current distance to closest apple
+          let currentMinDistance = Infinity;
+          for (const apple of finalApples) {
+            const distance = Math.abs(head.x - apple.position.x) + Math.abs(head.y - apple.position.y);
+            if (distance < currentMinDistance) {
+              currentMinDistance = distance;
+            }
+          }
+          
+          // Calculate if snake is moving closer to apple
+          const previousDistance = previousDistances[index];
+          const movingCloserToApple = currentMinDistance < previousDistance;
+          
           const inputs = generateNeuralNetworkInputs(snake, prevState);
-          const smallPenalty = 0.05;
-          snake.brain.learn(false, inputs, [], smallPenalty);
-        }
-        
-        // Extra learning for avoiding suicide
-        // If snake made a move that didn't kill it, give a small reward
-        if (snake.alive) {
-          const verySmallReward = 0.01;
-          snake.brain.learn(true, [], [], verySmallReward);
+          
+          if (movingCloserToApple) {
+            // Small positive reward for moving toward apple
+            const smallReward = 0.2;
+            snake.brain.learn(true, inputs, [], smallReward);
+          } else {
+            // Small negative feedback for moving away from apple
+            const smallPenalty = 0.1;
+            snake.brain.learn(false, inputs, [], smallPenalty);
+          }
         }
       });
 
       finalApples = ensureMinimumApples(finalApples);
 
       isProcessingUpdate.current = false;
-      
-      // Log state summary for debugging
-      console.log(`Updated state: ${snakesToUpdate.filter(s => s.alive).length} living snakes, ${finalApples.length} apples`);
       
       return {
         ...prevState,

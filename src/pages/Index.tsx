@@ -10,7 +10,7 @@ import { useToast } from "../components/ui/use-toast";
 
 const Index = () => {
   const [isInitializing, setIsInitializing] = useState(false);
-  const { gameState, victories, startTime, generationInfo, initializeGame, restartGame } = useGameLogic();
+  const { gameState, victories, startTime, generationInfo, initializeGame, restartGame, isGameRunning } = useGameLogic();
   const { toast } = useToast();
   
   // Función segura para inicializar el juego
@@ -31,7 +31,7 @@ const Index = () => {
       
       toast({
         title: "¡Juego iniciado!",
-        description: `${gameState.snakes?.length || 0} serpientes están listas para competir`
+        description: `${gameState.snakes?.length || 0} serpientes están listas para competir (Generación ${generationInfo.generation})`
       });
     } catch (error) {
       console.error("Error en la inicialización desde Index:", error);
@@ -43,7 +43,7 @@ const Index = () => {
     } finally {
       setIsInitializing(false);
     }
-  }, [initializeGame, isInitializing, gameState.snakes, toast]);
+  }, [initializeGame, isInitializing, gameState.snakes, toast, generationInfo]);
   
   // Inicializar el juego al cargar el componente
   useEffect(() => {
@@ -79,14 +79,35 @@ const Index = () => {
       
       <ScoreBoard snakes={gameState.snakes || []} generationInfo={generationInfo} />
       
-      {/* Botón para reiniciar el juego si es necesario */}
-      <Button 
-        onClick={handleInitializeGame} 
-        disabled={isInitializing}
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-      >
-        {isInitializing ? 'Iniciando...' : 'Reiniciar Juego'}
-      </Button>
+      {/* Información de generación */}
+      <div className="mt-4 p-2 bg-gray-800 rounded text-white">
+        <p>Generación: {generationInfo.generation} | Mejor puntuación: {generationInfo.bestScore}</p>
+        <div className="w-full bg-gray-700 h-2 mt-1 rounded-full">
+          <div 
+            className="bg-blue-500 h-2 rounded-full" 
+            style={{ width: `${Math.min(generationInfo.progress * 100, 100)}%` }}
+          ></div>
+        </div>
+      </div>
+      
+      {/* Botones de control */}
+      <div className="flex gap-4 mt-4">
+        <Button 
+          onClick={handleInitializeGame} 
+          disabled={isInitializing}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+        >
+          {isInitializing ? 'Iniciando...' : 'Reiniciar Juego'}
+        </Button>
+        
+        <Button
+          onClick={restartGame}
+          disabled={isInitializing || !isGameRunning}
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+        >
+          Terminar Ronda
+        </Button>
+      </div>
       
       {/* Indicador de estado */}
       <div className="mt-2 text-sm text-white">

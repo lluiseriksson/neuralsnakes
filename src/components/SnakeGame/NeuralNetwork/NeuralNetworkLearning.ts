@@ -10,20 +10,37 @@ export const applyLearning = (
 ): void => {
   // Increment games played counter
   const gamesPlayed = network.getGamesPlayed() + 1;
+  network.setGamesPlayed(gamesPlayed);
   
-  // Higher reward for better performance, stronger negative feedback for failures
-  // Increased learning rate to accelerate learning
-  const learningRate = success ? 0.15 * reward : 0.2;
+  // Skip learning if we don't have inputs (no context for learning)
+  if (inputs.length === 0) return;
+  
+  // Calculate learning rate based on context
+  // Faster learning for more significant events (higher rewards/penalties)
+  const learningRate = success 
+    ? 0.1 * Math.min(reward, 2) // Cap at 0.2 for success
+    : 0.15 * Math.min(reward, 1.5); // Cap at 0.225 for failure
   
   // Get current weights
   const currentWeights = network.getWeights();
   
-  // Apply adjustments based on game results
-  // For success, move weights in the positive direction that led to success
-  // For failure, move weights in the opposite direction that led to failure
-  const newWeights = currentWeights.map(weight => 
-    weight + (success ? 1 : -1) * learningRate * (Math.random() * 0.2 - (success ? 0.1 : 0))
-  );
+  // Apply adjustments to weights based on input values
+  // This creates a correlation between input patterns and outcomes
+  const newWeights = currentWeights.map((weight, index) => {
+    // Only adjust weights related to active inputs
+    if (index < inputs.length * 4) { // Assuming 4 output neurons
+      const inputIndex = Math.floor(index / 4);
+      const inputValue = inputs[inputIndex];
+      
+      // Adjust weight proportionally to input value and learning outcome
+      const adjustment = inputValue * learningRate * (success ? 1 : -1);
+      return weight + adjustment;
+    }
+    
+    // For non-input related weights, make smaller random adjustments
+    const randomFactor = (Math.random() * 0.1 - 0.05) * (success ? 1 : -1);
+    return weight + (randomFactor * learningRate);
+  });
   
   // Set new weights
   network.setWeights(newWeights);
@@ -36,7 +53,7 @@ export const applyLearning = (
 
 export const mutateNetwork = (
   network: NeuralNetworkCore, 
-  mutationRate: number = 0.15  // Increased from 0.1 to promote more exploration
+  mutationRate: number = 0.1
 ): void => {
   const weights = network.getWeights();
   
@@ -44,10 +61,18 @@ export const mutateNetwork = (
     // Apply mutation with probability mutationRate
     if (Math.random() < mutationRate) {
       // Mutation: either small adjustment or complete reset
-      if (Math.random() < 0.8) {
-        return weight + (Math.random() * 0.5 - 0.25); // Larger adjustment (was 0.4-0.2)
+      if (Math.random() < 0.9) {
+        // Normal small adjustment - following a bell curve for more natural mutations
+        const gaussianRandom = () => {
+          let u = 0, v = 0;
+          while(u === 0) u = Math.random(); 
+          while(v === 0) v = Math.random();
+          return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        };
+        
+        return weight + gaussianRandom() * 0.3; // Smaller adjustments for stability
       } else {
-        return Math.random() * 2 - 1; // Complete reset
+        return Math.random() * 2 - 1; // Complete reset (rarely)
       }
     }
     return weight;
@@ -58,7 +83,7 @@ export const mutateNetwork = (
 
 export const cloneNetwork = (
   network: NeuralNetworkCore, 
-  mutationRate: number = 0.15  // Increased from 0.1 to promote more exploration
+  mutationRate: number = 0.1
 ): NeuralNetworkCore => {
   const inputSize = 8; // Assuming standard input size 
   const hiddenSize = 12; // Assuming standard hidden size

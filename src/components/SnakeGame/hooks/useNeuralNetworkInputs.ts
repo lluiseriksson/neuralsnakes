@@ -47,8 +47,7 @@ export const calculateDirectionVectors = (head: Position, target: Position, grid
   const effectiveDy = Math.abs(directDy) <= Math.abs(wraparoundDy) ? directDy : wraparoundDy;
   
   // Add distance weighting - closer targets have stronger signal
-  const maxDistance = gridSize / 2;
-  const distanceWeight = 1 - (Math.min(Math.abs(effectiveDx) + Math.abs(effectiveDy), maxDistance) / maxDistance) * 0.8;
+  const distanceWeight = 1.0 - (Math.min(Math.abs(effectiveDx) + Math.abs(effectiveDy), gridSize) / gridSize) * 0.5;
   
   // Set direction vectors based on the relative position with distance weighting
   if (effectiveDy < 0) directionVectors[0] = 1 * distanceWeight; // UP
@@ -68,27 +67,31 @@ export const detectObstacles = (head: Position, snake: Snake, gameState: GameSta
   const obstacles = [0, 0, 0, 0];
   const gridSize = snake.gridSize;
   
-  // Create look-ahead positions (check 2 steps ahead for better planning)
+  // Create look-ahead positions (check 3 steps ahead for better planning)
   const lookAheadPositions = [
-    // UP: 1 and 2 steps
+    // UP: 1, 2, and 3 steps
     [
       { x: head.x, y: (head.y - 1 + gridSize) % gridSize },
-      { x: head.x, y: (head.y - 2 + gridSize) % gridSize }
+      { x: head.x, y: (head.y - 2 + gridSize) % gridSize },
+      { x: head.x, y: (head.y - 3 + gridSize) % gridSize }
     ],
-    // RIGHT: 1 and 2 steps
+    // RIGHT: 1, 2, and 3 steps
     [
       { x: (head.x + 1) % gridSize, y: head.y },
-      { x: (head.x + 2) % gridSize, y: head.y }
+      { x: (head.x + 2) % gridSize, y: head.y },
+      { x: (head.x + 3) % gridSize, y: head.y }
     ],
-    // DOWN: 1 and 2 steps
+    // DOWN: 1, 2, and 3 steps
     [
       { x: head.x, y: (head.y + 1) % gridSize },
-      { x: head.x, y: (head.y + 2) % gridSize }
+      { x: head.x, y: (head.y + 2) % gridSize },
+      { x: head.x, y: (head.y + 3) % gridSize }
     ],
-    // LEFT: 1 and 2 steps
+    // LEFT: 1, 2, and 3 steps
     [
       { x: (head.x - 1 + gridSize) % gridSize, y: head.y },
-      { x: (head.x - 2 + gridSize) % gridSize, y: head.y }
+      { x: (head.x - 2 + gridSize) % gridSize, y: head.y },
+      { x: (head.x - 3 + gridSize) % gridSize, y: head.y }
     ]
   ];
   
@@ -96,17 +99,19 @@ export const detectObstacles = (head: Position, snake: Snake, gameState: GameSta
   for (let i = 1; i < snake.positions.length; i++) {
     const segment = snake.positions[i];
     
-    // Check immediate collisions
+    // Check all directions for each distance
     for (let dir = 0; dir < 4; dir++) {
-      const firstPos = lookAheadPositions[dir][0];
-      if (firstPos.x === segment.x && firstPos.y === segment.y) {
+      // Check immediate position (strongest signal)
+      if (lookAheadPositions[dir][0].x === segment.x && lookAheadPositions[dir][0].y === segment.y) {
         obstacles[dir] = 1; // Immediate obstacle (strongest signal)
       }
-      
-      // Check look-ahead positions with weaker signals
-      const secondPos = lookAheadPositions[dir][1];
-      if (obstacles[dir] === 0 && secondPos.x === segment.x && secondPos.y === segment.y) {
-        obstacles[dir] = 0.7; // Further obstacle (weaker signal)
+      // Check second position (medium signal)
+      else if (obstacles[dir] < 0.8 && lookAheadPositions[dir][1].x === segment.x && lookAheadPositions[dir][1].y === segment.y) {
+        obstacles[dir] = 0.8; // Medium distance obstacle
+      }
+      // Check third position (weaker signal)
+      else if (obstacles[dir] < 0.6 && lookAheadPositions[dir][2].x === segment.x && lookAheadPositions[dir][2].y === segment.y) {
+        obstacles[dir] = 0.6; // Further obstacle (weaker signal)
       }
     }
   }
@@ -116,16 +121,19 @@ export const detectObstacles = (head: Position, snake: Snake, gameState: GameSta
     if (otherSnake.id === snake.id || !otherSnake.alive) continue;
     
     for (const segment of otherSnake.positions) {
-      // Check all directions for collisions with this segment
+      // Check all directions for each distance
       for (let dir = 0; dir < 4; dir++) {
-        const firstPos = lookAheadPositions[dir][0];
-        if (firstPos.x === segment.x && firstPos.y === segment.y) {
+        // Check immediate position (strongest signal)
+        if (lookAheadPositions[dir][0].x === segment.x && lookAheadPositions[dir][0].y === segment.y) {
           obstacles[dir] = 1; // Immediate obstacle
         }
-        
-        const secondPos = lookAheadPositions[dir][1];
-        if (obstacles[dir] === 0 && secondPos.x === segment.x && secondPos.y === segment.y) {
-          obstacles[dir] = 0.7; // Further obstacle
+        // Check second position (medium signal)
+        else if (obstacles[dir] < 0.8 && lookAheadPositions[dir][1].x === segment.x && lookAheadPositions[dir][1].y === segment.y) {
+          obstacles[dir] = 0.8; // Medium distance obstacle
+        }
+        // Check third position (weaker signal)
+        else if (obstacles[dir] < 0.6 && lookAheadPositions[dir][2].x === segment.x && lookAheadPositions[dir][2].y === segment.y) {
+          obstacles[dir] = 0.6; // Further obstacle (weaker signal)
         }
       }
     }
