@@ -101,5 +101,6 @@ export const useGameLogic = () => {
     };
   }, [isGameRunning, updateGame]);
 
-  return { gameState, victories, startTime, generationInfo };
+  // Importante: Aquí es donde estaba el error, necesitamos incluir initializeGame en el objeto de retorno
+  return { gameState, victories, startTime, generationInfo, initializeGame };
 };
