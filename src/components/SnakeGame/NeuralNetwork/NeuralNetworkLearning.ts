@@ -8,10 +8,6 @@ export const applyLearning = (
   outputs: number[] = [], 
   reward: number = 1
 ): void => {
-  // Increment games played counter
-  const gamesPlayed = network.getGamesPlayed() + 1;
-  network.setGamesPlayed(gamesPlayed);
-  
   // Skip learning if we don't have inputs (no context for learning)
   if (inputs.length === 0) return;
   

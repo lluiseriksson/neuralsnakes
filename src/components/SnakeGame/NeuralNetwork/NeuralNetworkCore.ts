@@ -123,6 +123,11 @@ export class NeuralNetworkCore implements INeuralNetwork {
     return this.gamesPlayed;
   }
   
+  // Method to set games played - adding this to fix the TypeScript error
+  setGamesPlayed(count: number): void {
+    this.gamesPlayed = count;
+  }
+  
   // Method to update the best score
   updateBestScore(score: number): void {
     if (score > this.bestScore) {
