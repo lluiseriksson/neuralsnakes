@@ -107,7 +107,7 @@ const Index = () => {
           
           <div className="border-2 border-gray-700 rounded-lg overflow-hidden">
             {gameState.snakes && gameState.snakes.length > 0 ? (
-              <GameCanvas gameState={gameState} />
+              <GameCanvas gameState={gameState} onSelectSnake={handleSelectSnake} />
             ) : (
               <div className="w-[600px] h-[600px] flex items-center justify-center bg-gray-900 text-white">
                 Cargando juego...
