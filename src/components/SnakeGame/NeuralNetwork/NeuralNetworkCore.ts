@@ -1,39 +1,20 @@
-import { NeuralNetwork as INeuralNetwork } from "../types";
-import { sigmoid } from "../NeuralNetworkActivations";
-import { deserializeWeights, serializeWeights, generateRandomWeights } from "../NeuralNetworkMatrix";
-import { 
-  fetchBestModelFromDb, 
-  saveModelToDb, 
-  saveTrainingDataToDb
-} from "../database/neuralNetworkDb";
-import { applyLearning, cloneNetwork, mutateNetwork } from "./NeuralNetworkLearning";
 
-type Experience = {
-  inputs: number[];
-  outputs: number[];
-  success: boolean;
-  reward: number;
-  timestamp: number;
-};
+import { NeuralNetwork as INeuralNetwork } from "../types";
+import { deserializeWeights, serializeWeights, generateRandomWeights } from "../NeuralNetworkMatrix";
+import { applyLearning, cloneNetwork, mutateNetwork } from "./NeuralNetworkLearning";
+import { ExperienceManager } from "./core/NeuralNetworkExperience";
+import { NetworkStats } from "./core/NeuralNetworkStats";
+import { Predictor } from "./core/NeuralNetworkPrediction";
+import { NetworkPersistence } from "./core/NeuralNetworkPersistence";
 
 export class NeuralNetworkCore implements INeuralNetwork {
   private inputSize: number;
   private hiddenSize: number;
   private outputSize: number;
-  private weightsInputHidden: number[][];
-  private weightsHiddenOutput: number[][];
-  private id: string | null = null;
-  private score: number = 0;
-  private generation: number = 1;
-  private bestScore: number = 0;
-  private gamesPlayed: number = 0;
-  private learningAttempts: number = 0;
-  private successfulMoves: number = 0;
-  private failedMoves: number = 0;
-  private experiences: Experience[] = [];
-  private maxExperiences: number = 100;
-  private learningRate: number = 0.3;
-  private lastPredictions: number[] = [];
+  private predictor: Predictor;
+  private persistence: NetworkPersistence;
+  private stats: NetworkStats;
+  private experiences: ExperienceManager;
 
   constructor(
     inputSize: number, 
@@ -51,70 +32,27 @@ export class NeuralNetworkCore implements INeuralNetwork {
     this.outputSize = outputSize;
     
     const initialWeights = generateRandomWeights(inputSize, hiddenSize, outputSize);
-    this.weightsInputHidden = initialWeights.weightsInputHidden;
-    this.weightsHiddenOutput = initialWeights.weightsHiddenOutput;
+    this.predictor = new Predictor(
+      inputSize, 
+      hiddenSize, 
+      outputSize, 
+      initialWeights.weightsInputHidden, 
+      initialWeights.weightsHiddenOutput
+    );
     
     if (weights && weights.length === (inputSize * hiddenSize + hiddenSize * outputSize)) {
       const deserialized = deserializeWeights(weights, inputSize, hiddenSize, outputSize);
-      this.weightsInputHidden = deserialized.weightsInputHidden;
-      this.weightsHiddenOutput = deserialized.weightsHiddenOutput;
+      this.predictor.setWeights(deserialized.weightsInputHidden, deserialized.weightsHiddenOutput);
     }
     
-    if (id) {
-      this.id = id;
-      this.score = score || 0;
-      this.generation = generation || 1;
-      this.bestScore = bestScore || 0;
-      this.gamesPlayed = gamesPlayed || 0;
-    }
-    
-    if (generation && generation > 50) {
-      this.learningRate = Math.max(0.05, 0.3 - (generation / 1000));
-      console.log(`Network ${id || 'new'} (gen ${generation}) using adaptive learning rate: ${this.learningRate.toFixed(4)}`);
-    }
+    this.persistence = new NetworkPersistence(id);
+    this.stats = new NetworkStats(score, generation, bestScore, gamesPlayed);
+    this.experiences = new ExperienceManager();
   }
 
   predict(inputs: number[]): number[] {
-    if (inputs.length > this.inputSize) {
-      console.log(`Truncating inputs from ${inputs.length} to ${this.inputSize}`);
-      inputs = inputs.slice(0, this.inputSize);
-    } 
-    else if (inputs.length < this.inputSize) {
-      console.error(`Expected ${this.inputSize} inputs, got ${inputs.length}. Padding with zeros.`);
-      inputs = [...inputs, ...Array(this.inputSize - inputs.length).fill(0)];
-    }
-    
-    const addNoise = this.generation < 50;
-    const noiseLevel = Math.max(0, 0.1 - (this.generation / 500));
-    
-    const hiddenOutputs = this.weightsInputHidden.map(weights => {
-      let sum = 0;
-      for (let i = 0; i < this.inputSize; i++) {
-        sum += weights[i] * inputs[i];
-      }
-      
-      if (addNoise) {
-        sum += (Math.random() * 2 - 1) * noiseLevel;
-      }
-      
-      return sigmoid(sum);
-    });
-    
-    const outputs = this.weightsHiddenOutput.map(weights => {
-      let sum = 0;
-      for (let i = 0; i < this.hiddenSize; i++) {
-        sum += weights[i] * hiddenOutputs[i];
-      }
-      
-      if (addNoise) {
-        sum += (Math.random() * 2 - 1) * noiseLevel;
-      }
-      
-      return sigmoid(sum);
-    });
-    
-    this.lastPredictions = [...outputs];
-    
+    const outputs = this.predictor.predict(inputs, this.stats.getGeneration());
+    this.stats.setLastPredictions(outputs);
     return outputs;
   }
 
@@ -127,126 +65,86 @@ export class NeuralNetworkCore implements INeuralNetwork {
   }
   
   getId(): string | null {
-    return this.id;
+    return this.persistence.getId();
   }
   
   getGeneration(): number {
-    return this.generation;
+    return this.stats.getGeneration();
   }
   
   updateGeneration(generation: number): void {
-    this.generation = generation;
-    
-    this.learningRate = Math.max(0.05, 0.3 - (generation / 1000));
+    this.stats.updateGeneration(generation);
   }
   
   getBestScore(): number {
-    return this.bestScore;
+    return this.stats.getBestScore();
   }
   
   getGamesPlayed(): number {
-    return this.gamesPlayed;
+    return this.stats.getGamesPlayed();
   }
   
   setGamesPlayed(count: number): void {
-    this.gamesPlayed = count;
+    this.stats.setGamesPlayed(count);
   }
   
   updateBestScore(score: number): void {
-    if (score > this.bestScore) {
-      this.bestScore = score;
-    }
+    this.stats.updateBestScore(score);
   }
 
   getProgressPercentage(): number {
-    const perfectScore = 50;
-    return Math.min(100, (this.bestScore / perfectScore) * 100);
+    return this.stats.getProgressPercentage();
   }
 
   async save(score: number): Promise<string | null> {
-    this.score = score;
-    this.updateBestScore(score);
+    this.stats.setScore(score);
+    this.stats.updateBestScore(score);
     
-    const metadata = {
-      best_score: this.bestScore,
-      games_played: this.gamesPlayed,
-      performance: {
-        learningAttempts: this.learningAttempts,
-        successfulMoves: this.successfulMoves,
-        failedMoves: this.failedMoves,
-        learningRate: this.learningRate
-      }
+    const performanceStats = {
+      ...this.stats.getPerformanceStats(),
+      learningRate: this.stats.getLearningRate()
     };
     
-    const id = await saveModelToDb(this.id, this.getWeights(), score, this.generation, metadata);
-    if (id) this.id = id;
-    return id;
+    return await this.persistence.save(
+      this.getWeights(),
+      score,
+      this.stats.getGeneration(),
+      this.stats.getBestScore(),
+      this.stats.getGamesPlayed(),
+      performanceStats
+    );
   }
 
   async saveTrainingData(inputs: number[], outputs: number[], success: boolean): Promise<void> {
-    if (!this.id) return;
-    await saveTrainingDataToDb(this.id, inputs, outputs, success);
+    await this.persistence.saveTrainingData(inputs, outputs, success);
   }
 
   serializeWeights(): number[] {
-    return serializeWeights(this.weightsInputHidden, this.weightsHiddenOutput);
+    return serializeWeights(
+      this.predictor.getWeightsInputHidden(), 
+      this.predictor.getWeightsHiddenOutput()
+    );
   }
   
   deserializeWeights(flat: number[]): void {
     const deserialized = deserializeWeights(flat, this.inputSize, this.hiddenSize, this.outputSize);
-    this.weightsInputHidden = deserialized.weightsInputHidden;
-    this.weightsHiddenOutput = deserialized.weightsHiddenOutput;
-  }
-
-  private addExperience(inputs: number[], outputs: number[], success: boolean, reward: number): void {
-    this.experiences.push({ 
-      inputs, 
-      outputs, 
-      success, 
-      reward,
-      timestamp: Date.now()
-    });
-    
-    if (this.experiences.length > this.maxExperiences) {
-      this.experiences.shift();
-    }
-  }
-  
-  private replayExperiences(count: number = 5): void {
-    if (this.experiences.length < 10) return;
-    
-    const prioritizedExperiences = [...this.experiences].sort((a, b) => {
-      const recencyScoreA = (Date.now() - a.timestamp) / 60000;
-      const recencyScoreB = (Date.now() - b.timestamp) / 60000;
-      
-      const priorityA = a.reward - (recencyScoreA * 0.1);
-      const priorityB = b.reward - (recencyScoreB * 0.1);
-      
-      return priorityB - priorityA;
-    });
-    
-    for (let i = 0; i < Math.min(count, prioritizedExperiences.length); i++) {
-      const exp = prioritizedExperiences[i];
-      
-      const ageInMinutes = (Date.now() - exp.timestamp) / 60000;
-      const recencyFactor = Math.max(0.5, 1 - (ageInMinutes / 30));
-      
-      applyLearning(this, exp.success, exp.inputs, exp.outputs, exp.reward * recencyFactor);
-    }
+    this.predictor.setWeights(deserialized.weightsInputHidden, deserialized.weightsHiddenOutput);
   }
 
   learn(success: boolean, inputs: number[] = [], outputs: number[] = [], reward: number = 1): void {
     this.trackLearningAttempt(success);
     
     if (inputs.length > 0 && outputs.length > 0) {
-      this.addExperience([...inputs], [...outputs], success, reward);
+      this.experiences.addExperience([...inputs], [...outputs], success, reward);
     }
     
     applyLearning(this, success, inputs, outputs, reward);
     
     const replayThreshold = success ? 0.5 : 0.3;
     if (Math.random() < replayThreshold || reward > 1.5) {
-      this.replayExperiences();
+      this.experiences.replayExperiences(5, (exp_success, exp_inputs, exp_outputs, exp_reward) => {
+        applyLearning(this, exp_success, exp_inputs, exp_outputs, exp_reward);
+      });
     }
   }
 
@@ -259,19 +157,10 @@ export class NeuralNetworkCore implements INeuralNetwork {
   }
 
   getPerformanceStats(): { learningAttempts: number, successfulMoves: number, failedMoves: number } {
-    return {
-      learningAttempts: this.learningAttempts,
-      successfulMoves: this.successfulMoves,
-      failedMoves: this.failedMoves
-    };
+    return this.stats.getPerformanceStats();
   }
 
   trackLearningAttempt(success: boolean): void {
-    this.learningAttempts++;
-    if (success) {
-      this.successfulMoves++;
-    } else {
-      this.failedMoves++;
-    }
+    this.stats.trackLearningAttempt(success);
   }
 }
