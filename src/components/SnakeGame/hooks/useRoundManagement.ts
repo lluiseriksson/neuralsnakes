@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { GameState } from '../types';
-import { getModelCache, updateCurrentGeneration, incrementGeneration, trackGamePlayed } from './snakeCreation/modelCache';
+import { getModelCache, updateCurrentGeneration, incrementGeneration, trackGamePlayed, resetModelCaches } from './snakeCreation/modelCache';
 
 export const useRoundManagement = (
   gameState: GameState,
@@ -32,13 +32,19 @@ export const useRoundManagement = (
     
     // ALWAYS increment generation to force evolution
     let newGeneration = incrementGeneration();
-    console.log(`Forcing generation increment from ${currentGen} to ${newGeneration}`);
+    console.log(`⚡ Forcing generation increment from ${currentGen} to ${newGeneration} ⚡`);
     
     // Additional increment if good score achieved
-    if (maxScore >= 3) {
-      // For better scores, increment generation again
+    if (maxScore >= 2) {
+      // For better scores, increment generation again to advance faster
       newGeneration = incrementGeneration();
-      console.log(`Good score (${maxScore}) achieved! Incrementing generation again to ${newGeneration}`);
+      console.log(`⚡ Good score (${maxScore}) achieved! Incrementing generation again to ${newGeneration} ⚡`);
+    }
+    
+    // Clear model caches occasionally to force fresh loading
+    if (Math.random() < 0.25) { // 25% chance to reset caches
+      resetModelCaches();
+      console.log("Model caches reset to force fresh model loading");
     }
     
     if (maxScore > 0) {
@@ -47,7 +53,7 @@ export const useRoundManagement = (
       setVictories(prevVictories => {
         const newVictories = { ...prevVictories };
         winningSnakes.forEach(winner => {
-          console.log(`Snake ${winner.id} ganó con ${winner.score} puntos! (Generación ${winner.brain.getGeneration()})`);
+          console.log(`Snake ${winner.id} (${winner.color}) ganó con ${winner.score} puntos! (Generación ${winner.brain.getGeneration()})`);
           newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
         });
         return newVictories;
@@ -67,7 +73,7 @@ export const useRoundManagement = (
           
           // Save the model to DB
           const savedId = await winner.brain.save(winner.score);
-          console.log(`Saved winning model for snake ${winner.id} with score ${winner.score} (gen: ${winner.brain.getGeneration()}) - ID: ${savedId}`);
+          console.log(`Saved winning model for snake ${winner.id} (${winner.color}) with score ${winner.score} (gen: ${winner.brain.getGeneration()}) - ID: ${savedId}`);
           
           // Make sure generation tracking is updated
           updateCurrentGeneration(winner.brain.getGeneration());
@@ -79,8 +85,8 @@ export const useRoundManagement = (
 
     // Also save non-winners if they have a good score
     for (const snake of gameState.snakes) {
-      // Save models with at least score 2 or more that aren't already saved as winners
-      if (snake.score >= 2 && maxScore > 0 && snake.score !== maxScore) {
+      // Save models with at least score 1 or more (was 2)
+      if (snake.score >= 1 && maxScore > 0 && snake.score !== maxScore) {
         try {
           snake.brain.updateBestScore(snake.score);
           
@@ -88,7 +94,7 @@ export const useRoundManagement = (
           snake.brain.updateGeneration(newGeneration);
           
           await snake.brain.save(snake.score);
-          console.log(`Saved model for snake ${snake.id} with score ${snake.score} (gen: ${snake.brain.getGeneration()})`);
+          console.log(`Saved model for snake ${snake.id} (${snake.color}) with score ${snake.score} (gen: ${snake.brain.getGeneration()})`);
           
           // Make sure generation tracking is updated
           updateCurrentGeneration(snake.brain.getGeneration());

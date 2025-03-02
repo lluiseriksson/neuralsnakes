@@ -1,4 +1,3 @@
-
 import { NeuralNetwork as INeuralNetwork } from '../../types';
 import { NeuralNetwork } from '../../NeuralNetwork';
 import { 
@@ -20,8 +19,9 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
     const newGeneration = Math.max(currentGeneration, bestModelCache.getGeneration()) + 2;
     console.log(`Nueva generación para mejor modelo: ${newGeneration}`);
     
-    // Use a HIGHER mutation rate for the best model to encourage exploration
-    const brain = bestModelCache.clone(0.2);
+    // Use a LOWER mutation rate for the best model (0.15 instead of 0.2)
+    // This preserves more of what has worked previously
+    const brain = bestModelCache.clone(0.15);
     
     // Force update generation to ensure progression
     brain.updateGeneration(newGeneration);
@@ -42,14 +42,14 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
         const newGeneration = Math.max(currentGeneration, bestModel.getGeneration()) + 2;
         console.log(`Nueva generación para mejor modelo cargado: ${newGeneration}`);
         
-        // Use a HIGHER mutation rate for the best model
-        const brain = bestModel.clone(0.2);
+        // Use a LOWER mutation rate for the best model (0.15 instead of 0.2)
+        const brain = bestModel.clone(0.15);
         
         // Force update generation to ensure progression
         brain.updateGeneration(newGeneration);
         updateCurrentGeneration(newGeneration);
         
-        console.log(`Loaded best model brain created with generation ${brain.getGeneration()}`);
+        console.log(`BEST MODEL: Loaded best model brain created with generation ${brain.getGeneration()}`);
         return brain;
       } else {
         console.log("No se encontró un modelo existente, creando uno nuevo");
@@ -60,7 +60,7 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
         updateCurrentGeneration(newGeneration);
         
         setBestModelCache(brain); // Cache the new model too
-        console.log(`New model brain created with generation ${brain.getGeneration()}`);
+        console.log(`BEST MODEL: New model brain created with generation ${brain.getGeneration()}`);
         return brain;
       }
     } catch (loadError) {
@@ -71,7 +71,7 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
       updateCurrentGeneration(newGeneration);
       
       setBestModelCache(brain);
-      console.log(`Fallback model brain created with generation ${brain.getGeneration()}`);
+      console.log(`BEST MODEL: Fallback model brain created with generation ${brain.getGeneration()}`);
       return brain;
     }
   }

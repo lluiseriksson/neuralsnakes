@@ -9,7 +9,7 @@ let currentGeneration = 1; // Track current generation
 // Track games played since last generation increment
 let gamesSinceLastGenIncrement = 0;
 // Reduce this to force more frequent generation increments
-const GAMES_TO_FORCE_INCREMENT = 5; // Force increment after just 5 games
+const GAMES_TO_FORCE_INCREMENT = 3; // Force increment after just 3 games
 
 export const getModelCache = () => {
   return {
@@ -49,7 +49,7 @@ export const setCombinedModelCache = (model: INeuralNetwork | null) => {
 export const incrementGeneration = () => {
   currentGeneration += 1;
   gamesSinceLastGenIncrement = 0;
-  console.log(`Generation explicitly incremented to ${currentGeneration}`);
+  console.log(`⚡ Generation explicitly incremented to ${currentGeneration} ⚡`);
   return currentGeneration;
 };
 
@@ -59,7 +59,7 @@ export const trackGamePlayed = () => {
   
   // Force generation increment after a certain number of games - REDUCED THRESHOLD
   if (gamesSinceLastGenIncrement >= GAMES_TO_FORCE_INCREMENT) {
-    console.log(`Forcing generation increment after ${GAMES_TO_FORCE_INCREMENT} games`);
+    console.log(`⚡ Forcing generation increment after ${GAMES_TO_FORCE_INCREMENT} games ⚡`);
     return incrementGeneration();
   }
   
@@ -69,7 +69,7 @@ export const trackGamePlayed = () => {
 export const updateCurrentGeneration = (generation: number) => {
   // Always take the highest generation value
   if (generation > currentGeneration) {
-    console.log(`Generation updated from ${currentGeneration} to ${generation}`);
+    console.log(`⚡ Generation updated from ${currentGeneration} to ${generation} ⚡`);
     currentGeneration = generation;
     gamesSinceLastGenIncrement = 0;
   }
@@ -78,7 +78,7 @@ export const updateCurrentGeneration = (generation: number) => {
 
 export const forceGenerationUpdate = (generation: number) => {
   // Force a specific generation value (use carefully)
-  console.log(`Generation forcefully set from ${currentGeneration} to ${generation}`);
+  console.log(`⚡ Generation forcefully set from ${currentGeneration} to ${generation} ⚡`);
   currentGeneration = generation;
   gamesSinceLastGenIncrement = 0;
   return currentGeneration;
@@ -86,6 +86,7 @@ export const forceGenerationUpdate = (generation: number) => {
 
 export const resetModelCaches = () => {
   // Use this to clear caches between major game resets if needed
+  console.log("Resetting model caches (but keeping generation number)");
   bestModelCache = null;
   combinedModelCache = null;
   // Do NOT reset currentGeneration here as we want to maintain progression

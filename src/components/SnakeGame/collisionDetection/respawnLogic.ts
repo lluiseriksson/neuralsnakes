@@ -15,10 +15,16 @@ export const handleRespawn = (snakes: Snake[]): Snake[] => {
     incrementGeneration();
   }
   
+  // Keep track of the number of dead snakes for logging
+  let deadCount = 0;
+  
   for (let i = 0; i < updatedSnakes.length; i++) {
     const snake = updatedSnakes[i];
     
     if (!snake.alive) {
+      deadCount++;
+      console.log(`Respawning dead snake ${snake.id} (${snake.color})`);
+      
       // Generate respawn configuration
       const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(snake.id);
       
@@ -33,27 +39,41 @@ export const handleRespawn = (snakes: Snake[]): Snake[] => {
       updatedSnakes[i].positions = fallbackPositions;
       updatedSnakes[i].direction = direction;
       updatedSnakes[i].color = color;
-      updatedSnakes[i].alive = true;
+      updatedSnakes[i].alive = true; // Critical: Set alive to true immediately
       
-      // Schedule full respawn after a delay
-      setTimeout(() => {
-        createSnake(snake.id, spawnX, spawnY, direction, color)
-          .then(newSnake => {
-            if (newSnake && newSnake.brain) {
-              // Update the snake with new properties while keeping the reference
-              Object.assign(updatedSnakes[i], newSnake);
-              updatedSnakes[i].alive = true;
-              console.log(`Snake ${snake.id} respawned with generation ${newSnake.brain.getGeneration()}`);
-            } else {
-              console.error(`Created snake ${snake.id} has invalid brain`);
-            }
-          })
-          .catch(error => {
-            console.error(`Error respawning snake ${snake.id}:`, error);
-            // Snake already has fallback values set above
-          });
-      }, 1000);
+      console.log(`Snake ${snake.id} (${color}) temporarily respawned at (${spawnX},${spawnY})`);
+      
+      // Prevent double-respawning by using a closure to capture the current value of i
+      ((snakeIndex) => {
+        // Schedule full respawn after a shorter delay (500ms instead of 1000ms)
+        setTimeout(() => {
+          try {
+            createSnake(snake.id, spawnX, spawnY, direction, color)
+              .then(newSnake => {
+                if (newSnake && newSnake.brain) {
+                  // Update the snake with new properties while keeping the reference
+                  Object.assign(updatedSnakes[snakeIndex], newSnake);
+                  updatedSnakes[snakeIndex].alive = true; // Ensure alive is set again
+                  console.log(`Snake ${snake.id} (${color}) fully respawned with generation ${newSnake.brain.getGeneration()}`);
+                } else {
+                  console.error(`Created snake ${snake.id} has invalid brain, keeping fallback values`);
+                }
+              })
+              .catch(error => {
+                console.error(`Error respawning snake ${snake.id}:`, error);
+                // Snake already has fallback values set above, so it should still be visible
+                console.log(`Snake ${snake.id} will continue with fallback values`);
+              });
+          } catch (error) {
+            console.error(`Exception during respawn of snake ${snake.id}:`, error);
+          }
+        }, 500); // Reduced delay for faster respawn
+      })(i);
     }
+  }
+  
+  if (deadCount > 0) {
+    console.log(`Respawned ${deadCount} dead snakes. ${updatedSnakes.filter(s => s.alive).length} snakes are now alive.`);
   }
   
   return updatedSnakes;

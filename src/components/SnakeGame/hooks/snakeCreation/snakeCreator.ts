@@ -10,18 +10,21 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
     // Select the appropriate brain creation strategy based on snake ID
     if (id === 0) {
       // Yellow snake - best model brain
+      console.log(`Creating best model brain for yellow snake ${id}`);
       brain = await createBestModelBrain().catch(error => {
         console.error(`Error creating best model brain: ${error.message}`);
         return createRandomBrain(id);
       });
     } else if (id === 1) {
       // Blue snake - combined model brain
+      console.log(`Creating combined model brain for blue snake ${id}`);
       brain = await createCombinedModelBrain().catch(error => {
         console.error(`Error creating combined model brain: ${error.message}`);
         return createRandomBrain(id);
       });
     } else {
       // Other snakes - random brains
+      console.log(`Creating random brain for snake ${id}`);
       brain = createRandomBrain(id);
     }
 
