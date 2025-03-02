@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { GameState } from './types';
 import { CELL_SIZE, GRID_SIZE } from './constants';
@@ -25,6 +26,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
       return;
     }
 
+    // Only redraw if game state has changed
     const currentStateHash = JSON.stringify({
       snakes: gameState.snakes.map(s => ({ 
         pos: s.positions, 
@@ -41,9 +43,31 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
     lastDrawnStateRef.current = currentStateHash;
     console.log("Dibujando nuevo estado", frameCount);
 
+    // Clear canvas completely
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Draw grid lines for clarity (optional)
+    ctx.strokeStyle = '#111111';
+    ctx.lineWidth = 0.5;
+    
+    // Draw vertical grid lines
+    for (let x = 0; x <= GRID_SIZE; x++) {
+      ctx.beginPath();
+      ctx.moveTo(x * CELL_SIZE, 0);
+      ctx.lineTo(x * CELL_SIZE, GRID_SIZE * CELL_SIZE);
+      ctx.stroke();
+    }
+    
+    // Draw horizontal grid lines
+    for (let y = 0; y <= GRID_SIZE; y++) {
+      ctx.beginPath();
+      ctx.moveTo(0, y * CELL_SIZE);
+      ctx.lineTo(GRID_SIZE * CELL_SIZE, y * CELL_SIZE);
+      ctx.stroke();
+    }
+
+    // Draw apples
     if (gameState.apples && gameState.apples.length > 0) {
       ctx.fillStyle = '#ff0000';
       gameState.apples.forEach(apple => {
@@ -60,6 +84,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
         }
       });
 
+      // Apple highlight effect
       if (frameCount % 3 === 0) {
         ctx.fillStyle = '#ff6666';
         gameState.apples.forEach(apple => {
@@ -78,6 +103,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
       }
     }
 
+    // Draw snakes
     if (gameState.snakes && Array.isArray(gameState.snakes) && gameState.snakes.length > 0) {
       console.log(`Dibujando ${gameState.snakes.length} serpientes en el canvas`);
       const aliveSnakes = gameState.snakes.filter(s => s && s.alive);
@@ -171,6 +197,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Ensure canvas size is correctly set
     canvas.width = GRID_SIZE * CELL_SIZE;
     canvas.height = GRID_SIZE * CELL_SIZE;
     
@@ -202,6 +229,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState }) => {
         style={{
           width: `${GRID_SIZE * CELL_SIZE}px`,
           height: `${GRID_SIZE * CELL_SIZE}px`,
+          display: 'block', // Ensure canvas is displayed
         }}
         className="border border-gray-800 bg-black rounded-lg shadow-lg"
       />

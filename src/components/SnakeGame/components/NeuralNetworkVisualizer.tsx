@@ -53,7 +53,7 @@ const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = ({ activ
     ctx.fillText('Neural Network Decision Visualization', canvas.width / 2, 20);
 
     // Calculate positions
-    const inputLayerX = 60;
+    const inputLayerX = 80;  // Increased from 60 to allow more space for labels
     const outputLayerX = canvas.width - 60;
     const inputStartY = 60;
     const outputStartY = 80;
@@ -164,9 +164,9 @@ const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = ({ activ
     <div className="border rounded-lg p-2 bg-gray-900">
       <canvas 
         ref={canvasRef} 
-        width={380} 
+        width={400} // Increased from 380 to provide more space for labels
         height={300} 
-        className="w-full max-w-[380px]"
+        className="w-full max-w-[400px]"
       />
       <div className="mt-2 text-xs text-gray-300 px-2">
         <p>Snake #{activeSnake.id} - Score: {activeSnake.score}</p>

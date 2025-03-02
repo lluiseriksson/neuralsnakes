@@ -22,7 +22,7 @@ const GenerationTracker: React.FC<GenerationTrackerProps> = ({ snakes }) => {
   const yellowSnakeGeneration = yellowSnake?.brain?.getGeneration() || 0;
   
   return (
-    <div className="fixed top-4 left-4 bg-black/80 text-white p-2 rounded-md text-sm z-50 max-w-xs shadow-lg">
+    <div className="fixed top-4 right-4 bg-black/80 text-white p-2 rounded-md text-sm z-50 max-w-xs shadow-lg">
       <h3 className="font-bold text-yellow-400 mb-1">Información de evolución:</h3>
       <div className="grid grid-cols-2 gap-x-2 gap-y-1">
         <div>Generación actual:</div>
