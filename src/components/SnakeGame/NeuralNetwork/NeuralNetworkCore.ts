@@ -1,3 +1,4 @@
+
 import { NeuralNetwork as INeuralNetwork } from "../types";
 import { sigmoid } from "../NeuralNetworkActivations";
 import { deserializeWeights, serializeWeights, generateRandomWeights } from "../NeuralNetworkMatrix";
@@ -100,6 +101,10 @@ export class NeuralNetworkCore implements INeuralNetwork {
   
   getGeneration(): number {
     return this.generation;
+  }
+  
+  updateGeneration(generation: number): void {
+    this.generation = generation;
   }
   
   getBestScore(): number {
