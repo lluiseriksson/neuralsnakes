@@ -1,8 +1,9 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 import { useGameState } from './useGameState';
 import { useGameLoop } from './useGameLoop';
 import { useGameControls } from './useGameControls';
-import { useGameInitialization } from './useGameInitialization';
+import { useGameInitialization } from './useGameInitialization'; // Import stays the same because of index.ts
 import { useGameUpdate } from './useGameUpdate';
 import { useRoundManagement } from './useRoundManagement';
 import { useAppleManagement } from './useAppleManagement';
