@@ -15,24 +15,19 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
   if (bestModelCache) {
     console.log(`Usando el mejor modelo en cache (generación ${bestModelCache.getGeneration()}, puntuación: ${bestModelCache.getBestScore()})`);
     
-    // Always increment generation for evolutionary progress
-    const newGeneration = currentGeneration + 1;
+    // Always create a new generation for evolution
+    const newGeneration = Math.max(currentGeneration, bestModelCache.getGeneration()) + 1;
     console.log(`Nueva generación para mejor modelo: ${newGeneration}`);
     
     // Use a lower mutation rate for the best model to preserve good behaviors
     const brain = bestModelCache.clone(0.05);
     
-    // Create a new instance with the updated generation
-    const weights = brain.getWeights();
-    const newBrain = new NeuralNetwork(
-      8, 12, 4, weights, brain.getId(), 0, newGeneration, 
-      brain.getBestScore(), brain.getGamesPlayed() + 1
-    );
+    // Force update generation to ensure progression
+    brain.updateGeneration(newGeneration);
+    updateCurrentGeneration(newGeneration);
     
-    // Force update the generation counter
-    incrementGeneration();
-    
-    return newBrain;
+    console.log(`Best model brain created with generation ${brain.getGeneration()}`);
+    return brain;
   } else {
     console.log("Cargando el mejor modelo...");
     try {
@@ -42,42 +37,40 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
         console.log(`Modelo cargado (generación ${bestModel.getGeneration()}, puntuación: ${bestModel.getBestScore()})`);
         
         // Always increment generation for evolutionary progress
-        const newGeneration = Math.max(currentGeneration + 1, bestModel.getGeneration() + 1);
+        const newGeneration = Math.max(currentGeneration, bestModel.getGeneration()) + 1;
         console.log(`Nueva generación para mejor modelo cargado: ${newGeneration}`);
         
         // Use a lower mutation rate for the best model
         const brain = bestModel.clone(0.05);
         
-        // Create a new instance with the updated generation
-        const weights = brain.getWeights();
-        const newBrain = new NeuralNetwork(
-          8, 12, 4, weights, brain.getId(), 0, newGeneration, 
-          brain.getBestScore(), brain.getGamesPlayed() + 1
-        );
+        // Force update generation to ensure progression
+        brain.updateGeneration(newGeneration);
+        updateCurrentGeneration(newGeneration);
         
-        // Force update the generation counter
-        incrementGeneration();
-        
-        return newBrain;
+        console.log(`Loaded best model brain created with generation ${brain.getGeneration()}`);
+        return brain;
       } else {
         console.log("No se encontró un modelo existente, creando uno nuevo");
+        // For new models, force at least generation 1
+        const newGeneration = Math.max(currentGeneration, 1);
         const brain = new NeuralNetwork(8, 12, 4);
+        brain.updateGeneration(newGeneration);
+        updateCurrentGeneration(newGeneration);
         
-        // For new models, start with generation 1
-        const newBrain = new NeuralNetwork(
-          8, 12, 4, brain.getWeights(), null, 0, 1
-        );
-        setBestModelCache(newBrain); // Cache the new model too
-        return newBrain;
+        setBestModelCache(brain); // Cache the new model too
+        console.log(`New model brain created with generation ${brain.getGeneration()}`);
+        return brain;
       }
     } catch (loadError) {
       console.error("Error cargando el mejor modelo:", loadError);
+      const newGeneration = Math.max(currentGeneration, 1);
       const brain = new NeuralNetwork(8, 12, 4);
-      const newBrain = new NeuralNetwork(
-        8, 12, 4, brain.getWeights(), null, 0, 1
-      );
-      setBestModelCache(newBrain);
-      return newBrain;
+      brain.updateGeneration(newGeneration);
+      updateCurrentGeneration(newGeneration);
+      
+      setBestModelCache(brain);
+      console.log(`Fallback model brain created with generation ${brain.getGeneration()}`);
+      return brain;
     }
   }
 };
@@ -88,23 +81,18 @@ export const createCombinedModelBrain = async (): Promise<INeuralNetwork> => {
   if (combinedModelCache) {
     console.log(`Usando modelo combinado en cache (generación ${combinedModelCache.getGeneration()})`);
     
-    // Always increment generation for evolutionary progress
-    const newGeneration = currentGeneration + 1;
+    // Always create a new generation for evolution
+    const newGeneration = Math.max(currentGeneration, combinedModelCache.getGeneration()) + 1;
     console.log(`Nueva generación para modelo combinado: ${newGeneration}`);
     
     const brain = combinedModelCache.clone(0.08);
     
-    // Create a new instance with the updated generation
-    const weights = brain.getWeights();
-    const newBrain = new NeuralNetwork(
-      8, 12, 4, weights, brain.getId(), 0, newGeneration, 
-      brain.getBestScore(), brain.getGamesPlayed() + 1
-    );
+    // Force update generation to ensure progression
+    brain.updateGeneration(newGeneration);
+    updateCurrentGeneration(newGeneration);
     
-    // Force update the generation counter
-    incrementGeneration();
-    
-    return newBrain;
+    console.log(`Combined model brain created with generation ${brain.getGeneration()}`);
+    return brain;
   } else {
     console.log("Creando un nuevo modelo combinado...");
     try {
@@ -113,40 +101,39 @@ export const createCombinedModelBrain = async (): Promise<INeuralNetwork> => {
         setCombinedModelCache(combinedModel);
         console.log(`Modelo combinado creado (generación ${combinedModel.getGeneration()})`);
         
-        // Always increment generation for evolutionary progress
-        const newGeneration = Math.max(currentGeneration + 1, combinedModel.getGeneration() + 1);
+        // Always create a new generation for evolution
+        const newGeneration = Math.max(currentGeneration, combinedModel.getGeneration()) + 1;
         console.log(`Nueva generación para modelo combinado nuevo: ${newGeneration}`);
         
         const brain = combinedModel.clone(0.08);
         
-        // Create a new instance with the updated generation
-        const weights = brain.getWeights();
-        const newBrain = new NeuralNetwork(
-          8, 12, 4, weights, brain.getId(), 0, newGeneration, 
-          brain.getBestScore(), brain.getGamesPlayed() + 1
-        );
+        // Force update generation to ensure progression
+        brain.updateGeneration(newGeneration);
+        updateCurrentGeneration(newGeneration);
         
-        // Force update the generation counter
-        incrementGeneration();
-        
-        return newBrain;
+        console.log(`Loaded combined model brain created with generation ${brain.getGeneration()}`);
+        return brain;
       } else {
         console.log("No se pudo combinar modelos, creando uno nuevo");
+        const newGeneration = Math.max(currentGeneration, 1);
         const brain = new NeuralNetwork(8, 12, 4);
-        const newBrain = new NeuralNetwork(
-          8, 12, 4, brain.getWeights(), null, 0, 1
-        );
-        setCombinedModelCache(newBrain);
-        return newBrain;
+        brain.updateGeneration(newGeneration);
+        updateCurrentGeneration(newGeneration);
+        
+        setCombinedModelCache(brain);
+        console.log(`Fallback combined model brain created with generation ${brain.getGeneration()}`);
+        return brain;
       }
     } catch (combineError) {
       console.error("Error combining models:", combineError);
+      const newGeneration = Math.max(currentGeneration, 1);
       const brain = new NeuralNetwork(8, 12, 4);
-      const newBrain = new NeuralNetwork(
-        8, 12, 4, brain.getWeights(), null, 0, 1
-      );
-      setCombinedModelCache(newBrain);
-      return newBrain;
+      brain.updateGeneration(newGeneration);
+      updateCurrentGeneration(newGeneration);
+      
+      setCombinedModelCache(brain);
+      console.log(`Error fallback combined model brain created with generation ${brain.getGeneration()}`);
+      return brain;
     }
   }
 };
@@ -158,24 +145,32 @@ export const createRandomBrain = (baseId: number): INeuralNetwork => {
   if (baseModel) {
     // Create a mutated clone from one of our base models
     console.log(`Creando un nuevo modelo con mutaciones para la serpiente ${baseId} (generación ${currentGeneration})`);
+    
+    // Force generation to current or higher
+    const newGeneration = Math.max(currentGeneration, baseModel.getGeneration());
+    
     const brain = baseModel.clone(0.15);
     
-    // Use the current generation
-    const weights = brain.getWeights();
-    const newBrain = new NeuralNetwork(
-      8, 12, 4, weights, null, 0, currentGeneration
-    );
+    // Ensure this brain has the current generation
+    brain.updateGeneration(newGeneration);
+    
     // Apply higher mutation rate for random models to explore new strategies
-    newBrain.mutate(0.2);
-    return newBrain;
+    brain.mutate(0.2);
+    
+    console.log(`Random model brain created from base with generation ${brain.getGeneration()}`);
+    return brain;
   } else {
     // Brand new model
     console.log(`Creando un modelo totalmente nuevo para la serpiente ${baseId} (generación ${currentGeneration})`);
+    
     const brain = new NeuralNetwork(8, 12, 4);
-    const newBrain = new NeuralNetwork(
-      8, 12, 4, brain.getWeights(), null, 0, currentGeneration
-    );
-    newBrain.mutate(0.25); // Higher mutation for completely new models
-    return newBrain;
+    
+    // Ensure this brain has at least the current generation
+    brain.updateGeneration(Math.max(currentGeneration, 1));
+    
+    brain.mutate(0.25); // Higher mutation for completely new models
+    
+    console.log(`Brand new random model brain created with generation ${brain.getGeneration()}`);
+    return brain;
   }
 };

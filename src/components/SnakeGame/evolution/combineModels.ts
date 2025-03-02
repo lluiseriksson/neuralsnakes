@@ -2,7 +2,7 @@
 import { NeuralNetwork } from "../NeuralNetwork";
 import { NeuralNetwork as INeuralNetwork } from "../types";
 import { mutateWeights, combineWeights } from "../neuralNetworkUtils";
-import { getModelCache, incrementGeneration } from "../hooks/snakeCreation/modelCache";
+import { getModelCache, incrementGeneration, updateCurrentGeneration } from "../hooks/snakeCreation/modelCache";
 
 /**
  * Combines multiple models to create a new evolved model
@@ -38,6 +38,7 @@ export const combineModels = (models: INeuralNetwork[]): INeuralNetwork | null =
     
     // Calculate explicit new generation number
     // This ensures we're always moving forward in generations
+    // Force at least +1 from current generation to ensure progression
     const explicitNewGeneration = Math.max(
       newGeneration,
       currentGeneration + 1,
@@ -66,6 +67,9 @@ export const combineModels = (models: INeuralNetwork[]): INeuralNetwork | null =
     // Higher mutation rate to avoid local optima
     const mutatedWeights = mutateWeights(combinedModel.getWeights(), 0.15, 0.25);
     combinedModel.setWeights(mutatedWeights);
+    
+    // Make sure to update the global generation tracker
+    updateCurrentGeneration(explicitNewGeneration);
     
     console.log(`Created combined model with generation ${combinedModel.getGeneration()}`);
     return combinedModel;

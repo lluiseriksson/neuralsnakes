@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { GameState } from '../types';
-import { getModelCache, updateCurrentGeneration, incrementGeneration } from './snakeCreation/modelCache';
+import { getModelCache, updateCurrentGeneration, incrementGeneration, trackGamePlayed } from './snakeCreation/modelCache';
 
 export const useRoundManagement = (
   gameState: GameState,
@@ -24,10 +24,19 @@ export const useRoundManagement = (
     const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
     console.log(`Round ended. Max score: ${maxScore}`);
     
-    // We'll always increment the generation at the end of a round to ensure progression
+    // Always track that a game has been played
+    trackGamePlayed();
+    
+    // Get current generation
     let currentGen = getModelCache().currentGeneration;
-    const newGeneration = incrementGeneration();
-    console.log(`Incrementing generation from ${currentGen} to ${newGeneration} at end of round`);
+    
+    // Force generation increment if max score is high enough
+    let newGeneration = currentGen;
+    if (maxScore >= 5) {
+      // For better scores, always increment generation
+      newGeneration = incrementGeneration();
+      console.log(`Good score (${maxScore}) achieved! Incrementing generation from ${currentGen} to ${newGeneration}`);
+    }
     
     if (maxScore > 0) {
       const winningSnakes = gameState.snakes.filter(snake => snake.score === maxScore);

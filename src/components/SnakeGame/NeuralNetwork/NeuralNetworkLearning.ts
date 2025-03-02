@@ -60,7 +60,9 @@ export const applyLearning = (
   
   // Guardar datos de entrenamiento para análisis posterior
   if (network.getId() && inputs.length > 0) {
-    network.saveTrainingData(inputs, outputs, success);
+    network.saveTrainingData(inputs, outputs, success).catch(err => {
+      console.log("Error saving training data, but continuing", err);
+    });
   }
 }
 
@@ -105,16 +107,21 @@ export const cloneNetwork = (
   const outputSize = 4; // Tamaño de salida estándar
   
   const weights = network.getWeights();
+  
+  // IMPORTANT: Explicitly increment generation when cloning
+  const nextGeneration = network.getGeneration() + 1;
+  console.log(`Cloning network: incrementing generation from ${network.getGeneration()} to ${nextGeneration}`);
+  
   const clone = new NeuralNetworkCore(
     inputSize, 
     hiddenSize, 
     outputSize, 
     weights,
-    network.getId(),
+    null, // New ID for clone
+    0, // Reset score for new clone
+    nextGeneration, // Increment generation
     network.getBestScore(),
-    network.getGeneration() + 1,
-    network.getBestScore(),
-    0 // Restablecer juegos jugados
+    0 // Reset games played
   );
   
   // Aplicar mutaciones con probabilidad mutationRate
