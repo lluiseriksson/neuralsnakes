@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { GRID_SIZE, APPLE_COUNT } from '../constants';
-import { GameState } from '../types';
+import { GameState, Direction } from '../types';
 import { generateApple } from './useAppleGeneration';
 import { createSnake, generateSnakeSpawnConfig } from './snakeCreation';
 
@@ -9,7 +9,7 @@ import { createSnake, generateSnakeSpawnConfig } from './snakeCreation';
 const cachedInitialApples = Array.from({ length: APPLE_COUNT }, generateApple);
 
 // Función para crear un cerebro de respaldo para una serpiente
-const createFallbackSnake = (id: number, spawnX: number, spawnY: number, direction: string, color: string) => {
+const createFallbackSnake = (id: number, spawnX: number, spawnY: number, direction: Direction, color: string) => {
   return {
     id,
     positions: [{x: spawnX, y: spawnY}, {x: spawnX, y: spawnY+1}, {x: spawnX, y: spawnY+2}],
@@ -24,10 +24,42 @@ const createFallbackSnake = (id: number, spawnX: number, spawnY: number, directi
       getProgressPercentage: () => 0,
       updateBestScore: () => {},
       updateGeneration: () => {},
-      save: async () => "fallback-id"
+      save: async () => "fallback-id",
+      clone: () => ({ 
+        predict: () => [Math.random(), Math.random(), Math.random(), Math.random()],
+        learn: () => {},
+        getGeneration: () => 1,
+        getBestScore: () => 0,
+        getProgressPercentage: () => 0,
+        updateBestScore: () => {},
+        updateGeneration: () => {},
+        save: async () => "fallback-id",
+        clone: () => ({}),
+        getId: () => null,
+        getWeights: () => [],
+        setWeights: () => {},
+        mutate: () => {},
+        getGamesPlayed: () => 0,
+        saveTrainingData: async () => {},
+        getPerformanceStats: () => ({ learningAttempts: 0, successfulMoves: 0, failedMoves: 0 })
+      }),
+      getId: () => null,
+      getWeights: () => [],
+      setWeights: () => {},
+      mutate: () => {},
+      getGamesPlayed: () => 0,
+      saveTrainingData: async () => {},
+      getPerformanceStats: () => ({ learningAttempts: 0, successfulMoves: 0, failedMoves: 0 })
     },
     alive: true,
-    gridSize: GRID_SIZE
+    gridSize: GRID_SIZE,
+    movesWithoutEating: 0,
+    decisionMetrics: {
+      applesEaten: 0,
+      applesIgnored: 0,
+      badDirections: 0,
+      goodDirections: 0
+    }
   };
 };
 
@@ -71,20 +103,20 @@ export const useGameInitialization = (
           console.log(`Intentando crear serpiente ${i} en posición (${spawnX}, ${spawnY})`);
           
           try {
-            const snake = await createSnake(i, spawnX, spawnY, direction, color);
+            const snake = await createSnake(i, spawnX, spawnY, direction as Direction, color);
             console.log(`Serpiente ${i} creada con éxito, posiciones: ${snake.positions.length}`);
             return snake;
           } catch (snakeError) {
             console.error(`Error creando serpiente ${i}, usando serpiente de respaldo:`, snakeError);
             // Si falla la creación, usar una serpiente de respaldo
-            return createFallbackSnake(i, spawnX, spawnY, direction, color);
+            return createFallbackSnake(i, spawnX, spawnY, direction as Direction, color);
           }
         } catch (error) {
           console.error(`Error en configuración de serpiente ${i}:`, error);
           // Configuración de respaldo para la serpiente
           const backupConfig = [
             5 + i * 5, 5 + i * 3, 
-            ["UP", "DOWN", "LEFT", "RIGHT"][i % 4], 
+            ["UP", "DOWN", "LEFT", "RIGHT"][i % 4] as Direction, 
             ["#FFDD00", "#3388FF", "#FF3366", "#33CC66"][i % 4]
           ];
           console.log(`Usando configuración de respaldo para serpiente ${i}`);
@@ -92,7 +124,7 @@ export const useGameInitialization = (
             i, 
             backupConfig[0] as number, 
             backupConfig[1] as number, 
-            backupConfig[2] as string, 
+            backupConfig[2] as Direction, 
             backupConfig[3] as string
           );
         }
@@ -120,7 +152,32 @@ export const useGameInitialization = (
             getProgressPercentage: () => 0,
             updateBestScore: () => {},
             updateGeneration: () => {},
-            save: async () => "fallback-id"
+            save: async () => "fallback-id",
+            clone: () => ({ 
+              predict: () => [Math.random(), Math.random(), Math.random(), Math.random()],
+              learn: () => {},
+              getGeneration: () => 1,
+              getBestScore: () => 0,
+              getProgressPercentage: () => 0,
+              updateBestScore: () => {},
+              updateGeneration: () => {},
+              save: async () => "fallback-id",
+              clone: () => ({}),
+              getId: () => null,
+              getWeights: () => [],
+              setWeights: () => {},
+              mutate: () => {},
+              getGamesPlayed: () => 0,
+              saveTrainingData: async () => {},
+              getPerformanceStats: () => ({ learningAttempts: 0, successfulMoves: 0, failedMoves: 0 })
+            }),
+            getId: () => null,
+            getWeights: () => [],
+            setWeights: () => {},
+            mutate: () => {},
+            getGamesPlayed: () => 0,
+            saveTrainingData: async () => {},
+            getPerformanceStats: () => ({ learningAttempts: 0, successfulMoves: 0, failedMoves: 0 })
           };
         }
         
@@ -159,7 +216,7 @@ export const useGameInitialization = (
       // Crear un estado básico del juego en caso de error
       const basicSnakes = Array.from({ length: 4 }, (_, i) => {
         const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(i);
-        return createFallbackSnake(i, spawnX, spawnY, direction, color);
+        return createFallbackSnake(i, spawnX, spawnY, direction as Direction, color);
       });
       
       setGameState({
