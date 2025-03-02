@@ -52,9 +52,9 @@ const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = ({ activ
     ctx.textAlign = 'center';
     ctx.fillText('Neural Network Decision Visualization', canvas.width / 2, 20);
 
-    // Calculate positions
-    const inputLayerX = 80;  // Increased from 60 to allow more space for labels
-    const outputLayerX = canvas.width - 60;
+    // Calculate positions - Increased spacing for better visibility
+    const inputLayerX = 120;  // Increased from 80 to allow more space for labels
+    const outputLayerX = canvas.width - 80;
     const inputStartY = 60;
     const outputStartY = 80;
     const nodeRadius = 12;
@@ -80,10 +80,14 @@ const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = ({ activ
       ctx.strokeStyle = '#FFFFFF';
       ctx.stroke();
       
-      // Draw node label
+      // Draw node label with improved visibility
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '10px Arial';
       ctx.textAlign = 'right';
+      // Draw label with a black outline for better visibility
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#000000';
+      ctx.strokeText(nodeValues.inputLabels[index], inputLayerX - nodeRadius - 5, y + 4);
       ctx.fillText(nodeValues.inputLabels[index], inputLayerX - nodeRadius - 5, y + 4);
       
       // Draw node value
@@ -115,10 +119,13 @@ const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = ({ activ
       ctx.strokeStyle = isChosen ? '#FFFF00' : '#FFFFFF';
       ctx.stroke();
       
-      // Draw node label
+      // Draw node label with improved visibility
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '10px Arial';
       ctx.textAlign = 'left';
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#000000';
+      ctx.strokeText(nodeValues.outputLabels[index], outputLayerX + nodeRadius + 5, y + 4);
       ctx.fillText(nodeValues.outputLabels[index], outputLayerX + nodeRadius + 5, y + 4);
       
       // Draw node value
@@ -164,9 +171,9 @@ const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = ({ activ
     <div className="border rounded-lg p-2 bg-gray-900">
       <canvas 
         ref={canvasRef} 
-        width={400} // Increased from 380 to provide more space for labels
+        width={500} // Increased from 400 to provide more space for labels
         height={300} 
-        className="w-full max-w-[400px]"
+        className="w-full h-full"
       />
       <div className="mt-2 text-xs text-gray-300 px-2">
         <p>Snake #{activeSnake.id} - Score: {activeSnake.score}</p>
