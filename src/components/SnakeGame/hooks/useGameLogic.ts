@@ -3,7 +3,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useGameState } from './useGameState';
 import { useGameLoop } from './useGameLoop';
 import { useGameControls } from './useGameControls';
-import { useGameInitialization } from './useGameInitialization'; // Import stays the same because of index.ts
+import { useGameInitialization } from './useGameInitialization';
 import { useGameUpdate } from './useGameUpdate';
 import { useRoundManagement } from './useRoundManagement';
 import { useAppleManagement } from './useAppleManagement';
@@ -63,7 +63,7 @@ export const useGameLogic = () => {
     ensureMinimumApples
   );
 
-  // Extract game loop logic
+  // Extract game loop logic - Usamos un intervalo más corto para mayor reactividad
   useGameLoop(
     isGameRunning,
     updateGame
@@ -80,18 +80,47 @@ export const useGameLogic = () => {
   // Inicialización inicial - convertida a useCallback para evitar recreaciones
   const startGame = useCallback(async () => {
     console.log("useGameLogic: Solicitando inicialización inicial del juego");
-    await initializeGame();
-    console.log("useGameLogic: Inicialización inicial completada");
-  }, [initializeGame]);
+    // Asegurarnos de limpiar cualquier loop previo
+    if (gameLoopRef.current) {
+      clearInterval(gameLoopRef.current);
+      gameLoopRef.current = null;
+    }
+    
+    // Reiniciar el estado de procesamiento antes de inicializar
+    isProcessingUpdate.current = false;
+    
+    try {
+      await initializeGame();
+      console.log("useGameLogic: Inicialización inicial completada");
+      
+      // Asegurarse explícitamente que el juego comienza a correr
+      setIsGameRunning(true);
+    } catch (error) {
+      console.error("Error crítico en inicialización:", error);
+      
+      // Intentar recuperar el juego en caso de error
+      setIsGameRunning(false);
+      setTimeout(() => {
+        console.log("Intento de recuperación automática después de error");
+        initializeGame().catch(console.error);
+      }, 2000);
+    }
+  }, [initializeGame, gameLoopRef, isProcessingUpdate, setIsGameRunning]);
 
   // Initialize game when component mounts - only once
   useEffect(() => {
     console.log("useGameLogic: Efecto de montaje ejecutado");
-    startGame().catch(error => {
-      console.error("Error en la inicialización inicial:", error);
-    });
+    // Iniciar con un pequeño retraso para asegurar que los componentes están montados
+    const timer = setTimeout(() => {
+      startGame().catch(error => {
+        console.error("Error en la inicialización inicial:", error);
+        // Intentar reiniciar en caso de error
+        setTimeout(startGame, 2000);
+      });
+    }, 300);
     
     return () => {
+      clearTimeout(timer);
       if (gameLoopRef.current) {
         clearInterval(gameLoopRef.current);
         gameLoopRef.current = null;

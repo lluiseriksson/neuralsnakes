@@ -9,27 +9,31 @@ interface SnakeSelectorProps {
 }
 
 const SnakeSelector: React.FC<SnakeSelectorProps> = ({ snakes, onSelectSnake, activeSnakeId }) => {
-  const livingSnakes = snakes.filter(snake => snake.alive);
+  // Asegurarnos de que siempre hay un array válido de serpientes
+  const validSnakes = Array.isArray(snakes) ? snakes : [];
   
+  // Mostrar todas las serpientes, no solo las vivas para diagnóstico
   return (
     <div className="flex flex-wrap gap-2 mb-2">
-      {livingSnakes.map(snake => (
+      {validSnakes.map(snake => (
         <button
           key={snake.id}
           onClick={() => onSelectSnake(snake)}
           className={`px-3 py-1 text-xs rounded-full transition-colors ${
             activeSnakeId === snake.id
               ? 'bg-blue-600 text-white'
-              : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+              : snake.alive 
+                ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
           }`}
           style={{ borderLeft: `4px solid ${snake.color}` }}
         >
-          Snake #{snake.id} - Score: {snake.score}
+          Snake #{snake.id} - {snake.alive ? 'Alive' : 'Dead'} - Score: {snake.score}
         </button>
       ))}
-      {livingSnakes.length === 0 && (
+      {validSnakes.length === 0 && (
         <div className="text-gray-400 text-sm px-2">
-          No living snakes to select
+          No snakes available - Game may be initializing
         </div>
       )}
     </div>

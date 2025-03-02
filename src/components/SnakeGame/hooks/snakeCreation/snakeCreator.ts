@@ -1,5 +1,5 @@
 import { Direction, Snake } from '../../types';
-import { generateInitialSnake } from '../../snakeMovement';
+import { generateInitialSnake } from '../../movement/initialSnake';
 import { createBestModelBrain, createCombinedModelBrain, createRandomBrain } from './createSnakeBrain';
 
 export const createSnake = async (id: number, x: number, y: number, direction: Direction, color: string): Promise<Snake> => {
@@ -33,30 +33,36 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       brain = createRandomBrain(id);
     }
 
-    // Generate initial positions
-    const positions = generateInitialSnake(x, y);
+    // Generate initial positions - con comprobación de seguridad
+    let positions = generateInitialSnake(x, y);
     
-    if (!positions || positions.length === 0) {
-      console.error(`Error generating initial positions for snake ${id}`);
+    // Verificar que las posiciones son válidas
+    if (!positions || !Array.isArray(positions) || positions.length === 0) {
+      console.error(`Error generating initial positions for snake ${id}, using fallback`);
       // Create simple initial positions as fallback
-      const fallbackPositions = [
+      positions = [
         { x, y },
         { x, y: y + 1 },
         { x, y: y + 2 }
       ];
       console.log(`Using fallback positions for snake ${id}`);
-      
-      return {
-        id,
-        positions: fallbackPositions,
-        direction,
-        color,
-        score: 0,
-        brain,
-        alive: true,
-        gridSize: 30
-      };
     }
+    
+    // Verificar que cada posición es válida
+    for (let i = 0; i < positions.length; i++) {
+      if (typeof positions[i].x !== 'number' || typeof positions[i].y !== 'number') {
+        console.error(`Invalid position at index ${i} for snake ${id}, fixing`);
+        positions[i] = { x: x + i, y };
+      }
+    }
+    
+    // Inicializar métricas de decisión para mejor análisis
+    const decisionMetrics = {
+      applesEaten: 0,
+      applesIgnored: 0,
+      badDirections: 0,
+      goodDirections: 0
+    };
     
     console.log(`Snake ${id} created at (${x}, ${y}) with ${positions.length} segments and generation ${brain.getGeneration()}`);
 
@@ -68,7 +74,9 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       score: 0,
       brain,
       alive: true,
-      gridSize: 30
+      gridSize: 30,
+      movesWithoutEating: 0,
+      decisionMetrics
     };
   } catch (error) {
     console.error(`Error creating snake ${id}:`, error);
@@ -91,7 +99,14 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       score: 0,
       brain: fallbackBrain,
       alive: true,
-      gridSize: 30
+      gridSize: 30,
+      movesWithoutEating: 0,
+      decisionMetrics: {
+        applesEaten: 0,
+        applesIgnored: 0,
+        badDirections: 0,
+        goodDirections: 0
+      }
     };
   }
 };
