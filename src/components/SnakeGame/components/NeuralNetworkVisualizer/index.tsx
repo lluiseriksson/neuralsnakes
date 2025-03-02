@@ -12,7 +12,14 @@ const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = ({ activ
   if (!activeSnake) {
     return (
       <div className="border rounded-lg p-4 bg-gray-900 text-white h-[300px] flex items-center justify-center transition-all duration-300 animate-pulse">
-        <p className="animate-fade-in">Select a snake to view its neural network</p>
+        <div className="text-center">
+          <p className="animate-fade-in mb-2">Select a snake to view its neural network</p>
+          <div className="flex justify-center space-x-3">
+            <div className="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"></div>
+            <div className="w-3 h-3 rounded-full bg-blue-400 animate-pulse"></div>
+            <div className="w-3 h-3 rounded-full bg-green-400 animate-pulse"></div>
+          </div>
+        </div>
       </div>
     );
   }

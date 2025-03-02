@@ -12,39 +12,52 @@ export const drawNode = (
   label: string, 
   isInput: boolean,
   isSelected: boolean = false,
-  nodeRadius: number = 12
+  nodeRadius: number = 12,
+  options: NodeStylingOptions = {}
 ): NodePosition => {
   // Add subtle position animation
-  const animX = x + Math.sin(Date.now() / 1000 + (isInput ? 0 : Math.PI)) * 1;
-  const animY = y + Math.cos(Date.now() / 1200 + (isInput ? Math.PI : 0)) * 1;
+  const time = Date.now();
+  const animSpeed = options.glowEffect ? 1200 : 1000;
+  const animX = x + Math.sin(time / animSpeed + (isInput ? 0 : Math.PI)) * 1;
+  const animY = y + Math.cos(time / (animSpeed + 200) + (isInput ? Math.PI : 0)) * 1;
   
-  // Get color based on activation value
+  // Get color based on activation value and node type
   const color = getNodeColor(value, isInput);
   
-  // Draw node circle with pulsating effect
-  const pulseSize = isSelected ? (Math.sin(Date.now() / 300) * 0.15) + 1 : 1;
+  // Calculate pulsating effect
+  const pulseSpeed = isSelected ? 300 : 500;
+  const pulseSize = (options.pulseEffect || isSelected) 
+    ? (Math.sin(time / pulseSpeed) * 0.15) + 1 
+    : 1;
   const animatedRadius = nodeRadius * pulseSize;
   
+  // Draw node with glow effect
+  if (options.glowEffect || isSelected) {
+    const glowIntensity = (Math.sin(time / 400) * 0.3) + 0.7;
+    ctx.shadowColor = isInput ? 'rgba(100, 255, 100, 0.6)' : 'rgba(255, 255, 0, 0.6)';
+    ctx.shadowBlur = 10 * glowIntensity;
+  }
+  
+  // Draw node circle
   ctx.beginPath();
   ctx.arc(animX, animY, animatedRadius, 0, 2 * Math.PI);
   ctx.fillStyle = color;
   ctx.fill();
   
-  // Draw node border with glowing effect for selected nodes
+  // Draw node border
   const borderWidth = isSelected ? 3 : 1;
   ctx.lineWidth = borderWidth;
   
   if (isSelected) {
     // Create glowing effect for selected nodes
-    const glowIntensity = (Math.sin(Date.now() / 200) * 0.3) + 0.7;
+    const glowIntensity = (Math.sin(time / 200) * 0.3) + 0.7;
     ctx.strokeStyle = `rgba(255, 255, 0, ${glowIntensity})`;
-    
-    // Add outer glow
-    ctx.shadowColor = 'rgba(255, 255, 0, 0.5)';
-    ctx.shadowBlur = 10 * glowIntensity;
+  } else if (options.glowEffect) {
+    // Create subtle glow for apple inputs
+    const glowIntensity = (Math.sin(time / 300) * 0.2) + 0.8;
+    ctx.strokeStyle = `rgba(100, 255, 100, ${glowIntensity})`;
   } else {
     ctx.strokeStyle = '#FFFFFF';
-    ctx.shadowBlur = 0;
   }
   
   ctx.stroke();

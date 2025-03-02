@@ -1,5 +1,5 @@
 
-import { NodePosition, NodeValues, OutputDrawResult } from './types';
+import { NodePosition, NodeValues, OutputDrawResult, NodeStylingOptions } from './types';
 import { drawNode } from './drawNode';
 
 // Draw output nodes
@@ -16,9 +16,24 @@ export const drawOutputNodes = (
   // Find the selected (highest activation) output
   const selectedIndex = nodeValues.outputs.indexOf(Math.max(...nodeValues.outputs));
   
+  // Add animation timing offset for staggered effect
+  const time = Date.now() / 1000;
+  
   nodeValues.outputs.forEach((value, index) => {
-    const y = outputStartY + (index * outputSpacing);
+    // Add slight movement based on time for visual interest
+    const oscillation = Math.sin(time + index * 0.5) * 2;
+    const y = outputStartY + (index * outputSpacing) + oscillation;
+    
     const isSelected = index === selectedIndex;
+    
+    // Custom styling options
+    const nodeOptions: NodeStylingOptions = {
+      radius: nodeRadius,
+      isSelected,
+      isInput: false,
+      pulseEffect: true,
+      glowEffect: isSelected // Make selected output glow
+    };
     
     const position = drawNode(
       ctx, 
@@ -28,7 +43,8 @@ export const drawOutputNodes = (
       nodeValues.outputLabels[index], 
       false,
       isSelected,
-      nodeRadius
+      nodeRadius,
+      nodeOptions
     );
     
     positions.push(position);

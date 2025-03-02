@@ -39,10 +39,11 @@ export interface CanvasLayout {
 export interface ConnectionStyle {
   opacity: number;
   width: number;
-  dashPattern?: number[];
-  flowSpeed?: number;
-  color?: string;
+  dashPattern: number[];
+  flowSpeed: number;
   gradient?: boolean;
+  colorStart?: string;
+  colorEnd?: string;
 }
 
 // Learning event for history visualization

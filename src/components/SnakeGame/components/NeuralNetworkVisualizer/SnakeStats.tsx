@@ -7,12 +7,44 @@ interface SnakeStatsProps {
 }
 
 const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
+  // Calculate success rate with safety check
+  const totalAttempts = activeSnake.brain.getPerformanceStats().learningAttempts || 1;
+  const successRate = (activeSnake.brain.getPerformanceStats().successfulMoves / totalAttempts * 100).toFixed(1);
+  
+  // Special styling for different snake types
+  const getSnakeTypeStyle = () => {
+    switch (activeSnake.id) {
+      case 0: return "text-yellow-400"; // Yellow snake
+      case 1: return "text-blue-400";   // Blue snake
+      default: return "text-gray-300";  // Other snakes
+    }
+  };
+  
+  // Get snake type label
+  const getSnakeTypeLabel = () => {
+    switch (activeSnake.id) {
+      case 0: return "Best Model (Yellow)";
+      case 1: return "Combined Model (Blue)";
+      default: return `Experimental #${activeSnake.id}`;
+    }
+  };
+
   return (
-    <div className="mt-2 text-xs text-gray-300 px-2">
-      <p>Snake #{activeSnake.id} - Score: {activeSnake.score}</p>
+    <div className="mt-2 text-xs px-2">
+      <p className={`font-semibold ${getSnakeTypeStyle()}`}>
+        {getSnakeTypeLabel()} - Score: {activeSnake.score}
+      </p>
       <div className="flex justify-between text-xs mt-1">
-        <span>Success rate: {(activeSnake.brain.getPerformanceStats().successfulMoves / (activeSnake.brain.getPerformanceStats().learningAttempts || 1) * 100).toFixed(1)}%</span>
+        <span>Success rate: {successRate}%</span>
         <span>Gen: {activeSnake.brain.getGeneration()}</span>
+      </div>
+      <div className="mt-1 text-xs">
+        <div className="w-full bg-gray-800 h-1 rounded-full">
+          <div 
+            className={`h-1 rounded-full ${activeSnake.id === 0 ? 'bg-yellow-400' : activeSnake.id === 1 ? 'bg-blue-500' : 'bg-green-500'}`}
+            style={{ width: `${Math.min(parseInt(successRate), 100)}%` }}
+          ></div>
+        </div>
       </div>
     </div>
   );
