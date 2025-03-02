@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { GRID_SIZE, APPLE_COUNT } from '../constants';
-import { GameState, Direction } from '../types';
+import { GameState, Direction, NeuralNetwork } from '../types';
 import { generateApple } from './useAppleGeneration';
 import { createSnake, generateSnakeSpawnConfig } from './snakeCreation';
 
@@ -10,22 +10,19 @@ const cachedInitialApples = Array.from({ length: APPLE_COUNT }, generateApple);
 
 // Función para crear un cerebro de respaldo para una serpiente
 const createFallbackSnake = (id: number, spawnX: number, spawnY: number, direction: Direction, color: string) => {
-  return {
-    id,
-    positions: [{x: spawnX, y: spawnY}, {x: spawnX, y: spawnY+1}, {x: spawnX, y: spawnY+2}],
-    direction,
-    color,
-    score: 0,
-    brain: {
-      predict: () => [Math.random(), Math.random(), Math.random(), Math.random()],
-      learn: () => {},
-      getGeneration: () => 1,
-      getBestScore: () => 0,
-      getProgressPercentage: () => 0,
-      updateBestScore: () => {},
-      updateGeneration: () => {},
-      save: async () => "fallback-id",
-      clone: () => ({ 
+  // Create a properly typed fallback brain that satisfies the NeuralNetwork interface
+  const fallbackBrain: NeuralNetwork = {
+    predict: () => [Math.random(), Math.random(), Math.random(), Math.random()],
+    learn: () => {},
+    getGeneration: () => 1,
+    getBestScore: () => 0,
+    getProgressPercentage: () => 0,
+    updateBestScore: () => {},
+    updateGeneration: () => {},
+    save: async () => "fallback-id",
+    clone: () => {
+      // Return a properly typed NeuralNetwork instead of an empty object
+      return {
         predict: () => [Math.random(), Math.random(), Math.random(), Math.random()],
         learn: () => {},
         getGeneration: () => 1,
@@ -34,7 +31,7 @@ const createFallbackSnake = (id: number, spawnX: number, spawnY: number, directi
         updateBestScore: () => {},
         updateGeneration: () => {},
         save: async () => "fallback-id",
-        clone: () => ({}),
+        clone: () => fallbackBrain,
         getId: () => null,
         getWeights: () => [],
         setWeights: () => {},
@@ -42,15 +39,24 @@ const createFallbackSnake = (id: number, spawnX: number, spawnY: number, directi
         getGamesPlayed: () => 0,
         saveTrainingData: async () => {},
         getPerformanceStats: () => ({ learningAttempts: 0, successfulMoves: 0, failedMoves: 0 })
-      }),
-      getId: () => null,
-      getWeights: () => [],
-      setWeights: () => {},
-      mutate: () => {},
-      getGamesPlayed: () => 0,
-      saveTrainingData: async () => {},
-      getPerformanceStats: () => ({ learningAttempts: 0, successfulMoves: 0, failedMoves: 0 })
+      };
     },
+    getId: () => null,
+    getWeights: () => [],
+    setWeights: () => {},
+    mutate: () => {},
+    getGamesPlayed: () => 0,
+    saveTrainingData: async () => {},
+    getPerformanceStats: () => ({ learningAttempts: 0, successfulMoves: 0, failedMoves: 0 })
+  };
+
+  return {
+    id,
+    positions: [{x: spawnX, y: spawnY}, {x: spawnX, y: spawnY+1}, {x: spawnX, y: spawnY+2}],
+    direction,
+    color,
+    score: 0,
+    brain: fallbackBrain,
     alive: true,
     gridSize: GRID_SIZE,
     movesWithoutEating: 0,
@@ -130,11 +136,12 @@ export const useGameInitialization = (
         }
       });
       
-      let snakes = await Promise.all(snakePromises);
+      // Wait for all snakes to be created, this returns an array
+      const snakes = await Promise.all(snakePromises);
       console.log(`Todas las serpientes creadas: ${snakes.length}`);
       
-      // Verificar que todas las serpientes tienen posiciones válidas y cerebros
-      snakes = snakes.map(snake => {
+      // Validate and fix any snakes as needed
+      const validatedSnakes = snakes.map(snake => {
         if (!snake.positions || snake.positions.length === 0) {
           console.error(`Serpiente ${snake.id} no tiene posiciones válidas, aplicando corrección`);
           const [spawnX, spawnY] = generateSnakeSpawnConfig(snake.id);
@@ -144,41 +151,16 @@ export const useGameInitialization = (
         // Verificar que el cerebro tiene todas las funciones necesarias
         if (!snake.brain || !snake.brain.predict || !snake.brain.getGeneration) {
           console.error(`Serpiente ${snake.id} tiene cerebro inválido, aplicando cerebro de respaldo`);
-          snake.brain = {
-            predict: () => [Math.random(), Math.random(), Math.random(), Math.random()],
-            learn: () => {},
-            getGeneration: () => 1,
-            getBestScore: () => 0,
-            getProgressPercentage: () => 0,
-            updateBestScore: () => {},
-            updateGeneration: () => {},
-            save: async () => "fallback-id",
-            clone: () => ({ 
-              predict: () => [Math.random(), Math.random(), Math.random(), Math.random()],
-              learn: () => {},
-              getGeneration: () => 1,
-              getBestScore: () => 0,
-              getProgressPercentage: () => 0,
-              updateBestScore: () => {},
-              updateGeneration: () => {},
-              save: async () => "fallback-id",
-              clone: () => ({}),
-              getId: () => null,
-              getWeights: () => [],
-              setWeights: () => {},
-              mutate: () => {},
-              getGamesPlayed: () => 0,
-              saveTrainingData: async () => {},
-              getPerformanceStats: () => ({ learningAttempts: 0, successfulMoves: 0, failedMoves: 0 })
-            }),
-            getId: () => null,
-            getWeights: () => [],
-            setWeights: () => {},
-            mutate: () => {},
-            getGamesPlayed: () => 0,
-            saveTrainingData: async () => {},
-            getPerformanceStats: () => ({ learningAttempts: 0, successfulMoves: 0, failedMoves: 0 })
-          };
+          // Use our typed fallback brain
+          const [spawnX, spawnY, direction] = generateSnakeSpawnConfig(snake.id);
+          const fixedSnake = createFallbackSnake(
+            snake.id, 
+            spawnX, 
+            spawnY, 
+            direction as Direction, 
+            snake.color
+          );
+          return fixedSnake;
         }
         
         return snake;
@@ -186,15 +168,15 @@ export const useGameInitialization = (
       
       // Actualizar estado del juego con las serpientes creadas
       setGameState({
-        snakes,
+        snakes: validatedSnakes,
         apples: [...cachedInitialApples],
         gridSize: GRID_SIZE,
       });
       
       // Actualizar información de generación con manejo seguro de cerebros nulos
-      const generations = snakes.map(s => s.brain?.getGeneration?.() || 1);
-      const scores = snakes.map(s => s.brain?.getBestScore?.() || 0);
-      const progresses = snakes.map(s => s.brain?.getProgressPercentage?.() || 0);
+      const generations = validatedSnakes.map(s => s.brain?.getGeneration?.() || 1);
+      const scores = validatedSnakes.map(s => s.brain?.getBestScore?.() || 0);
+      const progresses = validatedSnakes.map(s => s.brain?.getProgressPercentage?.() || 0);
       
       const highestGeneration = Math.max(...generations);
       const highestScore = Math.max(...scores);
@@ -248,3 +230,4 @@ export const useGameInitialization = (
 
   return { initializeGame };
 };
+
