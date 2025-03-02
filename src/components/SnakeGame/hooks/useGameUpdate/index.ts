@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { GameState } from '../../types';
-import { checkCollisions } from '../useCollisionDetection';
+import { checkCollisions, getCollisionInfo } from '../../collisionDetection';
 import { processSnakesMovement, hasLivingSnakes, storePreviousPositions } from './snakeProcessing';
 import { calculatePreviousDistances, calculateDistanceToClosestApple } from './calculateDistances';
 import { applyPositiveAppleLearning, applyDistanceBasedLearning, applyMissedApplePenalty } from './applyLearning';
@@ -55,11 +55,19 @@ export const useGameUpdate = (
           let finalApples = ensureMinimumApples(newApples);
           let snakesToUpdate = [...snakesAfterCollisions];
           
-          // Process learning for each snake
+          // Process learning for each snake with enhanced visualization data
           snakesToUpdate.forEach((snake, index) => {
             if (!snake.alive) return;
 
             const head = snake.positions[0];
+            
+            // Add collision info for visualization
+            if (!snake.debugInfo) {
+              snake.debugInfo = {};
+            }
+            
+            // Get detailed collision info for visualization
+            snake.debugInfo.collisionInfo = getCollisionInfo(snake.id, head, finalApples);
             
             // Check if snake ate an apple
             const appleIndex = finalApples.findIndex(apple => 
@@ -69,6 +77,10 @@ export const useGameUpdate = (
             if (appleIndex !== -1) {
               console.log(`Snake ${snake.id} ate an apple at (${head.x}, ${head.y})`);
               snake.score += 1;
+              
+              // Record this action for visualization
+              if (!snake.debugInfo.actions) snake.debugInfo.actions = [];
+              snake.debugInfo.actions.push({type: 'eat_apple', position: {...head}, time: Date.now()});
               
               // Apply positive reinforcement for eating an apple
               applyPositiveAppleLearning(snake, prevState);
@@ -84,6 +96,15 @@ export const useGameUpdate = (
               
               // Calculate current distance to closest apple
               const currentMinDistance = calculateDistanceToClosestApple(head, finalApples);
+              
+              // Record this evaluation for visualization
+              if (!snake.debugInfo.evaluations) snake.debugInfo.evaluations = [];
+              snake.debugInfo.evaluations.push({
+                prevDistance: previousDistances[index],
+                currentDistance: currentMinDistance,
+                improvement: previousDistances[index] - currentMinDistance,
+                time: Date.now()
+              });
               
               // Apply learning based on whether the snake is moving closer to an apple
               applyDistanceBasedLearning(snake, prevState, previousDistances[index], currentMinDistance);

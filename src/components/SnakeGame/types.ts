@@ -26,6 +26,35 @@ export interface NeuralNetwork {
   getPerformanceStats: () => { learningAttempts: number, successfulMoves: number, failedMoves: number };
 }
 
+// Información de depuración para visualización
+export type DebugInfo = {
+  lastInputs?: number[];
+  lastOutputs?: number[];
+  validationError?: boolean;
+  decisions?: {
+    inputs: number[];
+    outputs: number[];
+    headPosition: Position;
+    time: number;
+  }[];
+  actions?: {
+    type: string;
+    position: Position;
+    time: number;
+  }[];
+  evaluations?: {
+    prevDistance: number;
+    currentDistance: number;
+    improvement: number;
+    time: number;
+  }[];
+  collisionInfo?: {
+    hasNearbyApples: boolean;
+    nearbyApples: any[];
+    closestAppleDistance: number | null;
+  };
+};
+
 export type Snake = {
   id: number;
   positions: Position[];
@@ -44,6 +73,7 @@ export type Snake = {
     badDirections: number;
     goodDirections: number;
   }; // Métricas para análisis
+  debugInfo?: DebugInfo; // Nueva propiedad para visualización y depuración
 };
 
 export type Apple = {

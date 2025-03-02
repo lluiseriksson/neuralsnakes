@@ -10,20 +10,49 @@ export const processSnakesMovement = (snakes: Snake[], gameState: GameState): Sn
   return snakes.map(snake => {
     if (!snake.alive) return snake;
     
+    // Initialize debug info object if it doesn't exist
+    if (!snake.debugInfo) {
+      snake.debugInfo = {};
+    }
+    
     // Generate neural network inputs
     const inputs = generateNeuralNetworkInputs(snake, gameState);
+    
+    // Store inputs for visualization
+    snake.debugInfo.lastInputs = [...inputs];
     
     // Validate inputs
     if (!validateInputs(inputs)) {
       console.log(`Invalid inputs for snake ${snake.id}`, inputs);
+      snake.debugInfo.validationError = true;
       return snake;
     }
 
     // Get prediction from neural network
     const prediction = snake.brain.predict(inputs);
     
+    // Store outputs for visualization
+    snake.debugInfo.lastOutputs = [...prediction];
+    
     // Apply movement with prediction
     const movedSnake = moveSnake(snake, gameState, prediction);
+    
+    // Add decision record for logging and visualization
+    if (!movedSnake.debugInfo.decisions) {
+      movedSnake.debugInfo.decisions = [];
+    }
+    
+    // Limit decisions array to prevent memory issues
+    if (movedSnake.debugInfo.decisions.length > 20) {
+      movedSnake.debugInfo.decisions.shift();
+    }
+    
+    movedSnake.debugInfo.decisions.push({
+      inputs,
+      outputs: prediction,
+      headPosition: {...movedSnake.positions[0]},
+      time: Date.now()
+    });
     
     return movedSnake;
   });
