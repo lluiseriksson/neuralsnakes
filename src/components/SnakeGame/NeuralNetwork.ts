@@ -1,3 +1,4 @@
+
 import { NeuralNetwork as INeuralNetwork } from "./types";
 import { NeuralNetworkCore } from "./NeuralNetwork/NeuralNetworkCore";
 import { applyLearning, cloneNetwork, mutateNetwork } from "./NeuralNetwork/NeuralNetworkLearning";
@@ -78,6 +79,21 @@ export class NeuralNetwork implements INeuralNetwork {
   
   getGeneration(): number {
     return this.core.getGeneration();
+  }
+  
+  // Add the missing updateGeneration method
+  updateGeneration(generation: number): void {
+    // Make sure the core has a setGeneration method or access to the generation property
+    if (this.core.setGeneration) {
+      this.core.setGeneration(generation);
+    } else {
+      // Fallback approach - assuming _generation is the property name in core
+      (this.core as any)._generation = generation;
+    }
+    
+    // Also update the model cache generation
+    const { updateCurrentGeneration } = require('./hooks/snakeCreation/modelCache');
+    updateCurrentGeneration(generation);
   }
   
   getBestScore(): number {

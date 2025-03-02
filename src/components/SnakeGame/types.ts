@@ -15,6 +15,7 @@ export interface NeuralNetwork {
   getWeights: () => number[];
   setWeights: (weights: number[]) => void;
   getGeneration: () => number;
+  updateGeneration: (generation: number) => void;
   getBestScore: () => number;
   getGamesPlayed: () => number;
   updateBestScore: (score: number) => void;
