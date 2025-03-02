@@ -1,18 +1,18 @@
 
 import { resetGamesSinceLastIncrement } from './gameTracking';
 
-// FIXED: Start at a high generation to escape stagnation
-let currentGeneration = 5; // Track current generation - FIXED to start higher
+// Start at a significantly higher generation to accelerate evolution
+let currentGeneration = 25; 
 
 export const getCurrentGeneration = (): number => {
   return currentGeneration;
 };
 
 export const incrementGeneration = (): number => {
-  // FIXED: Add +3 instead of +1 to accelerate evolution
-  currentGeneration += 3;
+  // More aggressive incrementation to push evolution faster
+  currentGeneration += 10;
   resetGamesSinceLastIncrement();
-  console.log(`⚡ Generation explicitly incremented to ${currentGeneration} ⚡`);
+  console.log(`⚡ Generation aggressively incremented to ${currentGeneration} ⚡`);
   return currentGeneration;
 };
 
@@ -26,14 +26,76 @@ export const updateCurrentGeneration = (generation: number): number => {
   return currentGeneration;
 };
 
+// Enhanced generation update based on performance metrics
+export const advanceGenerationBasedOnMetrics = (
+  score: number, 
+  applesEaten: number, 
+  kills: number, 
+  deaths: number, 
+  suicides: number
+): number => {
+  // Calculate a performance index based on all metrics
+  const performanceIndex = calculatePerformanceIndex(score, applesEaten, kills, deaths, suicides);
+  
+  // Calculate significant generation boost based on performance
+  const generationBoost = Math.floor(performanceIndex * 10) + 5;
+  
+  // Always increment by at least 5 to ensure progression
+  const newGeneration = currentGeneration + Math.max(generationBoost, 5);
+  
+  console.log(`⚡ Advanced generation from ${currentGeneration} to ${newGeneration} based on metrics ⚡`);
+  console.log(`Performance metrics: score=${score}, apples=${applesEaten}, kills=${kills}, deaths=${deaths}, suicides=${suicides}`);
+  console.log(`Performance index: ${performanceIndex.toFixed(2)}, resulting in boost of ${generationBoost}`);
+  
+  currentGeneration = newGeneration;
+  resetGamesSinceLastIncrement();
+  
+  // Also update model caches with the new generation
+  updateModelCachesGeneration(newGeneration);
+  
+  return currentGeneration;
+};
+
+// Calculate performance index from multiple metrics
+const calculatePerformanceIndex = (
+  score: number, 
+  applesEaten: number, 
+  kills: number, 
+  deaths: number, 
+  suicides: number
+): number => {
+  // Weight factors for different metrics
+  const scoreWeight = 1.0;
+  const appleWeight = 1.5;
+  const killWeight = 2.0;
+  const deathPenalty = -0.5;
+  const suicidePenalty = -1.0;
+  
+  // Calculate positive contribution
+  const positiveFactors = (score * scoreWeight) + (applesEaten * appleWeight) + (kills * killWeight);
+  
+  // Calculate negative factors
+  const negativeFactors = (deaths * deathPenalty) + (suicides * suicidePenalty);
+  
+  // Calculate overall index (ensure it's at least 0.1)
+  return Math.max(0.1, positiveFactors + negativeFactors);
+};
+
 export const forceGenerationUpdate = (generation: number): number => {
-  // FIXED: Always add at least 3 to ensure significant progression when forcing updates
-  const newGeneration = Math.max(generation, currentGeneration) + 3;
+  // Even more aggressive boost when forcing updates
+  const newGeneration = Math.max(generation, currentGeneration) + 10;
   console.log(`⚡ Generation forcefully set from ${currentGeneration} to ${newGeneration} ⚡`);
   currentGeneration = newGeneration;
   resetGamesSinceLastIncrement();
   
-  // Also update the model caches with the new generation
+  // Update the model caches with the new generation
+  updateModelCachesGeneration(newGeneration);
+  
+  return currentGeneration;
+};
+
+// Update model cache generations
+const updateModelCachesGeneration = (newGeneration: number): void => {
   const { bestModelCache, combinedModelCache } = getModelCache();
   
   if (bestModelCache) {
@@ -44,8 +106,18 @@ export const forceGenerationUpdate = (generation: number): number => {
     combinedModelCache.updateGeneration(newGeneration);
     console.log(`Combined model cache generation updated to ${combinedModelCache.getGeneration()}`);
   }
+};
+
+// Reset both model caches to force fresh learning
+export const purgeAllModelCaches = (): void => {
+  console.log("🔄 PURGING ALL MODEL CACHES - FORCING COMPLETE RESET 🔄");
   
-  return currentGeneration;
+  // Force a generation jump to prevent stagnation
+  currentGeneration += 50;
+  console.log(`⚡ Post-reset generation set to ${currentGeneration} ⚡`);
+  
+  const { resetModelCaches } = require('./cacheManagement');
+  resetModelCaches(true); // true for deep reset
 };
 
 // Import from other modules to avoid circular dependencies

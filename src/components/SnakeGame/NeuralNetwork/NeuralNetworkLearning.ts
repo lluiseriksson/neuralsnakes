@@ -17,16 +17,21 @@ export const applyLearning = (
   // Track learning attempt
   network.trackLearningAttempt(success);
   
-  // Calculate learning rate - more balanced approach
-  // Lower base rates to prevent wild oscillations
-  const baseRate = success ? 0.2 : 0.25; 
-  const learningRate = baseRate * Math.min(reward, 2.0);
+  // Calculate learning rate with adaptive approach based on generation
+  // Higher generations get smaller learning rates to fine-tune rather than drastically change
+  const generation = network.getGeneration();
+  const adaptiveFactor = Math.max(0.1, 1.0 - (generation / 200)); // Lower learning rate for higher generations
+  
+  // Calculate learning rate - more sophisticated approach
+  const baseRate = success ? 0.3 * adaptiveFactor : 0.35 * adaptiveFactor;
+  // Cap maximum reward to prevent wild oscillations but allow significant learning
+  const learningRate = baseRate * Math.min(reward, 3.0);
   
   // Get current weights
   const currentWeights = network.getWeights();
   
-  // Apply regularization to prevent overfitting
-  const regularizationStrength = 0.01;
+  // Apply regularization to prevent overfitting - stronger for higher generations
+  const regularizationStrength = 0.01 + (generation / 10000); // Increases slightly with generation
   
   // Apply adjustments to weights based on input values with regularization
   const newWeights = currentWeights.map((weight, index) => {
@@ -38,13 +43,18 @@ export const applyLearning = (
       
       // Weight adjustment proportional to input value and learning outcome
       const inputStrength = Math.abs(inputValue) > 0.5 ? 1.5 : 1.0;
+      // More nuanced adjustment based on success/failure
       const adjustment = inputValue * learningRate * inputStrength * (success ? 1 : -1);
       
-      // Apply stronger reinforcement for chosen action, but more moderately
-      if (success && outputs.length > 0 && outputs[outputIndex] > 0.5) {
-        // Add regularization term to prevent weights from growing too large
+      // Apply stronger reinforcement for chosen action with gradient
+      if (success && outputs.length > 0) {
+        const outputConfidence = outputs[outputIndex];
+        // Scale reinforcement based on the confidence of the output
+        const confidenceBonus = outputConfidence > 0.5 ? 2.0 : 1.0;
+        
+        // Apply regularization term to prevent weights from growing too large
         const regularization = regularizationStrength * weight;
-        return weight + (adjustment * 2.0) - regularization;
+        return weight + (adjustment * confidenceBonus) - regularization;
       }
       
       // Apply regularization to all weights
@@ -75,12 +85,22 @@ export const mutateNetwork = (
   mutationRate: number = 0.1
 ): void => {
   const weights = network.getWeights();
+  const generation = network.getGeneration();
+  
+  // Adaptive mutation - more focused mutations for higher generations
+  // to refine behavior rather than make dramatic changes
+  const adaptiveMutationRate = mutationRate * Math.max(0.2, 1.0 - (generation / 300));
+  
+  // Track how often a weight is actually mutated
+  let mutationCount = 0;
   
   const mutatedWeights = weights.map(weight => {
-    // Apply mutation with probability mutationRate
-    if (Math.random() < mutationRate) {
-      if (Math.random() < 0.8) { // 80% chance for small to medium adjustments
-        // Normal small-to-medium adjustment with bell curve distribution
+    // Apply mutation with probability adaptiveMutationRate
+    if (Math.random() < adaptiveMutationRate) {
+      mutationCount++;
+      
+      if (Math.random() < 0.9) { // 90% chance for Gaussian adjustments
+        // Normal adjustment with bell curve distribution for more natural mutations
         const gaussianRandom = () => {
           let u = 0, v = 0;
           while(u === 0) u = Math.random(); 
@@ -88,15 +108,19 @@ export const mutateNetwork = (
           return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
         };
         
-        // More moderate adjustments
-        return weight + gaussianRandom() * 0.8; 
+        // Adaptive mutation strength - more precise for higher generations
+        const adaptiveStrength = Math.max(0.1, 1.0 - (generation / 400));
+        return weight + gaussianRandom() * adaptiveStrength; 
       } else {
-        // Complete reset (20% of the time) - allows exploring completely new solutions
-        return Math.random() * 3 - 1.5; // Range [-1.5, 1.5] - more moderate
+        // Complete reset (10% of the time) - allows exploring completely new solutions
+        // More contained range for more stable evolution
+        return Math.random() * 2 - 1; // Range [-1, 1]
       }
     }
     return weight;
   });
+  
+  console.log(`Applied mutations to ${mutationCount} weights (${((mutationCount/weights.length)*100).toFixed(1)}%) with rate ${adaptiveMutationRate.toFixed(4)}`);
   
   network.setWeights(mutatedWeights);
 }
@@ -112,7 +136,8 @@ export const cloneNetwork = (
   const weights = network.getWeights();
   
   // IMPORTANT: Explicitly increment generation when cloning
-  const nextGeneration = network.getGeneration() + 1;
+  // More aggressive generational increment for faster evolution
+  const nextGeneration = network.getGeneration() + 5;
   console.log(`Cloning network: incrementing generation from ${network.getGeneration()} to ${nextGeneration}`);
   
   const clone = new NeuralNetworkCore(

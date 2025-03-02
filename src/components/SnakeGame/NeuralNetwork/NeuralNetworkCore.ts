@@ -1,4 +1,3 @@
-
 import { NeuralNetwork as INeuralNetwork } from "../types";
 import { sigmoid } from "../NeuralNetworkActivations";
 import { deserializeWeights, serializeWeights, generateRandomWeights } from "../NeuralNetworkMatrix";
@@ -14,6 +13,7 @@ type Experience = {
   outputs: number[];
   success: boolean;
   reward: number;
+  timestamp: number;
 };
 
 export class NeuralNetworkCore implements INeuralNetwork {
@@ -31,8 +31,10 @@ export class NeuralNetworkCore implements INeuralNetwork {
   private successfulMoves: number = 0;
   private failedMoves: number = 0;
   private experiences: Experience[] = [];
-  private maxExperiences: number = 50;
-  
+  private maxExperiences: number = 100;
+  private learningRate: number = 0.3;
+  private lastPredictions: number[] = [];
+
   constructor(
     inputSize: number, 
     hiddenSize: number, 
@@ -65,6 +67,11 @@ export class NeuralNetworkCore implements INeuralNetwork {
       this.bestScore = bestScore || 0;
       this.gamesPlayed = gamesPlayed || 0;
     }
+    
+    if (generation && generation > 50) {
+      this.learningRate = Math.max(0.05, 0.3 - (generation / 1000));
+      console.log(`Network ${id || 'new'} (gen ${generation}) using adaptive learning rate: ${this.learningRate.toFixed(4)}`);
+    }
   }
 
   predict(inputs: number[]): number[] {
@@ -77,11 +84,19 @@ export class NeuralNetworkCore implements INeuralNetwork {
       inputs = [...inputs, ...Array(this.inputSize - inputs.length).fill(0)];
     }
     
+    const addNoise = this.generation < 50;
+    const noiseLevel = Math.max(0, 0.1 - (this.generation / 500));
+    
     const hiddenOutputs = this.weightsInputHidden.map(weights => {
       let sum = 0;
       for (let i = 0; i < this.inputSize; i++) {
         sum += weights[i] * inputs[i];
       }
+      
+      if (addNoise) {
+        sum += (Math.random() * 2 - 1) * noiseLevel;
+      }
+      
       return sigmoid(sum);
     });
     
@@ -90,8 +105,15 @@ export class NeuralNetworkCore implements INeuralNetwork {
       for (let i = 0; i < this.hiddenSize; i++) {
         sum += weights[i] * hiddenOutputs[i];
       }
+      
+      if (addNoise) {
+        sum += (Math.random() * 2 - 1) * noiseLevel;
+      }
+      
       return sigmoid(sum);
     });
+    
+    this.lastPredictions = [...outputs];
     
     return outputs;
   }
@@ -114,6 +136,8 @@ export class NeuralNetworkCore implements INeuralNetwork {
   
   updateGeneration(generation: number): void {
     this.generation = generation;
+    
+    this.learningRate = Math.max(0.05, 0.3 - (generation / 1000));
   }
   
   getBestScore(): number {
@@ -149,7 +173,8 @@ export class NeuralNetworkCore implements INeuralNetwork {
       performance: {
         learningAttempts: this.learningAttempts,
         successfulMoves: this.successfulMoves,
-        failedMoves: this.failedMoves
+        failedMoves: this.failedMoves,
+        learningRate: this.learningRate
       }
     };
     
@@ -174,22 +199,39 @@ export class NeuralNetworkCore implements INeuralNetwork {
   }
 
   private addExperience(inputs: number[], outputs: number[], success: boolean, reward: number): void {
-    this.experiences.push({ inputs, outputs, success, reward });
+    this.experiences.push({ 
+      inputs, 
+      outputs, 
+      success, 
+      reward,
+      timestamp: Date.now()
+    });
     
     if (this.experiences.length > this.maxExperiences) {
       this.experiences.shift();
     }
   }
   
-  private replayExperiences(count: number = 3): void {
-    if (this.experiences.length < 5) return;
+  private replayExperiences(count: number = 5): void {
+    if (this.experiences.length < 10) return;
     
-    for (let i = 0; i < count; i++) {
-      const index = Math.floor(Math.random() * this.experiences.length);
-      const exp = this.experiences[index];
+    const prioritizedExperiences = [...this.experiences].sort((a, b) => {
+      const recencyScoreA = (Date.now() - a.timestamp) / 60000;
+      const recencyScoreB = (Date.now() - b.timestamp) / 60000;
       
-      const replayFactor = 0.7;
-      applyLearning(this, exp.success, exp.inputs, exp.outputs, exp.reward * replayFactor);
+      const priorityA = a.reward - (recencyScoreA * 0.1);
+      const priorityB = b.reward - (recencyScoreB * 0.1);
+      
+      return priorityB - priorityA;
+    });
+    
+    for (let i = 0; i < Math.min(count, prioritizedExperiences.length); i++) {
+      const exp = prioritizedExperiences[i];
+      
+      const ageInMinutes = (Date.now() - exp.timestamp) / 60000;
+      const recencyFactor = Math.max(0.5, 1 - (ageInMinutes / 30));
+      
+      applyLearning(this, exp.success, exp.inputs, exp.outputs, exp.reward * recencyFactor);
     }
   }
 
@@ -202,7 +244,8 @@ export class NeuralNetworkCore implements INeuralNetwork {
     
     applyLearning(this, success, inputs, outputs, reward);
     
-    if (Math.random() < 0.3 || reward > 1.0) {
+    const replayThreshold = success ? 0.5 : 0.3;
+    if (Math.random() < replayThreshold || reward > 1.5) {
       this.replayExperiences();
     }
   }

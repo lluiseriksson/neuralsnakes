@@ -1,4 +1,3 @@
-
 import { Direction, Snake } from '../../types';
 import { generateInitialSnake } from '../../movement/initialSnake';
 import { createBestModelBrain, createCombinedModelBrain, createRandomBrain } from './createSnakeBrain';
@@ -11,7 +10,7 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
     
     // Select the appropriate brain creation strategy based on snake ID
     if (id === 0) {
-      // Yellow snake - best model brain
+      // Yellow snake - best model brain with enhanced capabilities
       console.log(`⭐ Creating YELLOW SNAKE ${id} with color ${color} ⭐`);
       brain = await createBestModelBrain().catch(error => {
         console.error(`Error creating best model brain: ${error.message}`);
@@ -21,25 +20,39 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       // Log the generation of yellow snake for debugging
       console.log(`⭐ YELLOW SNAKE GENERATION CHECK: ${brain.getGeneration()} ⭐`);
       
-      // FIXED: Force significant generation update from yellow snake to ensure it's spreading to other snakes
+      // Force significant generation update from yellow snake to spread to other snakes
       const yellowSnakeGeneration = brain.getGeneration();
       if (yellowSnakeGeneration > 0) {
-        // FIXED: Add +5 instead of +1 to force significantly higher generations
-        const newGeneration = yellowSnakeGeneration + 5;
+        // Add +15 to force significantly higher generations
+        const newGeneration = yellowSnakeGeneration + 15;
         console.log(`⚡ YELLOW SNAKE is forcing global generation to ${newGeneration} ⚡`);
         forceGenerationUpdate(newGeneration);
       }
     } else if (id === 1) {
-      // Blue snake - combined model brain
+      // Blue snake - combined model brain with experimental variations
       console.log(`Creating combined model brain for blue snake ${id}`);
       brain = await createCombinedModelBrain().catch(error => {
         console.error(`Error creating combined model brain: ${error.message}`);
         return createRandomBrain(id);
       });
+      
+      // Apply extra mutations to blue snake for exploration
+      if (brain) {
+        console.log(`Applying additional mutations to blue snake for exploratory learning`);
+        brain.mutate(0.3); // Higher mutation rate for exploration
+      }
     } else {
-      // Other snakes - random brains
-      console.log(`Creating random brain for snake ${id}`);
+      // Other snakes - random brains with various learning strategies
+      console.log(`Creating specialized random brain for snake ${id}`);
       brain = createRandomBrain(id);
+      
+      // Apply different mutation strategies based on snake ID for diversity
+      if (brain) {
+        // Even IDs get more mutations, odd IDs get less
+        const specializedRate = id % 2 === 0 ? 0.4 : 0.2;
+        brain.mutate(specializedRate);
+        console.log(`Applied specialized mutation rate ${specializedRate} to snake ${id}`);
+      }
     }
 
     if (!brain) {
@@ -47,9 +60,9 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       brain = createRandomBrain(id);
     }
 
-    // FIXED: Ensure brain has a valid generation
-    if (brain.getGeneration() < 5) {
-      const newGeneration = Math.max(5, getModelCache().currentGeneration);
+    // Ensure brain has a valid generation - much higher minimum
+    if (brain.getGeneration() < 25) {
+      const newGeneration = Math.max(25, getModelCache().currentGeneration);
       console.log(`⚡ Fixing low generation (${brain.getGeneration()}) for snake ${id} to ${newGeneration} ⚡`);
       brain.updateGeneration(newGeneration);
     }
@@ -77,12 +90,17 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       }
     }
     
-    // Initialize decision metrics for better analysis
+    // Initialize enhanced decision metrics for better analysis
     const decisionMetrics = {
       applesEaten: 0,
       applesIgnored: 0,
       badDirections: 0,
-      goodDirections: 0
+      goodDirections: 0,
+      killCount: 0,
+      suicides: 0,
+      effectiveDecisions: 0,
+      ineffectiveDecisions: 0,
+      survivalTime: 0
     };
     
     console.log(`Snake ${id} created at (${x}, ${y}) with ${positions.length} segments and generation ${brain.getGeneration()}`);
@@ -112,9 +130,9 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
     // Create fallback brain
     const fallbackBrain = createRandomBrain(id);
     
-    // FIXED: Ensure fallback brain has a valid generation
-    if (fallbackBrain.getGeneration() < 5) {
-      const newGeneration = Math.max(5, getModelCache().currentGeneration);
+    // Ensure fallback brain has a valid generation
+    if (fallbackBrain.getGeneration() < 25) {
+      const newGeneration = Math.max(25, getModelCache().currentGeneration);
       console.log(`⚡ Fixing low generation in fallback brain for snake ${id} to ${newGeneration} ⚡`);
       fallbackBrain.updateGeneration(newGeneration);
     }
@@ -133,7 +151,12 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
         applesEaten: 0,
         applesIgnored: 0,
         badDirections: 0,
-        goodDirections: 0
+        goodDirections: 0,
+        killCount: 0,
+        suicides: 0,
+        effectiveDecisions: 0,
+        ineffectiveDecisions: 0,
+        survivalTime: 0
       }
     };
   }

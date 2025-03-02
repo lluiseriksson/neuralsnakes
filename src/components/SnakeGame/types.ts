@@ -22,7 +22,7 @@ export interface NeuralNetwork {
   mutate: (mutationRate?: number) => void;
   getProgressPercentage: () => number;
   saveTrainingData: (inputs: number[], outputs: number[], success: boolean) => Promise<void>;
-  // Añadimos la propiedad getPerformanceStats para análisis
+  // Performance stats for analysis
   getPerformanceStats: () => { learningAttempts: number, successfulMoves: number, failedMoves: number };
 }
 
@@ -76,7 +76,7 @@ export interface CollisionProximityInfo {
   closestAppleDistance: number | null;
 }
 
-// Información de depuración para visualización
+// Debug information for visualization
 export interface DebugInfo {
   lastInputs?: number[];
   lastOutputs?: number[];
@@ -100,16 +100,21 @@ export type Snake = {
   brain: NeuralNetwork;
   alive: boolean;
   gridSize: number;
-  lastOutputs?: number[]; // Outputs de la última decisión para aprendizaje
-  lastInputs?: number[];  // Inputs de la última decisión para aprendizaje
-  movesWithoutEating?: number; // Contador de movimientos sin comer
+  lastOutputs?: number[]; // Last decision outputs for learning
+  lastInputs?: number[];  // Last decision inputs for learning
+  movesWithoutEating?: number; // Counter for moves without eating
   decisionMetrics?: {
     applesEaten: number;
     applesIgnored: number;
     badDirections: number;
     goodDirections: number;
-  }; // Métricas para análisis
-  debugInfo?: DebugInfo; // Nueva propiedad para visualización y depuración
+    killCount?: number;     // New: Track kills by this snake
+    suicides?: number;      // New: Track suicides
+    effectiveDecisions?: number; // New: Decisions that improved situation
+    ineffectiveDecisions?: number; // New: Decisions that worsened situation
+    survivalTime?: number;  // New: How long the snake survived
+  }; // Metrics for analysis
+  debugInfo?: DebugInfo; // Property for visualization and debugging
 };
 
 export type Apple = {
