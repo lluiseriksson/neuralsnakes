@@ -6,9 +6,10 @@ import { generateNeuralNetworkInputs } from '../neuralNetworkInputs';
  * Apply positive reinforcement for eating an apple
  */
 export const applyPositiveAppleLearning = (snake: Snake, prevState: GameState): void => {
-  // Significant positive reinforcement for eating apples
+  // More moderate positive reinforcement for eating apples
   const inputs = generateNeuralNetworkInputs(snake, prevState);
-  const reward = 2.0 + (Math.min(snake.score, 10) * 0.1); // Higher reward as score increases, but capped
+  // Capped and more balanced reward that scales more gradually with score
+  const reward = 1.0 + (Math.min(snake.score, 10) * 0.05);
   
   // Learn from the successful move using the last outputs that led to this position
   snake.brain.learn(true, inputs, snake.lastOutputs || [], reward);
@@ -27,17 +28,18 @@ export const applyDistanceBasedLearning = (
   const inputs = generateNeuralNetworkInputs(snake, prevState);
   
   if (distanceDelta > 0) {
-    // Moving toward apple - reward proportional to improvement
-    const reward = 0.3 + Math.min(distanceDelta * 0.1, 0.2);
+    // Moving toward apple - reward proportional to improvement, but more moderate
+    const reward = 0.2 + Math.min(distanceDelta * 0.05, 0.15);
     snake.brain.learn(true, inputs, snake.lastOutputs || [], reward);
   } else if (distanceDelta === 0) {
     // Not making progress toward apple, but not moving away either
-    // Very mild negative reinforcement
-    const penalty = 0.1;
-    snake.brain.learn(false, inputs, snake.lastOutputs || [], penalty);
+    // Very mild learning signal - neutral rather than negative
+    const modifier = 0.05;
+    snake.brain.learn(distanceDelta < -1 ? false : true, inputs, snake.lastOutputs || [], modifier);
   } else {
-    // Moving away from apple - penalty proportional to regression
-    const penalty = 0.2 + Math.min(Math.abs(distanceDelta) * 0.1, 0.3);
+    // Moving away from apple - penalty proportional to regression, but not too harsh
+    // Use a milder penalty to avoid overreacting to exploration
+    const penalty = 0.1 + Math.min(Math.abs(distanceDelta) * 0.05, 0.15);
     snake.brain.learn(false, inputs, snake.lastOutputs || [], penalty);
   }
 };
@@ -59,8 +61,8 @@ export const applyMissedApplePenalty = (snake: Snake, prevState: GameState, fina
   );
   
   if (missedApples.length > 0) {
-    // Snake missed an adjacent apple - apply stronger negative reinforcement
-    const missedPenalty = 0.5; // Higher penalty for missing adjacent apples
+    // Snake missed an adjacent apple - apply moderate negative reinforcement
+    const missedPenalty = 0.3; // Moderate penalty
     const inputs = generateNeuralNetworkInputs(snake, prevState);
     snake.brain.learn(false, inputs, snake.lastOutputs || [], missedPenalty);
   }

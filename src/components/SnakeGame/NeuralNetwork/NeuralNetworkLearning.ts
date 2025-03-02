@@ -17,42 +17,46 @@ export const applyLearning = (
   // Track learning attempt
   network.trackLearningAttempt(success);
   
-  // Calculate learning rate based on context
-  // EXTREMELY more aggressive: highly amplified learning
-  const learningRate = success 
-    ? 0.5 * Math.min(reward, 4.0) // Cap at 2.0 for success (much higher)
-    : 0.6 * Math.min(reward, 3.0); // Cap at 1.8 for failure (much higher)
+  // Calculate learning rate - more balanced approach
+  // Lower base rates to prevent wild oscillations
+  const baseRate = success ? 0.2 : 0.25; 
+  const learningRate = baseRate * Math.min(reward, 2.0);
   
   // Get current weights
   const currentWeights = network.getWeights();
   
-  // Apply adjustments to weights based on input values
-  // This creates a correlation between input patterns and outcomes
+  // Apply regularization to prevent overfitting
+  const regularizationStrength = 0.01;
+  
+  // Apply adjustments to weights based on input values with regularization
   const newWeights = currentWeights.map((weight, index) => {
     // Only adjust weights related to active inputs
-    // Using a more direct connection between inputs and outputs
     if (index < inputs.length * 4) { // Assuming 4 output neurons
       const inputIndex = Math.floor(index / 4);
       const outputIndex = index % 4;
       const inputValue = inputs[inputIndex];
       
       // Weight adjustment proportional to input value and learning outcome
-      // Much stronger for significant inputs
-      const inputStrength = Math.abs(inputValue) > 0.5 ? 3.0 : 2.0;
+      const inputStrength = Math.abs(inputValue) > 0.5 ? 1.5 : 1.0;
       const adjustment = inputValue * learningRate * inputStrength * (success ? 1 : -1);
       
-      // For success, we GREATLY reinforce weights associated with the chosen direction
+      // Apply stronger reinforcement for chosen action, but more moderately
       if (success && outputs.length > 0 && outputs[outputIndex] > 0.5) {
-        return weight + (adjustment * 5.0); // 500% more reinforcement for the chosen action
+        // Add regularization term to prevent weights from growing too large
+        const regularization = regularizationStrength * weight;
+        return weight + (adjustment * 2.0) - regularization;
       }
       
-      return weight + adjustment;
+      // Apply regularization to all weights
+      const regularization = regularizationStrength * weight;
+      return weight + adjustment - regularization;
     }
     
-    // For weights not related to inputs, make smaller random adjustments
-    // But significant enough to explore new solutions
-    const randomFactor = (Math.random() * 0.4 - 0.2) * (success ? 1 : -1);
-    return weight + (randomFactor * learningRate);
+    // For weights not directly related to inputs, apply smaller adjustments
+    // with regularization to prevent overfitting
+    const randomFactor = (Math.random() * 0.2 - 0.1) * (success ? 1 : -1);
+    const regularization = regularizationStrength * weight;
+    return weight + (randomFactor * learningRate) - regularization;
   });
   
   // Set new weights
@@ -75,9 +79,8 @@ export const mutateNetwork = (
   const mutatedWeights = weights.map(weight => {
     // Apply mutation with probability mutationRate
     if (Math.random() < mutationRate) {
-      // Mutation: either a small adjustment or a complete reset
-      if (Math.random() < 0.7) { // More probability for medium adjustments
-        // Normal medium adjustment - follow a bell curve for more natural mutations
+      if (Math.random() < 0.8) { // 80% chance for small to medium adjustments
+        // Normal small-to-medium adjustment with bell curve distribution
         const gaussianRandom = () => {
           let u = 0, v = 0;
           while(u === 0) u = Math.random(); 
@@ -85,11 +88,11 @@ export const mutateNetwork = (
           return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
         };
         
-        // Much larger adjustments for wider exploration
-        return weight + gaussianRandom() * 1.5; 
+        // More moderate adjustments
+        return weight + gaussianRandom() * 0.8; 
       } else {
-        // Complete reset (30% of the time) - allows exploring completely new solutions
-        return Math.random() * 4 - 2; // Wider range [-2, 2]
+        // Complete reset (20% of the time) - allows exploring completely new solutions
+        return Math.random() * 3 - 1.5; // Range [-1.5, 1.5] - more moderate
       }
     }
     return weight;

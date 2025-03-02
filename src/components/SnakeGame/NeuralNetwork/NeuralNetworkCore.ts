@@ -1,4 +1,3 @@
-
 import { NeuralNetwork as INeuralNetwork } from "../types";
 import { sigmoid } from "../NeuralNetworkActivations";
 import { deserializeWeights, serializeWeights, generateRandomWeights } from "../NeuralNetworkMatrix";
@@ -8,6 +7,13 @@ import {
   saveTrainingDataToDb
 } from "../database/neuralNetworkDb";
 import { applyLearning, cloneNetwork, mutateNetwork } from "./NeuralNetworkLearning";
+
+type Experience = {
+  inputs: number[];
+  outputs: number[];
+  success: boolean;
+  reward: number;
+};
 
 export class NeuralNetworkCore implements INeuralNetwork {
   private inputSize: number;
@@ -23,6 +29,8 @@ export class NeuralNetworkCore implements INeuralNetwork {
   private learningAttempts: number = 0;
   private successfulMoves: number = 0;
   private failedMoves: number = 0;
+  private experiences: Experience[] = [];
+  private maxExperiences: number = 50;
   
   constructor(
     inputSize: number, 
@@ -159,9 +167,38 @@ export class NeuralNetworkCore implements INeuralNetwork {
     this.weightsHiddenOutput = deserialized.weightsHiddenOutput;
   }
 
+  private addExperience(inputs: number[], outputs: number[], success: boolean, reward: number): void {
+    this.experiences.push({ inputs, outputs, success, reward });
+    
+    if (this.experiences.length > this.maxExperiences) {
+      this.experiences.shift();
+    }
+  }
+  
+  private replayExperiences(count: number = 3): void {
+    if (this.experiences.length < 5) return;
+    
+    for (let i = 0; i < count; i++) {
+      const index = Math.floor(Math.random() * this.experiences.length);
+      const exp = this.experiences[index];
+      
+      const replayFactor = 0.7;
+      applyLearning(this, exp.success, exp.inputs, exp.outputs, exp.reward * replayFactor);
+    }
+  }
+
   learn(success: boolean, inputs: number[] = [], outputs: number[] = [], reward: number = 1): void {
     this.trackLearningAttempt(success);
+    
+    if (inputs.length > 0 && outputs.length > 0) {
+      this.addExperience([...inputs], [...outputs], success, reward);
+    }
+    
     applyLearning(this, success, inputs, outputs, reward);
+    
+    if (Math.random() < 0.3 || reward > 1.0) {
+      this.replayExperiences();
+    }
   }
 
   clone(mutationRate: number = 0.1): INeuralNetwork {

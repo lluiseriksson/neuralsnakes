@@ -14,6 +14,8 @@ export const applyNegativeLearning = (snake: Snake, penaltyMultiplier: number = 
     1, 0, 0, 0 // Obstacle detected in direction that caused death
   ];
   
-  // Apply negative learning with specified penalty
-  snake.brain.learn(false, lastInputs, snake.lastOutputs || [], penaltyMultiplier);
+  // Apply negative learning with more balanced penalty
+  // Reduce the penalty to avoid overtraining on negative outcomes
+  const adjustedPenalty = Math.min(penaltyMultiplier, 1.2);
+  snake.brain.learn(false, lastInputs, snake.lastOutputs || [], adjustedPenalty);
 };

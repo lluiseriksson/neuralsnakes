@@ -21,24 +21,26 @@ export const getNeuralNetworkDirection = (
     isObstacle: adjacentObstacles.some(obs => obs.dir === dir)
   })).sort((a, b) => b.value - a.value);
   
-  // First try the most promising direction if it's safe
-  for (const pred of sortedPredictions) {
-    if (!pred.isOpposite && !pred.isObstacle) {
-      return pred.direction;
-    }
+  // Safety check: Give preference to safe directions that aren't opposite
+  // First try directions that have no obstacles and aren't opposite to current direction
+  const safePredictions = sortedPredictions.filter(p => !p.isObstacle && !p.isOpposite);
+  
+  if (safePredictions.length > 0) {
+    return safePredictions[0].direction;
   }
   
-  // If all directions have obstacles, choose the least bad one
-  if (sortedPredictions.length > 0) {
-    // First avoid opposite directions
-    const nonOppositeChoices = sortedPredictions.filter(p => !p.isOpposite);
-    if (nonOppositeChoices.length > 0) {
-      return nonOppositeChoices[0].direction;
-    } else {
-      // If all are opposite, choose the one with the highest value
-      return sortedPredictions[0].direction;
-    }
+  // If all directions have obstacles or are opposite, prioritize avoiding obstacles
+  const nonObstaclePredictions = sortedPredictions.filter(p => !p.isObstacle);
+  if (nonObstaclePredictions.length > 0) {
+    return nonObstaclePredictions[0].direction;
   }
   
-  return null;
+  // If all directions have obstacles, choose the one with highest value that isn't opposite
+  const nonOppositePredictions = sortedPredictions.filter(p => !p.isOpposite);
+  if (nonOppositePredictions.length > 0) {
+    return nonOppositePredictions[0].direction;
+  }
+  
+  // Absolute last resort: just take the highest value
+  return sortedPredictions[0].direction;
 };
