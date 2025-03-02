@@ -1,3 +1,4 @@
+
 import { NeuralNetwork as INeuralNetwork } from "./types";
 import { NeuralNetworkCore } from "./NeuralNetwork/NeuralNetworkCore";
 import { applyLearning, cloneNetwork, mutateNetwork } from "./NeuralNetwork/NeuralNetworkLearning";
