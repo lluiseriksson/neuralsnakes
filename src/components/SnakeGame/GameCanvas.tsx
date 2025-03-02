@@ -41,12 +41,18 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onSelectSnake }) => 
     };
   }, [handleSelectSnake]);
 
+  // Get the selected snake for additional info display
+  const selectedSnake = selectedSnakeId !== null 
+    ? gameState.snakes.find(s => s.id === selectedSnakeId) 
+    : null;
+
   return (
     <div className="relative">
       <CanvasRenderer 
         gameState={gameState}
         width={canvasWidth}
         height={canvasHeight}
+        selectedSnakeId={selectedSnakeId}
       />
       
       {!hasSnakes && <LoadingOverlay />}
@@ -56,8 +62,15 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onSelectSnake }) => 
       )}
       
       {selectedSnakeId !== null && (
-        <div className="absolute top-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 text-xs rounded">
-          Snake #{selectedSnakeId} selected
+        <div className="absolute top-2 left-2 bg-black bg-opacity-80 text-white px-3 py-2 text-sm rounded">
+          <div className="font-semibold">Snake #{selectedSnakeId} selected</div>
+          {selectedSnake && (
+            <div className="text-xs mt-1">
+              <div>Score: {selectedSnake.score}</div>
+              <div>Direction: {selectedSnake.direction}</div>
+              <div>Moves: {selectedSnake.movesWithoutEating || 0}</div>
+            </div>
+          )}
         </div>
       )}
     </div>

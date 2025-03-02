@@ -8,14 +8,23 @@ interface CanvasRendererProps {
   gameState: GameState;
   width: number;
   height: number;
+  selectedSnakeId?: number | null;
 }
 
-const CanvasRenderer: React.FC<CanvasRendererProps> = ({ gameState, width, height }) => {
+const CanvasRenderer: React.FC<CanvasRendererProps> = ({ 
+  gameState, 
+  width, 
+  height,
+  selectedSnakeId = null
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [frameCount, setFrameCount] = useState(0);
   const lastDrawnStateRef = useRef<string>('');
   // Add state for active snake to highlight
   const [activeSnakeId, setActiveSnakeId] = useState<number | null>(null);
+
+  // Use the provided selectedSnakeId or the local state
+  const effectiveSelectedSnakeId = selectedSnakeId !== null ? selectedSnakeId : activeSnakeId;
 
   const drawGame = () => {
     const canvas = canvasRef.current;
@@ -37,7 +46,9 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({ gameState, width, heigh
         alive: s.alive,
         direction: s.direction
       })),
-      apples: gameState.apples
+      apples: gameState.apples,
+      selected: effectiveSelectedSnakeId,
+      frame: frameCount
     });
     
     if (currentStateHash === lastDrawnStateRef.current) {
@@ -58,12 +69,13 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({ gameState, width, heigh
     drawApples(ctx, gameState.apples, frameCount, CELL_SIZE);
     
     // Draw snakes
-    drawSnakes(ctx, gameState.snakes, CELL_SIZE);
+    drawSnakes(ctx, gameState.snakes, CELL_SIZE, effectiveSelectedSnakeId);
     
     // Draw debug info for all active snakes
     gameState.snakes.forEach(snake => {
       if (snake.alive) {
-        drawDebugInfo(ctx, snake, CELL_SIZE);
+        const isSelected = snake.id === effectiveSelectedSnakeId;
+        drawDebugInfo(ctx, snake, CELL_SIZE, isSelected);
       }
     });
 
@@ -100,6 +112,13 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({ gameState, width, heigh
       canvas.removeEventListener('click', handleCanvasClick);
     };
   }, [gameState.snakes]);
+
+  // Update active snake ID when selectedSnakeId prop changes
+  useEffect(() => {
+    if (selectedSnakeId !== null) {
+      setActiveSnakeId(selectedSnakeId);
+    }
+  }, [selectedSnakeId]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
