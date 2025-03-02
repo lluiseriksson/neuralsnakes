@@ -68,7 +68,15 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onSelectSnake }) => 
             <div className="text-xs mt-1">
               <div>Score: {selectedSnake.score}</div>
               <div>Direction: {selectedSnake.direction}</div>
-              <div>Moves: {selectedSnake.movesWithoutEating || 0}</div>
+              <div>Moves without eating: {selectedSnake.movesWithoutEating || 0}</div>
+              {selectedSnake.debugInfo?.lastDecision && (
+                <div className="text-xs mt-1 text-green-400">
+                  <div>Decision: {selectedSnake.debugInfo.lastDecision.reason}</div>
+                  {selectedSnake.debugInfo.lastDecision.confidence !== undefined && (
+                    <div>Confidence: {selectedSnake.debugInfo.lastDecision.confidence.toFixed(2)}</div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

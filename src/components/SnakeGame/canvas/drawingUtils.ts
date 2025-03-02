@@ -99,7 +99,8 @@ export const drawApples = (
 export const drawSnakes = (
   ctx: CanvasRenderingContext2D, 
   snakes: Snake[], 
-  cellSize: number
+  cellSize: number,
+  selectedSnakeId?: number | null
 ): void => {
   if (!snakes || !Array.isArray(snakes) || snakes.length === 0) {
     console.log('No hay serpientes para dibujar:', snakes);
@@ -126,7 +127,8 @@ export const drawSnakes = (
       return;
     }
     
-    const snakeColor = snake.color || '#ffffff';
+    const isSelected = selectedSnakeId !== undefined && selectedSnakeId !== null && snake.id === selectedSnakeId;
+    const snakeColor = isSelected ? '#ffff00' : snake.color || '#ffffff';
     console.log(`Dibujando serpiente ${index} con color ${snakeColor} y ${snake.positions.length} segmentos`);
     
     // Draw snake body segments
@@ -270,5 +272,32 @@ export const drawDebugInfo = (
     }
     
     ctx.setLineDash([]);
+  }
+  
+  // Draw last decision information if available
+  if (debugInfo.lastDecision) {
+    const headPos = snake.positions[0];
+    const x = headPos.x * cellSize;
+    const y = headPos.y * cellSize;
+    
+    // Draw decision reason above the snake
+    ctx.font = '8px Arial';
+    ctx.fillStyle = '#aaffaa';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      `${debugInfo.lastDecision.reason}`,
+      x + cellSize / 2,
+      y - 12
+    );
+    
+    // Draw confidence if available
+    if (debugInfo.lastDecision.confidence !== undefined) {
+      ctx.fillStyle = debugInfo.lastDecision.confidence > 0.6 ? '#aaffaa' : '#ffaaaa';
+      ctx.fillText(
+        `conf: ${debugInfo.lastDecision.confidence.toFixed(2)}`,
+        x + cellSize / 2,
+        y - 3
+      );
+    }
   }
 };

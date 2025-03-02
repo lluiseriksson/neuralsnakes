@@ -38,6 +38,14 @@ type LearningEvent = {
   missedPositions?: Position[];
 };
 
+// New decision type to track decision making
+type DecisionInfo = {
+  direction: Direction;
+  reason: string;
+  confidence?: number;
+  time: number;
+};
+
 // Información de depuración para visualización
 export type DebugInfo = {
   lastInputs?: number[];
@@ -65,8 +73,10 @@ export type DebugInfo = {
     nearbyApples: any[];
     closestAppleDistance: number | null;
   };
-  // Añadimos el array de eventos de aprendizaje para seguimiento
+  // Learning events array for tracking
   learningEvents?: LearningEvent[];
+  // Last decision info for displaying the decision rationale
+  lastDecision?: DecisionInfo;
 };
 
 export type Snake = {
