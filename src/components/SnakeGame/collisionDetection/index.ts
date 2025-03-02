@@ -4,3 +4,4 @@ export * from './snakeCollisions';
 export * from './appleCollisions';
 export * from './respawnLogic';
 export * from './checkCollisions';
+export * from './learningEffects';
