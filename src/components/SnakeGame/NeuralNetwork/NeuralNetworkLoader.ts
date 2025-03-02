@@ -3,7 +3,7 @@ import { NeuralNetwork as INeuralNetwork } from "../types";
 import { NeuralNetwork } from "../NeuralNetwork";
 import { fetchBestModelFromDb, fetchAllModelsFromDb } from "../database/modelFetching";
 import { combineModels } from "../evolution/combineModels";
-import { getModelCache, setBestModelCache, setCombinedModelCache, updateCurrentGeneration, incrementGeneration } from "../hooks/snakeCreation/modelCache";
+import { getModelCache, setBestModelCache, setCombinedModelCache, updateCurrentGeneration, incrementGeneration, forceGenerationUpdate } from "../hooks/snakeCreation/modelCache";
 
 export const loadBestModel = async (): Promise<INeuralNetwork | null> => {
   try {
@@ -11,6 +11,13 @@ export const loadBestModel = async (): Promise<INeuralNetwork | null> => {
     const { bestModelCache } = getModelCache();
     if (bestModelCache) {
       console.log("Using cached best model from global cache");
+      
+      // FIXED: Always increment the generation when reusing cached model
+      const newGeneration = bestModelCache.getGeneration() + 1;
+      bestModelCache.updateGeneration(newGeneration);
+      forceGenerationUpdate(newGeneration);
+      console.log(`FIXED: Incremented cached best model generation to ${bestModelCache.getGeneration()}`);
+      
       return bestModelCache;
     }
     
@@ -28,6 +35,9 @@ export const loadBestModel = async (): Promise<INeuralNetwork | null> => {
     const bestScore = metadata.best_score || model.score || 0;
     const gamesPlayed = metadata.games_played || 0;
     
+    // FIXED: Make sure the generation is at least 3
+    const loadedGeneration = Math.max(model.generation, 3);
+    
     const neuralNetwork = new NeuralNetwork(
       8, 
       12, 
@@ -35,22 +45,24 @@ export const loadBestModel = async (): Promise<INeuralNetwork | null> => {
       weightsArray, 
       model.id, 
       model.score, 
-      model.generation,
+      loadedGeneration,
       bestScore,
       gamesPlayed
     );
     
     // Update the generation tracking system
-    if (model.generation > 0) {
-      updateCurrentGeneration(model.generation);
-      // Also increment generation after loading to ensure progress
-      incrementGeneration();
+    if (loadedGeneration > 0) {
+      // FIXED: Always add at least 1 to the loaded generation
+      const newGeneration = loadedGeneration + 1;
+      neuralNetwork.updateGeneration(newGeneration);
+      forceGenerationUpdate(newGeneration);
+      console.log(`FIXED: Incremented loaded best model generation to ${neuralNetwork.getGeneration()}`);
     }
     
     // Update global cache
     setBestModelCache(neuralNetwork);
     
-    console.log(`Loaded best model with generation ${model.generation} and score ${model.score || 0}`);
+    console.log(`Loaded best model with generation ${neuralNetwork.getGeneration()} and score ${model.score || 0}`);
     return neuralNetwork;
   } catch (err) {
     console.error('Exception loading best neural network:', err);

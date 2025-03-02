@@ -8,8 +8,8 @@ let currentGeneration = 1; // Track current generation
 
 // Track games played since last generation increment
 let gamesSinceLastGenIncrement = 0;
-// Reduce this to force more frequent generation increments
-const GAMES_TO_FORCE_INCREMENT = 3; // Force increment after just 3 games
+// FIXED: Reduce this to force MORE frequent generation increments
+const GAMES_TO_FORCE_INCREMENT = 1; // FIXED: Force increment after EVERY game
 
 export const getModelCache = () => {
   return {
@@ -57,7 +57,7 @@ export const trackGamePlayed = () => {
   gamesSinceLastGenIncrement++;
   console.log(`Games since last generation increment: ${gamesSinceLastGenIncrement}`);
   
-  // Force generation increment after a certain number of games - REDUCED THRESHOLD
+  // FIXED: Force generation increment EVERY game
   if (gamesSinceLastGenIncrement >= GAMES_TO_FORCE_INCREMENT) {
     console.log(`⚡ Forcing generation increment after ${GAMES_TO_FORCE_INCREMENT} games ⚡`);
     return incrementGeneration();
@@ -77,10 +77,22 @@ export const updateCurrentGeneration = (generation: number) => {
 };
 
 export const forceGenerationUpdate = (generation: number) => {
-  // Force a specific generation value (use carefully)
-  console.log(`⚡ Generation forcefully set from ${currentGeneration} to ${generation} ⚡`);
-  currentGeneration = generation;
+  // FIXED: Always add at least 1 to ensure progression when forcing updates
+  const newGeneration = Math.max(generation, currentGeneration) + 1;
+  console.log(`⚡ Generation forcefully set from ${currentGeneration} to ${newGeneration} ⚡`);
+  currentGeneration = newGeneration;
   gamesSinceLastGenIncrement = 0;
+  
+  // FIXED: Also update the model caches with the new generation
+  if (bestModelCache) {
+    bestModelCache.updateGeneration(newGeneration);
+    console.log(`Best model cache generation updated to ${bestModelCache.getGeneration()}`);
+  }
+  if (combinedModelCache) {
+    combinedModelCache.updateGeneration(newGeneration);
+    console.log(`Combined model cache generation updated to ${combinedModelCache.getGeneration()}`);
+  }
+  
   return currentGeneration;
 };
 

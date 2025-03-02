@@ -6,7 +6,8 @@ import {
   setBestModelCache, 
   setCombinedModelCache, 
   incrementGeneration,
-  updateCurrentGeneration 
+  updateCurrentGeneration,
+  forceGenerationUpdate
 } from './modelCache';
 
 export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
@@ -15,18 +16,20 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
   if (bestModelCache) {
     console.log(`Usando el mejor modelo en cache (generación ${bestModelCache.getGeneration()}, puntuación: ${bestModelCache.getBestScore()})`);
     
-    // Always create a new generation for evolution
+    // FIXED: Force a significant generation increment every time to prevent stagnation
     const newGeneration = Math.max(currentGeneration, bestModelCache.getGeneration()) + 1;
-    console.log(`Nueva generación para mejor modelo: ${newGeneration}`);
+    console.log(`Nueva generación forzada para mejor modelo amarillo: ${newGeneration}`);
     
-    // Use balanced mutation rate for best model (0.1 instead of 0.15)
+    // Use lower mutation rate for best model (0.1)
     const brain = bestModelCache.clone(0.1);
     
-    // Force update generation to ensure progression
+    // FIXED: Force update generation and make sure it's applied
     brain.updateGeneration(newGeneration);
-    updateCurrentGeneration(newGeneration);
     
-    console.log(`Best model brain created with generation ${brain.getGeneration()}`);
+    // FIXED: Explicitly update the global generation tracker
+    forceGenerationUpdate(newGeneration);
+    
+    console.log(`Best model brain created with new forced generation ${brain.getGeneration()}`);
     return brain;
   } else {
     console.log("Cargando el mejor modelo...");
@@ -36,26 +39,26 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
         setBestModelCache(bestModel); // Store in cache
         console.log(`Modelo cargado (generación ${bestModel.getGeneration()}, puntuación: ${bestModel.getBestScore()})`);
         
-        // Always increment generation for evolutionary progress
-        const newGeneration = Math.max(currentGeneration, bestModel.getGeneration()) + 1;
-        console.log(`Nueva generación para mejor modelo cargado: ${newGeneration}`);
+        // FIXED: Force a significant generation increment to break out of stagnation
+        const newGeneration = Math.max(currentGeneration, bestModel.getGeneration()) + 2;
+        console.log(`Nueva generación forzada para mejor modelo cargado: ${newGeneration}`);
         
         // Use balanced mutation rate (0.1)
-        const brain = bestModel.clone(0.1);
+        const brain = bestModel.clone(0.15); // FIXED: Increased mutation rate slightly
         
-        // Force update generation to ensure progression
+        // FIXED: Force update generation and ensure it's applied globally
         brain.updateGeneration(newGeneration);
-        updateCurrentGeneration(newGeneration);
+        forceGenerationUpdate(newGeneration);
         
-        console.log(`BEST MODEL: Loaded best model brain created with generation ${brain.getGeneration()}`);
+        console.log(`BEST MODEL: Loaded best model brain created with forced generation ${brain.getGeneration()}`);
         return brain;
       } else {
         console.log("No se encontró un modelo existente, creando uno nuevo");
-        // For new models, force at least generation 2
-        const newGeneration = Math.max(currentGeneration, 2);
+        // For new models, force at least generation 3
+        const newGeneration = Math.max(currentGeneration, 3);
         const brain = new NeuralNetwork(8, 12, 4);
         brain.updateGeneration(newGeneration);
-        updateCurrentGeneration(newGeneration);
+        forceGenerationUpdate(newGeneration);
         
         setBestModelCache(brain); // Cache the new model too
         console.log(`BEST MODEL: New model brain created with generation ${brain.getGeneration()}`);
@@ -63,10 +66,10 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
       }
     } catch (loadError) {
       console.error("Error cargando el mejor modelo:", loadError);
-      const newGeneration = Math.max(currentGeneration, 2);
+      const newGeneration = Math.max(currentGeneration, 3);
       const brain = new NeuralNetwork(8, 12, 4);
       brain.updateGeneration(newGeneration);
-      updateCurrentGeneration(newGeneration);
+      forceGenerationUpdate(newGeneration);
       
       setBestModelCache(brain);
       console.log(`BEST MODEL: Fallback model brain created with generation ${brain.getGeneration()}`);

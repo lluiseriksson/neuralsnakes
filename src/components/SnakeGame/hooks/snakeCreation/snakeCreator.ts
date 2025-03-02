@@ -1,6 +1,8 @@
+
 import { Direction, Snake } from '../../types';
 import { generateInitialSnake } from '../../movement/initialSnake';
 import { createBestModelBrain, createCombinedModelBrain, createRandomBrain } from './createSnakeBrain';
+import { getModelCache, forceGenerationUpdate } from './modelCache';
 
 export const createSnake = async (id: number, x: number, y: number, direction: Direction, color: string): Promise<Snake> => {
   try {
@@ -15,6 +17,15 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
         console.error(`Error creating best model brain: ${error.message}`);
         return createRandomBrain(id);
       });
+      
+      // FIXED: Log the generation of yellow snake for debugging
+      console.log(`YELLOW SNAKE GENERATION CHECK: ${brain.getGeneration()}`);
+      
+      // FIXED: Force generation update from yellow snake to ensure it's spreading to other snakes
+      const yellowSnakeGeneration = brain.getGeneration();
+      if (yellowSnakeGeneration > 0) {
+        forceGenerationUpdate(yellowSnakeGeneration);
+      }
     } else if (id === 1) {
       // Blue snake - combined model brain
       console.log(`Creating combined model brain for blue snake ${id}`);
