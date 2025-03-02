@@ -1,21 +1,43 @@
 
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface TimerProps {
   startTime: number;
 }
 
 const Timer: React.FC<TimerProps> = ({ startTime }) => {
-  const [timeLeft, setTimeLeft] = React.useState(60);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const timerRef = useRef<number | null>(null);
 
-  React.useEffect(() => {
-    const interval = setInterval(() => {
+  useEffect(() => {
+    // Clear any existing interval
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    // Set initial time left
+    const initialElapsed = Date.now() - startTime;
+    const initialRemaining = Math.max(0, 60 - Math.floor(initialElapsed / 1000));
+    setTimeLeft(initialRemaining);
+    
+    // Start new interval
+    timerRef.current = window.setInterval(() => {
       const elapsed = Date.now() - startTime;
       const remaining = Math.max(0, 60 - Math.floor(elapsed / 1000));
       setTimeLeft(remaining);
+      
+      // Auto-cleanup when time reaches 0
+      if (remaining <= 0 && timerRef.current) {
+        clearInterval(timerRef.current);
+      }
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [startTime]);
 
   return (
