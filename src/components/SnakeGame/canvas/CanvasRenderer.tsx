@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { GameState } from '../types';
 import { CELL_SIZE, GRID_SIZE } from '../constants';
-import { drawGrid, drawApples, drawSnakes, drawDebugInfo } from './drawingUtils';
+import { 
+  drawGrid, 
+  drawApples, 
+  drawSnakes, 
+  drawDebugInfo 
+} from './drawing';
 
 interface CanvasRendererProps {
   gameState: GameState;
