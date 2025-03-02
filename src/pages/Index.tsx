@@ -169,7 +169,7 @@ const Index = () => {
       <div className="mt-4 p-2 bg-gray-800 rounded text-white text-sm max-w-lg">
         <p>Estado del aprendizaje:</p>
         <ul className="list-disc list-inside mt-1 text-xs">
-          <li>Serpiente roja: modelo óptimo (mutación baja)</li>
+          <li>Serpiente amarilla: modelo óptimo (mutación baja)</li>
           <li>Serpiente azul: modelo combinado (mutación media)</li>
           <li>Otras serpientes: modelos experimentales (mutación alta)</li>
         </ul>

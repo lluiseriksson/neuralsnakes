@@ -1,4 +1,3 @@
-
 import { NeuralNetwork as INeuralNetwork } from '../../types';
 import { NeuralNetwork } from '../../NeuralNetwork';
 import { 

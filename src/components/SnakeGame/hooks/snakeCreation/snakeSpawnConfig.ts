@@ -6,7 +6,7 @@ export const generateSnakeSpawnConfig = (snakeId: number): [number, number, Dire
   const positions: [number, number][] = [[5, 5], [25, 25], [5, 25], [25, 5]];
   const directions: Direction[] = ['RIGHT', 'LEFT', 'UP', 'DOWN'];
   // More vibrant colors for better visibility
-  const colors = ['#FFDD00', 'blue', 'green', '#9b87f5']; // Brighter yellow for better visibility
+  const colors = ['#FFDD00', 'blue', 'green', '#9b87f5']; // Yellow color for first snake
   
   // Ensure snake ID is within bounds
   const safeId = Math.min(Math.max(0, snakeId), positions.length - 1);
