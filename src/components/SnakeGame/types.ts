@@ -26,6 +26,18 @@ export interface NeuralNetwork {
   getPerformanceStats: () => { learningAttempts: number, successfulMoves: number, failedMoves: number };
 }
 
+// Define un tipo para eventos de aprendizaje
+type LearningEvent = {
+  type: string;
+  reward?: number;
+  time: number;
+  position: Position;
+  distanceDelta?: number;
+  missedAppleCount?: number;
+  penalty?: number;
+  missedPositions?: Position[];
+};
+
 // Información de depuración para visualización
 export type DebugInfo = {
   lastInputs?: number[];
@@ -53,6 +65,8 @@ export type DebugInfo = {
     nearbyApples: any[];
     closestAppleDistance: number | null;
   };
+  // Añadimos el array de eventos de aprendizaje para seguimiento
+  learningEvents?: LearningEvent[];
 };
 
 export type Snake = {
