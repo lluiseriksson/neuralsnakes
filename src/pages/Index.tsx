@@ -7,6 +7,7 @@ import VictoryDisplay from "../components/SnakeGame/components/VictoryDisplay";
 import Timer from "../components/SnakeGame/components/Timer";
 import NeuralNetworkVisualizer from "../components/SnakeGame/components/NeuralNetworkVisualizer";
 import SnakeSelector from "../components/SnakeGame/components/SnakeSelector";
+import GenerationTracker from "../components/SnakeGame/components/GenerationTracker";
 import { Button } from "../components/ui/button";
 import { useToast } from "../components/ui/use-toast";
 import { Snake } from "../components/SnakeGame/types";
@@ -94,6 +95,11 @@ const Index = () => {
       <h1 className="text-2xl font-bold mb-4 text-white">Snake AI Battle</h1>
       
       <VictoryDisplay victories={victories} />
+      
+      {/* Display the generation tracker when we have snakes */}
+      {gameState.snakes && gameState.snakes.length > 0 && (
+        <GenerationTracker snakes={gameState.snakes} />
+      )}
       
       <div className="flex flex-col lg:flex-row gap-4 items-start">
         <div className="relative">

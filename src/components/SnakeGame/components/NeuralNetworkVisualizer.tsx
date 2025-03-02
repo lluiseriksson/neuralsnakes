@@ -52,9 +52,9 @@ const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = ({ activ
     ctx.textAlign = 'center';
     ctx.fillText('Neural Network Decision Visualization', canvas.width / 2, 20);
 
-    // Calculate positions - Increased spacing for better visibility
-    const inputLayerX = 120;  // Increased from 80 to allow more space for labels
-    const outputLayerX = canvas.width - 80;
+    // Calculate positions - Improved spacing for better visibility
+    const inputLayerX = 150;  // Further increased from 120 to ensure labels are fully visible
+    const outputLayerX = canvas.width - 100;
     const inputStartY = 60;
     const outputStartY = 80;
     const nodeRadius = 12;
@@ -80,15 +80,22 @@ const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = ({ activ
       ctx.strokeStyle = '#FFFFFF';
       ctx.stroke();
       
-      // Draw node label with improved visibility
+      // Draw node label with stronger visibility
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = '10px Arial';
+      ctx.font = '11px Arial';
       ctx.textAlign = 'right';
+      
+      // Draw stronger background for text for better contrast
+      const textWidth = ctx.measureText(nodeValues.inputLabels[index]).width;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(inputLayerX - nodeRadius - 10 - textWidth, y - 8, textWidth + 8, 16);
+      
       // Draw label with a black outline for better visibility
+      ctx.fillStyle = '#FFFFFF';
       ctx.lineWidth = 2;
       ctx.strokeStyle = '#000000';
-      ctx.strokeText(nodeValues.inputLabels[index], inputLayerX - nodeRadius - 5, y + 4);
-      ctx.fillText(nodeValues.inputLabels[index], inputLayerX - nodeRadius - 5, y + 4);
+      ctx.strokeText(nodeValues.inputLabels[index], inputLayerX - nodeRadius - 10, y + 4);
+      ctx.fillText(nodeValues.inputLabels[index], inputLayerX - nodeRadius - 10, y + 4);
       
       // Draw node value
       ctx.font = '9px Arial';
@@ -121,12 +128,20 @@ const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = ({ activ
       
       // Draw node label with improved visibility
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = '10px Arial';
+      ctx.font = '11px Arial';
       ctx.textAlign = 'left';
+      
+      // Draw background for text
+      const textWidth = ctx.measureText(nodeValues.outputLabels[index]).width;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(outputLayerX + nodeRadius + 8, y - 8, textWidth + 8, 16);
+      
+      // Draw text with outline
+      ctx.fillStyle = '#FFFFFF';
       ctx.lineWidth = 2;
       ctx.strokeStyle = '#000000';
-      ctx.strokeText(nodeValues.outputLabels[index], outputLayerX + nodeRadius + 5, y + 4);
-      ctx.fillText(nodeValues.outputLabels[index], outputLayerX + nodeRadius + 5, y + 4);
+      ctx.strokeText(nodeValues.outputLabels[index], outputLayerX + nodeRadius + 10, y + 4);
+      ctx.fillText(nodeValues.outputLabels[index], outputLayerX + nodeRadius + 10, y + 4);
       
       // Draw node value
       ctx.font = '9px Arial';
@@ -171,9 +186,9 @@ const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = ({ activ
     <div className="border rounded-lg p-2 bg-gray-900">
       <canvas 
         ref={canvasRef} 
-        width={500} // Increased from 400 to provide more space for labels
+        width={550} // Further increased width to accommodate larger text and better spacing
         height={300} 
-        className="w-full h-full"
+        className="w-full h-full" // Keep this class to ensure proper scaling
       />
       <div className="mt-2 text-xs text-gray-300 px-2">
         <p>Snake #{activeSnake.id} - Score: {activeSnake.score}</p>
