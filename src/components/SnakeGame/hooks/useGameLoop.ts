@@ -1,78 +1,39 @@
-import { useEffect, useRef } from 'react';
-import { useGameState } from './useGameState';
-import { useGameInitialization } from './useGameInitialization';
-import { useRoundManagement } from './useRoundManagement';
-import { useGameUpdate } from './useGameUpdate';
 
-export const useGameLoop = () => {
-  const {
-    gameState,
-    setGameState,
-    victories,
-    setVictories,
-    generationInfo,
-    setGenerationInfo,
-    startTime,
-    setStartTime,
-    isGameRunning,
-    setIsGameRunning
-  } = useGameState();
-  
-  const { initializeGame } = useGameInitialization(setGameState, setGenerationInfo);
-  const isProcessingUpdate = useRef(false);
-  const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
-  
-  const { endRound } = useRoundManagement(
-    gameState,
-    setVictories,
-    setIsGameRunning,
-    isProcessingUpdate,
-    gameLoopRef,
-    initializeGame
-  );
+import { useRef, useEffect } from 'react';
+import { FPS } from '../constants';
 
-  const { updateGame } = useGameUpdate(
-    isGameRunning,
-    startTime,
-    isProcessingUpdate,
-    setGameState,
-    endRound,
-    (apples) => {
-      const minApples = 3;
-      if (apples.length < minApples) {
-        const newApplesNeeded = minApples - apples.length;
-        for (let i = 0; i < newApplesNeeded; i++) {
-          // apples.push(generateApple());
-        }
-      }
-      return apples;
-    }
-  );
+export const useGameLoop = (
+  isGameRunning: boolean,
+  updateGame: () => void
+) => {
+  // Create a ref to store the interval ID
+  const gameLoopIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (isGameRunning && !isProcessingUpdate.current) {
-      gameLoopRef.current = setInterval(updateGame, 60);
-    } else if (!isGameRunning && gameLoopRef.current) {
-      clearInterval(gameLoopRef.current);
-      gameLoopRef.current = null;
+    console.log(`Configurando game loop con FPS: ${FPS}`);
+    
+    // Clear existing interval if it exists
+    if (gameLoopIntervalRef.current) {
+      clearInterval(gameLoopIntervalRef.current);
+      gameLoopIntervalRef.current = null;
     }
-
+    
+    // Only set up the interval if the game is running
+    if (isGameRunning) {
+      gameLoopIntervalRef.current = setInterval(() => {
+        updateGame();
+      }, 1000 / FPS);
+    }
+    
+    // Clean up the interval when the component unmounts or when dependencies change
     return () => {
-      if (gameLoopRef.current) {
-        clearInterval(gameLoopRef.current);
+      if (gameLoopIntervalRef.current) {
+        clearInterval(gameLoopIntervalRef.current);
+        gameLoopIntervalRef.current = null;
       }
     };
   }, [isGameRunning, updateGame]);
 
-  return {
-    gameState,
-    victories,
-    generationInfo,
-    isGameRunning,
-    setIsGameRunning,
-    initializeGame,
-    startTime,
-    setStartTime,
-    endRound
-  };
+  // No need to return anything as we're just setting up the game loop
+  return {};
 };

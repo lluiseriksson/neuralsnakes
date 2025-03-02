@@ -64,7 +64,7 @@ export const useGameLogic = () => {
   );
 
   // Extract game loop logic
-  const {  } = useGameLoop(
+  useGameLoop(
     isGameRunning,
     updateGame
   );

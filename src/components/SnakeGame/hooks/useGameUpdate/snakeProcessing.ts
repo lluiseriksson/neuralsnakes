@@ -1,5 +1,5 @@
 
-import { GameState, Snake } from '../../types';
+import { GameState, Snake, Position } from '../../types';
 import { moveSnake } from '../../movement';
 import { generateNeuralNetworkInputs, validateInputs } from '../neuralNetworkInputs';
 
