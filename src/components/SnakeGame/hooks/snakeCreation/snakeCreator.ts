@@ -18,10 +18,10 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
         return createRandomBrain(id);
       });
       
-      // FIXED: Log the generation of yellow snake for debugging
+      // Log the generation of yellow snake for debugging
       console.log(`YELLOW SNAKE GENERATION CHECK: ${brain.getGeneration()}`);
       
-      // FIXED: Force generation update from yellow snake to ensure it's spreading to other snakes
+      // Force generation update from yellow snake to ensure it's spreading to other snakes
       const yellowSnakeGeneration = brain.getGeneration();
       if (yellowSnakeGeneration > 0) {
         forceGenerationUpdate(yellowSnakeGeneration);
@@ -44,10 +44,10 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       brain = createRandomBrain(id);
     }
 
-    // Generate initial positions - con comprobación de seguridad
+    // Generate initial positions with safety check
     let positions = generateInitialSnake(x, y);
     
-    // Verificar que las posiciones son válidas
+    // Verify positions are valid
     if (!positions || !Array.isArray(positions) || positions.length === 0) {
       console.error(`Error generating initial positions for snake ${id}, using fallback`);
       // Create simple initial positions as fallback
@@ -59,7 +59,7 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       console.log(`Using fallback positions for snake ${id}`);
     }
     
-    // Verificar que cada posición es válida
+    // Verify each position is valid
     for (let i = 0; i < positions.length; i++) {
       if (typeof positions[i].x !== 'number' || typeof positions[i].y !== 'number') {
         console.error(`Invalid position at index ${i} for snake ${id}, fixing`);
@@ -67,7 +67,7 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       }
     }
     
-    // Inicializar métricas de decisión para mejor análisis
+    // Initialize decision metrics for better analysis
     const decisionMetrics = {
       applesEaten: 0,
       applesIgnored: 0,

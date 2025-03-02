@@ -37,14 +37,14 @@ export const useGameInitialization = (
       gamesPlayedRef.current++;
       console.log(`Iniciando partida #${gamesPlayedRef.current}`);
 
-      // Configuración inicial mientras las serpientes cargan
+      // Initial setup while snakes are loading
       setGameState(prevState => ({
         ...prevState,
         apples: [...cachedInitialApples],
         gridSize: GRID_SIZE,
       }));
 
-      // Crear serpientes en paralelo para mejor rendimiento
+      // Create snakes in parallel for better performance
       console.log("Creando 4 serpientes...");
       const snakePromises = Array.from({ length: 4 }, async (_, i) => {
         try {
@@ -57,12 +57,12 @@ export const useGameInitialization = (
             return snake;
           } catch (snakeError) {
             console.error(`Error creando serpiente ${i}, usando serpiente de respaldo:`, snakeError);
-            // Si falla la creación, usar una serpiente de respaldo
+            // If creation fails, use a fallback snake
             return createFallbackSnake(i, spawnX, spawnY, direction as Direction, color);
           }
         } catch (error) {
           console.error(`Error en configuración de serpiente ${i}:`, error);
-          // Configuración de respaldo para la serpiente
+          // Fallback configuration for snake
           const backupConfig = [
             5 + i * 5, 5 + i * 3, 
             ["UP", "DOWN", "LEFT", "RIGHT"][i % 4] as Direction, 
@@ -86,7 +86,7 @@ export const useGameInitialization = (
       // Validate and fix any snakes as needed
       const validatedSnakes = snakes.map(snake => validateAndFixSnake(snake));
       
-      // Actualizar estado del juego con las serpientes creadas
+      // Update game state with created snakes
       setGameState({
         snakes: validatedSnakes,
         apples: [...cachedInitialApples],

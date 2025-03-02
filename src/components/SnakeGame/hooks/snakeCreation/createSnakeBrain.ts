@@ -1,3 +1,4 @@
+
 import { NeuralNetwork as INeuralNetwork } from '../../types';
 import { NeuralNetwork } from '../../NeuralNetwork';
 import { 
@@ -15,17 +16,17 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
   if (bestModelCache) {
     console.log(`Usando el mejor modelo en cache (generación ${bestModelCache.getGeneration()}, puntuación: ${bestModelCache.getBestScore()})`);
     
-    // FIXED: Force a significant generation increment every time to prevent stagnation
+    // Force a significant generation increment every time to prevent stagnation
     const newGeneration = Math.max(currentGeneration, bestModelCache.getGeneration()) + 1;
     console.log(`Nueva generación forzada para mejor modelo amarillo: ${newGeneration}`);
     
     // Use lower mutation rate for best model (0.1)
     const brain = bestModelCache.clone(0.1);
     
-    // FIXED: Force update generation and make sure it's applied
+    // Force update generation and make sure it's applied
     brain.updateGeneration(newGeneration);
     
-    // FIXED: Explicitly update the global generation tracker
+    // Explicitly update the global generation tracker
     forceGenerationUpdate(newGeneration);
     
     console.log(`Best model brain created with new forced generation ${brain.getGeneration()}`);
@@ -38,14 +39,14 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
         setBestModelCache(bestModel); // Store in cache
         console.log(`Modelo cargado (generación ${bestModel.getGeneration()}, puntuación: ${bestModel.getBestScore()})`);
         
-        // FIXED: Force a significant generation increment to break out of stagnation
+        // Force a significant generation increment to break out of stagnation
         const newGeneration = Math.max(currentGeneration, bestModel.getGeneration()) + 2;
         console.log(`Nueva generación forzada para mejor modelo cargado: ${newGeneration}`);
         
         // Use balanced mutation rate (0.1)
-        const brain = bestModel.clone(0.15); // FIXED: Increased mutation rate slightly
+        const brain = bestModel.clone(0.15); // Increased mutation rate slightly
         
-        // FIXED: Force update generation and ensure it's applied globally
+        // Force update generation and ensure it's applied globally
         brain.updateGeneration(newGeneration);
         forceGenerationUpdate(newGeneration);
         
