@@ -1,50 +1,78 @@
+import { useEffect, useRef } from 'react';
+import { useGameState } from './useGameState';
+import { useGameInitialization } from './useGameInitialization';
+import { useRoundManagement } from './useRoundManagement';
+import { useGameUpdate } from './useGameUpdate';
 
-import { useRef, useEffect } from 'react';
-import { FPS } from '../constants';
-
-export const useGameLoop = (
-  isGameRunning: boolean,
-  updateGame: () => void
-) => {
-  const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
+export const useGameLoop = () => {
+  const {
+    gameState,
+    setGameState,
+    victories,
+    setVictories,
+    generationInfo,
+    setGenerationInfo,
+    startTime,
+    setStartTime,
+    isGameRunning,
+    setIsGameRunning
+  } = useGameState();
+  
+  const { initializeGame } = useGameInitialization(setGameState, setGenerationInfo);
   const isProcessingUpdate = useRef(false);
-  const frameCountRef = useRef(0);
+  const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const { endRound } = useRoundManagement(
+    gameState,
+    setVictories,
+    setIsGameRunning,
+    isProcessingUpdate,
+    gameLoopRef,
+    initializeGame
+  );
 
-  // Set up game loop whenever isGameRunning changes
+  const { updateGame } = useGameUpdate(
+    isGameRunning,
+    startTime,
+    isProcessingUpdate,
+    setGameState,
+    endRound,
+    (apples) => {
+      const minApples = 3;
+      if (apples.length < minApples) {
+        const newApplesNeeded = minApples - apples.length;
+        for (let i = 0; i < newApplesNeeded; i++) {
+          // apples.push(generateApple());
+        }
+      }
+      return apples;
+    }
+  );
+
   useEffect(() => {
-    if (!isGameRunning) {
-      console.log("Game loop pausado: el juego no está corriendo");
-      if (gameLoopRef.current) {
-        clearInterval(gameLoopRef.current);
-        gameLoopRef.current = null;
-      }
-      return;
-    }
-    
-    console.log("Configurando game loop con FPS:", FPS);
-    if (gameLoopRef.current) {
+    if (isGameRunning && !isProcessingUpdate.current) {
+      gameLoopRef.current = setInterval(updateGame, 60);
+    } else if (!isGameRunning && gameLoopRef.current) {
       clearInterval(gameLoopRef.current);
+      gameLoopRef.current = null;
     }
-    
-    gameLoopRef.current = setInterval(() => {
-      frameCountRef.current += 1;
-      if (frameCountRef.current % 10 === 0) {
-        console.log(`Frame #${frameCountRef.current}`);
-      }
-      updateGame();
-    }, 1000 / FPS);
-    
+
     return () => {
       if (gameLoopRef.current) {
         clearInterval(gameLoopRef.current);
-        gameLoopRef.current = null;
       }
     };
   }, [isGameRunning, updateGame]);
 
   return {
-    gameLoopRef,
-    isProcessingUpdate,
-    frameCountRef
+    gameState,
+    victories,
+    generationInfo,
+    isGameRunning,
+    setIsGameRunning,
+    initializeGame,
+    startTime,
+    setStartTime,
+    endRound
   };
 };
