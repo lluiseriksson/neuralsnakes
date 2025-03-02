@@ -1,7 +1,13 @@
-
 import { useCallback } from 'react';
 import { GameState } from '../types';
-import { getModelCache, updateCurrentGeneration, incrementGeneration, trackGamePlayed, resetModelCaches, forceGenerationUpdate } from './snakeCreation/modelCache';
+import { 
+  getModelCache, 
+  updateCurrentGeneration, 
+  incrementGeneration, 
+  trackGamePlayed, 
+  resetModelCaches, 
+  forceGenerationUpdate 
+} from './snakeCreation/modelCache';
 
 export const useRoundManagement = (
   gameState: GameState,
