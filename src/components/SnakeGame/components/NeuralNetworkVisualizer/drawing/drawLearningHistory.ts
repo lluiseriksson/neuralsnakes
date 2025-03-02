@@ -1,14 +1,5 @@
 
-type LearningEvent = {
-  type: string;
-  reward?: number;
-  time: number;
-  position: { x: number, y: number };
-  distanceDelta?: number;
-  missedAppleCount?: number;
-  penalty?: number;
-  missedPositions?: { x: number, y: number }[];
-};
+import { LearningEvent } from './types';
 
 export const drawLearningHistory = (
   ctx: CanvasRenderingContext2D, 

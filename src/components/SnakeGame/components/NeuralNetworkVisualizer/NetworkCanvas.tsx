@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Snake } from '../../types';
 import { drawNetworkNodes } from './drawing/drawNetworkNodes';
 import { drawLearningHistory } from './drawing/drawLearningHistory';
+import { NodeValues, LearningEvent } from './drawing/types';
 
 interface NetworkCanvasProps {
   activeSnake: Snake;
@@ -10,12 +11,7 @@ interface NetworkCanvasProps {
 
 const NetworkCanvas: React.FC<NetworkCanvasProps> = ({ activeSnake }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [nodeValues, setNodeValues] = useState<{
-    inputs: number[],
-    outputs: number[],
-    inputLabels: string[],
-    outputLabels: string[]
-  }>({
+  const [nodeValues, setNodeValues] = useState<NodeValues>({
     inputs: [],
     outputs: [],
     inputLabels: ['Up Apple', 'Right Apple', 'Down Apple', 'Left Apple', 'Up Obstacle', 'Right Obstacle', 'Down Obstacle', 'Left Obstacle'],
@@ -53,7 +49,8 @@ const NetworkCanvas: React.FC<NetworkCanvasProps> = ({ activeSnake }) => {
     
     // Draw learning history if available
     if (activeSnake?.debugInfo?.learningEvents && activeSnake.debugInfo.learningEvents.length > 0) {
-      drawLearningHistory(ctx, activeSnake.debugInfo.learningEvents, canvas);
+      const learningEvents = activeSnake.debugInfo.learningEvents as LearningEvent[];
+      drawLearningHistory(ctx, learningEvents, canvas);
     }
     
   }, [nodeValues, activeSnake]);

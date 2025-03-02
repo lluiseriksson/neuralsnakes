@@ -1,5 +1,5 @@
 
-import { NodeValues, NodePosition } from './types';
+import { NodeValues, NodePosition, CanvasLayout } from './types';
 import { drawNetworkTitle } from './drawNetworkTitle';
 import { drawInputNodes } from './drawInputNodes';
 import { drawOutputNodes } from './drawOutputNodes';
@@ -13,13 +13,17 @@ export const drawNetworkNodes = (
   activeSnake: any
 ) => {
   // Set up layout parameters
-  const inputLayerX = 150;  // Further increased from 120 to ensure labels are fully visible
-  const outputLayerX = canvas.width - 100;
-  const inputStartY = 60;
-  const outputStartY = 80;
-  const nodeRadius = 12;
-  const inputSpacing = 30;
-  const outputSpacing = 40;
+  const layout: CanvasLayout = {
+    width: canvas.width,
+    height: canvas.height,
+    inputLayerX: 150,  // Further increased from 120 to ensure labels are fully visible
+    outputLayerX: canvas.width - 100,
+    inputStartY: 60,
+    outputStartY: 80,
+    nodeRadius: 12,
+    inputSpacing: 30,
+    outputSpacing: 40
+  };
   
   // Request animation frame for continuous updates
   requestAnimationFrame(() => {
@@ -27,17 +31,17 @@ export const drawNetworkNodes = (
     
     // Draw input nodes and get their positions
     const inputPositions = drawInputNodes(
-      ctx, nodeValues, inputLayerX, inputStartY, inputSpacing, nodeRadius
+      ctx, nodeValues, layout.inputLayerX, layout.inputStartY, layout.inputSpacing, layout.nodeRadius
     );
     
     // Draw output nodes and get their positions + selected index
     const { positions: outputPositions, selectedIndex } = drawOutputNodes(
-      ctx, nodeValues, outputLayerX, outputStartY, outputSpacing, nodeRadius
+      ctx, nodeValues, layout.outputLayerX, layout.outputStartY, layout.outputSpacing, layout.nodeRadius
     );
     
     // Draw connections between input nodes and selected output
     drawConnections(
-      ctx, inputPositions, outputPositions, selectedIndex, nodeValues, nodeRadius
+      ctx, inputPositions, outputPositions, selectedIndex, nodeValues, layout.nodeRadius
     );
   });
 };

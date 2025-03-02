@@ -1,5 +1,5 @@
 
-import { NodePosition, NodeValues } from './types';
+import { NodePosition, NodeValues, OutputDrawResult } from './types';
 import { drawNode } from './drawNode';
 
 // Draw output nodes
@@ -10,7 +10,7 @@ export const drawOutputNodes = (
   outputStartY: number, 
   outputSpacing: number,
   nodeRadius: number = 12
-): { positions: NodePosition[], selectedIndex: number } => {
+): OutputDrawResult => {
   const positions: NodePosition[] = [];
   
   // Find the selected (highest activation) output

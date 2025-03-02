@@ -26,8 +26,8 @@ export interface NeuralNetwork {
   getPerformanceStats: () => { learningAttempts: number, successfulMoves: number, failedMoves: number };
 }
 
-// Define un tipo para eventos de aprendizaje
-type LearningEvent = {
+// Learning event for visualization and analysis
+export interface LearningEvent {
   type: string;
   reward?: number;
   time: number;
@@ -36,48 +36,60 @@ type LearningEvent = {
   missedAppleCount?: number;
   penalty?: number;
   missedPositions?: Position[];
-};
+}
 
-// New decision type to track decision making
-type DecisionInfo = {
+// Decision information for tracking decision making process
+export interface DecisionInfo {
   direction: Direction;
   reason: string;
   confidence?: number;
   time: number;
-};
+}
+
+// Detailed decision tracking information
+export interface DecisionRecord {
+  inputs: number[];
+  outputs: number[];
+  headPosition: Position;
+  time: number;
+}
+
+// Action recording for visualization
+export interface ActionRecord {
+  type: string;
+  position: Position;
+  time: number;
+}
+
+// Distance evaluation information
+export interface DistanceEvaluation {
+  prevDistance: number;
+  currentDistance: number;
+  improvement: number;
+  time: number;
+}
+
+// Apple proximity information
+export interface CollisionProximityInfo {
+  hasNearbyApples: boolean;
+  nearbyApples: any[];
+  closestAppleDistance: number | null;
+}
 
 // Información de depuración para visualización
-export type DebugInfo = {
+export interface DebugInfo {
   lastInputs?: number[];
   lastOutputs?: number[];
   validationError?: boolean;
-  decisions?: {
-    inputs: number[];
-    outputs: number[];
-    headPosition: Position;
-    time: number;
-  }[];
-  actions?: {
-    type: string;
-    position: Position;
-    time: number;
-  }[];
-  evaluations?: {
-    prevDistance: number;
-    currentDistance: number;
-    improvement: number;
-    time: number;
-  }[];
-  collisionInfo?: {
-    hasNearbyApples: boolean;
-    nearbyApples: any[];
-    closestAppleDistance: number | null;
-  };
+  decisions?: DecisionRecord[];
+  actions?: ActionRecord[];
+  evaluations?: DistanceEvaluation[];
+  collisionInfo?: CollisionProximityInfo;
   // Learning events array for tracking
   learningEvents?: LearningEvent[];
   // Last decision info for displaying the decision rationale
   lastDecision?: DecisionInfo;
-};
+}
 
 export type Snake = {
   id: number;

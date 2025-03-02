@@ -1,5 +1,5 @@
 
-import { NodePosition } from './types';
+import { NodePosition, NodeStylingOptions } from './types';
 import { getNodeColor } from './nodeStyles';
 import { drawNodeLabel } from './drawNodeLabel';
 

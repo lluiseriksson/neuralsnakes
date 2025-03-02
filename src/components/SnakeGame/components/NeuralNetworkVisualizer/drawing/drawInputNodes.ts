@@ -1,5 +1,5 @@
 
-import { NodePosition, NodeValues } from './types';
+import { NodePosition, NodeValues, NodeStylingOptions } from './types';
 import { drawNode } from './drawNode';
 
 // Draw input nodes
@@ -15,6 +15,12 @@ export const drawInputNodes = (
   
   nodeValues.inputs.forEach((value, index) => {
     const y = inputStartY + (index * inputSpacing);
+    const nodeOptions: NodeStylingOptions = {
+      radius: nodeRadius,
+      isInput: true,
+      pulseEffect: true
+    };
+    
     const position = drawNode(
       ctx, 
       inputLayerX, 
