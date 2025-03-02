@@ -30,12 +30,15 @@ export const useRoundManagement = (
     // Get current generation
     let currentGen = getModelCache().currentGeneration;
     
-    // Force generation increment if max score is high enough
-    let newGeneration = currentGen;
-    if (maxScore >= 5) {
-      // For better scores, always increment generation
+    // ALWAYS increment generation to force evolution
+    let newGeneration = incrementGeneration();
+    console.log(`Forcing generation increment from ${currentGen} to ${newGeneration}`);
+    
+    // Additional increment if good score achieved
+    if (maxScore >= 3) {
+      // For better scores, increment generation again
       newGeneration = incrementGeneration();
-      console.log(`Good score (${maxScore}) achieved! Incrementing generation from ${currentGen} to ${newGeneration}`);
+      console.log(`Good score (${maxScore}) achieved! Incrementing generation again to ${newGeneration}`);
     }
     
     if (maxScore > 0) {
@@ -76,8 +79,8 @@ export const useRoundManagement = (
 
     // Also save non-winners if they have a good score
     for (const snake of gameState.snakes) {
-      // Save models with at least score 3 or more that aren't already saved as winners
-      if (snake.score >= 3 && maxScore > 0 && snake.score !== maxScore) {
+      // Save models with at least score 2 or more that aren't already saved as winners
+      if (snake.score >= 2 && maxScore > 0 && snake.score !== maxScore) {
         try {
           snake.brain.updateBestScore(snake.score);
           

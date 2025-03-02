@@ -8,7 +8,8 @@ let currentGeneration = 1; // Track current generation
 
 // Track games played since last generation increment
 let gamesSinceLastGenIncrement = 0;
-const GAMES_TO_FORCE_INCREMENT = 20; // Force increment after this many games
+// Reduce this to force more frequent generation increments
+const GAMES_TO_FORCE_INCREMENT = 5; // Force increment after just 5 games
 
 export const getModelCache = () => {
   return {
@@ -56,7 +57,7 @@ export const trackGamePlayed = () => {
   gamesSinceLastGenIncrement++;
   console.log(`Games since last generation increment: ${gamesSinceLastGenIncrement}`);
   
-  // Force generation increment after a certain number of games
+  // Force generation increment after a certain number of games - REDUCED THRESHOLD
   if (gamesSinceLastGenIncrement >= GAMES_TO_FORCE_INCREMENT) {
     console.log(`Forcing generation increment after ${GAMES_TO_FORCE_INCREMENT} games`);
     return incrementGeneration();

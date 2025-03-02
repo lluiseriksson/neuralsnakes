@@ -18,10 +18,10 @@ export const applyLearning = (
   network.trackLearningAttempt(success);
   
   // Calculate learning rate based on context
-  // MUCHO más agresivo: aprendizaje muy amplificado
+  // EXTREMELY more aggressive: highly amplified learning
   const learningRate = success 
-    ? 0.3 * Math.min(reward, 3.0) // Cap at 0.9 for success (mucho más alto)
-    : 0.4 * Math.min(reward, 2.5); // Cap at 1.0 for failure (mucho más alto)
+    ? 0.5 * Math.min(reward, 4.0) // Cap at 2.0 for success (much higher)
+    : 0.6 * Math.min(reward, 3.0); // Cap at 1.8 for failure (much higher)
   
   // Get current weights
   const currentWeights = network.getWeights();
@@ -29,36 +29,36 @@ export const applyLearning = (
   // Apply adjustments to weights based on input values
   // This creates a correlation between input patterns and outcomes
   const newWeights = currentWeights.map((weight, index) => {
-    // Solo ajustar pesos relacionados con entradas activas
-    // Usando una conexión más directa entre entradas y salidas
+    // Only adjust weights related to active inputs
+    // Using a more direct connection between inputs and outputs
     if (index < inputs.length * 4) { // Assuming 4 output neurons
       const inputIndex = Math.floor(index / 4);
       const outputIndex = index % 4;
       const inputValue = inputs[inputIndex];
       
-      // Ajuste de peso proporcional al valor de entrada y resultado del aprendizaje
-      // Mucho más fuerte para entradas significativas
-      const inputStrength = Math.abs(inputValue) > 0.5 ? 2.0 : 1.5;
+      // Weight adjustment proportional to input value and learning outcome
+      // Much stronger for significant inputs
+      const inputStrength = Math.abs(inputValue) > 0.5 ? 3.0 : 2.0;
       const adjustment = inputValue * learningRate * inputStrength * (success ? 1 : -1);
       
-      // Para éxitos, reforzamos MUCHO MÁS los pesos asociados a la dirección elegida
+      // For success, we GREATLY reinforce weights associated with the chosen direction
       if (success && outputs.length > 0 && outputs[outputIndex] > 0.5) {
-        return weight + (adjustment * 3.0); // 300% más de refuerzo para la acción elegida
+        return weight + (adjustment * 5.0); // 500% more reinforcement for the chosen action
       }
       
       return weight + adjustment;
     }
     
-    // Para pesos no relacionados con entradas, hacer ajustes aleatorios más pequeños
-    // Pero lo suficientemente significativos para explorar nuevas soluciones
-    const randomFactor = (Math.random() * 0.2 - 0.1) * (success ? 1 : -1);
+    // For weights not related to inputs, make smaller random adjustments
+    // But significant enough to explore new solutions
+    const randomFactor = (Math.random() * 0.4 - 0.2) * (success ? 1 : -1);
     return weight + (randomFactor * learningRate);
   });
   
-  // Establecer nuevos pesos
+  // Set new weights
   network.setWeights(newWeights);
   
-  // Guardar datos de entrenamiento para análisis posterior
+  // Save training data for later analysis
   if (network.getId() && inputs.length > 0) {
     network.saveTrainingData(inputs, outputs, success).catch(err => {
       console.log("Error saving training data, but continuing", err);
@@ -73,11 +73,11 @@ export const mutateNetwork = (
   const weights = network.getWeights();
   
   const mutatedWeights = weights.map(weight => {
-    // Aplicar mutación con probabilidad mutationRate
+    // Apply mutation with probability mutationRate
     if (Math.random() < mutationRate) {
-      // Mutación: ya sea un pequeño ajuste o un reinicio completo
-      if (Math.random() < 0.8) { // Más probabilidad para ajustes medianos
-        // Ajuste normal mediano - siguiendo una curva de campana para mutaciones más naturales
+      // Mutation: either a small adjustment or a complete reset
+      if (Math.random() < 0.7) { // More probability for medium adjustments
+        // Normal medium adjustment - follow a bell curve for more natural mutations
         const gaussianRandom = () => {
           let u = 0, v = 0;
           while(u === 0) u = Math.random(); 
@@ -85,11 +85,11 @@ export const mutateNetwork = (
           return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
         };
         
-        // Ajustes mucho más grandes para una exploración más amplia
-        return weight + gaussianRandom() * 0.8; 
+        // Much larger adjustments for wider exploration
+        return weight + gaussianRandom() * 1.5; 
       } else {
-        // Reinicio completo (20% de las veces) - permite explorar soluciones completamente nuevas
-        return Math.random() * 2 - 1;
+        // Complete reset (30% of the time) - allows exploring completely new solutions
+        return Math.random() * 4 - 2; // Wider range [-2, 2]
       }
     }
     return weight;
@@ -102,9 +102,9 @@ export const cloneNetwork = (
   network: NeuralNetworkCore, 
   mutationRate: number = 0.1
 ): NeuralNetworkCore => {
-  const inputSize = 8; // Tamaño de entrada estándar
-  const hiddenSize = 12; // Tamaño oculto estándar
-  const outputSize = 4; // Tamaño de salida estándar
+  const inputSize = 8; // Standard input size
+  const hiddenSize = 12; // Standard hidden size
+  const outputSize = 4; // Standard output size
   
   const weights = network.getWeights();
   
@@ -124,7 +124,7 @@ export const cloneNetwork = (
     0 // Reset games played
   );
   
-  // Aplicar mutaciones con probabilidad mutationRate
+  // Apply mutations with probability mutationRate
   if (mutationRate > 0) {
     mutateNetwork(clone, mutationRate);
   }
