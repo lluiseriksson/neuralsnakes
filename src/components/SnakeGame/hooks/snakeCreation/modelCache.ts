@@ -17,22 +17,30 @@ export const getModelCache = () => {
 export const setBestModelCache = (model: INeuralNetwork | null) => {
   bestModelCache = model;
   if (model) {
-    // Update currentGeneration when setting a new best model
-    updateCurrentGeneration(model.getGeneration());
+    // Always take the highest generation number
+    const modelGeneration = model.getGeneration();
+    if (modelGeneration > currentGeneration) {
+      console.log(`Updating generation from ${currentGeneration} to ${modelGeneration} from best model`);
+      currentGeneration = modelGeneration;
+    }
   }
 };
 
 export const setCombinedModelCache = (model: INeuralNetwork | null) => {
   combinedModelCache = model;
   if (model) {
-    // Update currentGeneration when setting a new combined model
-    updateCurrentGeneration(model.getGeneration());
+    // Always take the highest generation number 
+    const modelGeneration = model.getGeneration();
+    if (modelGeneration > currentGeneration) {
+      console.log(`Updating generation from ${currentGeneration} to ${modelGeneration} from combined model`);
+      currentGeneration = modelGeneration;
+    }
   }
 };
 
 export const incrementGeneration = () => {
   currentGeneration += 1;
-  console.log(`Generation incremented to ${currentGeneration}`);
+  console.log(`Generation explicitly incremented to ${currentGeneration}`);
   return currentGeneration;
 };
 
@@ -45,8 +53,16 @@ export const updateCurrentGeneration = (generation: number) => {
   return currentGeneration;
 };
 
+export const forceGenerationUpdate = (generation: number) => {
+  // Force a specific generation value (use carefully)
+  console.log(`Generation forcefully set from ${currentGeneration} to ${generation}`);
+  currentGeneration = generation;
+  return currentGeneration;
+};
+
 export const resetModelCaches = () => {
   // Use this to clear caches between major game resets if needed
   bestModelCache = null;
   combinedModelCache = null;
+  // Do NOT reset currentGeneration here as we want to maintain progression
 };

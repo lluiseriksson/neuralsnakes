@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { GameState } from '../types';
-import { getModelCache, updateCurrentGeneration } from './snakeCreation/modelCache';
+import { getModelCache, updateCurrentGeneration, incrementGeneration } from './snakeCreation/modelCache';
 
 export const useRoundManagement = (
   gameState: GameState,
@@ -24,6 +24,11 @@ export const useRoundManagement = (
     const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
     console.log(`Round ended. Max score: ${maxScore}`);
     
+    // We'll always increment the generation at the end of a round to ensure progression
+    let currentGen = getModelCache().currentGeneration;
+    const newGeneration = incrementGeneration();
+    console.log(`Incrementing generation from ${currentGen} to ${newGeneration} at end of round`);
+    
     if (maxScore > 0) {
       const winningSnakes = gameState.snakes.filter(snake => snake.score === maxScore);
       
@@ -37,14 +42,16 @@ export const useRoundManagement = (
       });
       
       // Log current generation state
-      const { currentGeneration } = getModelCache();
-      console.log(`Current generation before saving: ${currentGeneration}`);
+      console.log(`Current generation before saving: ${newGeneration}`);
       
       // Save the winning models
       for (const winner of winningSnakes) {
         try {
           // Update the winner's best score first
           winner.brain.updateBestScore(winner.score);
+          
+          // Make sure the winning model has the latest generation
+          winner.brain.updateGeneration(newGeneration);
           
           // Save the model to DB
           const savedId = await winner.brain.save(winner.score);
@@ -64,6 +71,9 @@ export const useRoundManagement = (
       if (snake.score >= 3 && maxScore > 0 && snake.score !== maxScore) {
         try {
           snake.brain.updateBestScore(snake.score);
+          
+          // Make sure the model has the latest generation
+          snake.brain.updateGeneration(newGeneration);
           
           await snake.brain.save(snake.score);
           console.log(`Saved model for snake ${snake.id} with score ${snake.score} (gen: ${snake.brain.getGeneration()})`);

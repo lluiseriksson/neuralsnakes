@@ -3,7 +3,7 @@ import { NeuralNetwork as INeuralNetwork } from "../types";
 import { NeuralNetwork } from "../NeuralNetwork";
 import { fetchBestModelFromDb, fetchAllModelsFromDb } from "../database/modelFetching";
 import { combineModels } from "../evolution/combineModels";
-import { getModelCache, setBestModelCache, setCombinedModelCache, updateCurrentGeneration } from "../hooks/snakeCreation/modelCache";
+import { getModelCache, setBestModelCache, setCombinedModelCache, updateCurrentGeneration, incrementGeneration } from "../hooks/snakeCreation/modelCache";
 
 export const loadBestModel = async (): Promise<INeuralNetwork | null> => {
   try {
@@ -41,12 +41,16 @@ export const loadBestModel = async (): Promise<INeuralNetwork | null> => {
     );
     
     // Update the generation tracking system
-    updateCurrentGeneration(model.generation);
+    if (model.generation > 0) {
+      updateCurrentGeneration(model.generation);
+      // Also increment generation after loading to ensure progress
+      incrementGeneration();
+    }
     
     // Update global cache
     setBestModelCache(neuralNetwork);
     
-    console.log(`Loaded best model with generation ${model.generation} and score ${model.score}`);
+    console.log(`Loaded best model with generation ${model.generation} and score ${model.score || 0}`);
     return neuralNetwork;
   } catch (err) {
     console.error('Exception loading best neural network:', err);
@@ -73,7 +77,9 @@ export const loadAllModels = async (): Promise<INeuralNetwork[]> => {
       const gamesPlayed = metadata.games_played || 0;
       
       // Update the generation tracking system for each model
-      updateCurrentGeneration(model.generation);
+      if (model.generation > 0) {
+        updateCurrentGeneration(model.generation);
+      }
       
       return new NeuralNetwork(
         8, 
@@ -88,10 +94,19 @@ export const loadAllModels = async (): Promise<INeuralNetwork[]> => {
       );
     });
     
+    // Also increment generation after loading to ensure progress
+    if (models.length > 0) {
+      const maxGeneration = Math.max(...models.map(m => m.getGeneration()));
+      if (maxGeneration > 0) {
+        updateCurrentGeneration(maxGeneration);
+        incrementGeneration();
+      }
+    }
+    
     console.log(`Loaded ${models.length} models. Highest generation: ${Math.max(...models.map(m => m.getGeneration()))}`);
     return models;
   } catch (err) {
-    console.error('Exception loading all neural networks:', err);
+    console.error('Exception loading all neural networks from DB:', err);
     return [];
   }
 }
@@ -99,7 +114,7 @@ export const loadAllModels = async (): Promise<INeuralNetwork[]> => {
 export const getCombinedModel = async (count: number = 5): Promise<INeuralNetwork | null> => {
   try {
     // Check global cache first
-    const { combinedModelCache } = getModelCache();
+    const { combinedModelCache, currentGeneration } = getModelCache();
     if (combinedModelCache) {
       console.log(`Using cached combined model from global cache (generation ${combinedModelCache.getGeneration()})`);
       return combinedModelCache;
@@ -112,6 +127,8 @@ export const getCombinedModel = async (count: number = 5): Promise<INeuralNetwor
       
       // Create a new model if no existing models can be loaded
       const newModel = new NeuralNetwork(8, 12, 4);
+      // Set generation to current + 1 to ensure progress
+      newModel.updateGeneration(currentGeneration > 0 ? currentGeneration : 1);
       return newModel;
     }
     
@@ -130,9 +147,21 @@ export const getCombinedModel = async (count: number = 5): Promise<INeuralNetwor
         // Cache the combined model
         setCombinedModelCache(combinedModel);
         console.log(`Successfully created combined model with generation ${combinedModel.getGeneration()}`);
+        
+        // Ensure generation progress
+        incrementGeneration();
+        
         return combinedModel;
       } else {
         console.log("Model combination returned null, falling back to best model");
+        // If we have a best model, make sure its generation is properly set
+        if (topModels[0]) {
+          // Always ensure generation progression
+          const newGeneration = Math.max(currentGeneration + 1, topModels[0].getGeneration() + 1);
+          topModels[0].updateGeneration(newGeneration);
+          // Make sure we update the cache with the new generation
+          setCombinedModelCache(topModels[0]);
+        }
         return topModels[0];
       }
     } catch (combineErr) {
@@ -141,16 +170,28 @@ export const getCombinedModel = async (count: number = 5): Promise<INeuralNetwor
       // If combining fails, return the best available model
       if (topModels.length > 0) {
         console.log("Fallback to best available model");
+        // Always ensure generation progression
+        const newGeneration = Math.max(currentGeneration + 1, topModels[0].getGeneration() + 1);
+        topModels[0].updateGeneration(newGeneration);
+        // Make sure we update the cache with the new generation
+        setCombinedModelCache(topModels[0]);
         return topModels[0];
       } else {
         // Last resort: create a new model
         console.log("Fallback to new model as last resort");
-        return new NeuralNetwork(8, 12, 4);
+        const newModel = new NeuralNetwork(8, 12, 4);
+        // Set generation to current + 1 to ensure progress
+        newModel.updateGeneration(currentGeneration > 0 ? currentGeneration + 1 : 1);
+        return newModel;
       }
     }
   } catch (err) {
     console.error("Exception in getCombinedModel:", err);
     // Return a new model as fallback
-    return new NeuralNetwork(8, 12, 4);
+    const newModel = new NeuralNetwork(8, 12, 4);
+    // Set generation to current + 1 to ensure progress
+    const { currentGeneration } = getModelCache();
+    newModel.updateGeneration(currentGeneration > 0 ? currentGeneration + 1 : 1);
+    return newModel;
   }
 }
