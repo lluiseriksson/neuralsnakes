@@ -11,10 +11,13 @@ export {
   incrementGeneration,
   updateCurrentGeneration,
   forceGenerationUpdate,
-  getCurrentGeneration
+  getCurrentGeneration,
+  advanceGenerationBasedOnMetrics,
+  purgeAllModelCaches
 } from './generationTracking';
 
 export {
   trackGamePlayed,
-  getGamesSinceLastIncrement
+  getGamesSinceLastIncrement,
+  resetGamesSinceLastIncrement
 } from './gameTracking';
