@@ -1,3 +1,4 @@
+
 import { Direction, Snake } from '../../types';
 import { generateInitialSnake } from '../../movement/initialSnake';
 import { createBestModelBrain, createCombinedModelBrain, createRandomBrain } from './createSnakeBrain';
@@ -60,9 +61,9 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       brain = createRandomBrain(id);
     }
 
-    // Ensure brain has a valid generation - much higher minimum
-    if (brain.getGeneration() < 25) {
-      const newGeneration = Math.max(25, getModelCache().currentGeneration);
+    // Ensure brain has a valid generation - start at 1 as requested
+    if (brain.getGeneration() < 1) {
+      const newGeneration = 1;
       console.log(`⚡ Fixing low generation (${brain.getGeneration()}) for snake ${id} to ${newGeneration} ⚡`);
       brain.updateGeneration(newGeneration);
     }
@@ -130,9 +131,9 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
     // Create fallback brain
     const fallbackBrain = createRandomBrain(id);
     
-    // Ensure fallback brain has a valid generation
-    if (fallbackBrain.getGeneration() < 25) {
-      const newGeneration = Math.max(25, getModelCache().currentGeneration);
+    // Ensure fallback brain has a valid generation (start at 1)
+    if (fallbackBrain.getGeneration() < 1) {
+      const newGeneration = 1;
       console.log(`⚡ Fixing low generation in fallback brain for snake ${id} to ${newGeneration} ⚡`);
       fallbackBrain.updateGeneration(newGeneration);
     }

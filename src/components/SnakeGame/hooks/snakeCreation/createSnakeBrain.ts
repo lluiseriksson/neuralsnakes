@@ -56,9 +56,8 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
         return brain;
       } else {
         console.log("No se encontró un modelo existente, creando uno nuevo");
-        // For new models, force at least generation 10
-        // FIXED: Start at much higher generation when no model exists
-        const newGeneration = Math.max(currentGeneration, 10);
+        // Start at generation 1 as requested
+        const newGeneration = 1;
         const brain = new NeuralNetwork(8, 12, 4);
         brain.updateGeneration(newGeneration);
         forceGenerationUpdate(newGeneration);
@@ -69,8 +68,8 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
       }
     } catch (loadError) {
       console.error("Error cargando el mejor modelo:", loadError);
-      // FIXED: Start at much higher generation to force progression
-      const newGeneration = Math.max(currentGeneration, 10);
+      // Start at generation 1 as requested
+      const newGeneration = 1;
       const brain = new NeuralNetwork(8, 12, 4);
       brain.updateGeneration(newGeneration);
       forceGenerationUpdate(newGeneration);
@@ -124,7 +123,8 @@ export const createCombinedModelBrain = async (): Promise<INeuralNetwork> => {
         return brain;
       } else {
         console.log("No se pudo combinar modelos, creando uno nuevo");
-        const newGeneration = Math.max(currentGeneration, 2);
+        // Start at generation 1 as requested
+        const newGeneration = 1;
         const brain = new NeuralNetwork(8, 12, 4);
         brain.updateGeneration(newGeneration);
         updateCurrentGeneration(newGeneration);
@@ -135,7 +135,8 @@ export const createCombinedModelBrain = async (): Promise<INeuralNetwork> => {
       }
     } catch (combineError) {
       console.error("Error combining models:", combineError);
-      const newGeneration = Math.max(currentGeneration, 2);
+      // Start at generation 1 as requested
+      const newGeneration = 1;
       const brain = new NeuralNetwork(8, 12, 4);
       brain.updateGeneration(newGeneration);
       updateCurrentGeneration(newGeneration);

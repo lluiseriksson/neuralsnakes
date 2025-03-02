@@ -1,8 +1,8 @@
 
 import { resetGamesSinceLastIncrement } from './gameTracking';
 
-// Start at a significantly higher generation to accelerate evolution
-let currentGeneration = 25; 
+// Reset to generation 1 as requested
+let currentGeneration = 1; 
 
 export const getCurrentGeneration = (): number => {
   return currentGeneration;

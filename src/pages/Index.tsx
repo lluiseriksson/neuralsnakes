@@ -171,9 +171,10 @@ const Index = () => {
         </Button>
       </div>
       
-      {/* Estado del aprendizaje */}
+      {/* Estado del aprendizaje - Updated with new evolution system description */}
       <div className="mt-4 p-2 bg-gray-800 rounded text-white text-sm max-w-lg">
-        <p>Estado del aprendizaje:</p>
+        <p className="font-bold mb-1">Sistema de evolución neural mejorado:</p>
+        <p className="mb-2 text-yellow-400 text-xs">The neural network evolution system has been completely enhanced with infinite generations and much smarter learning criteria. The system now tracks apples eaten, scores, kills, deaths, and suicides to determine generation advancement, with aggressive generation increases to ensure continuous evolution.</p>
         <ul className="list-disc list-inside mt-1 text-xs">
           <li>Serpiente amarilla: modelo óptimo (mutación baja)</li>
           <li>Serpiente azul: modelo combinado (mutación media)</li>
