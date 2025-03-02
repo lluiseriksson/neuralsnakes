@@ -1,5 +1,5 @@
 
-import { sigmoid } from "../NeuralNetworkActivations";
+import { sigmoid } from "../../NeuralNetworkActivations";
 
 export type Experience = {
   inputs: number[];
