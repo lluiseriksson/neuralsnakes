@@ -1,3 +1,4 @@
+
 import { NeuralNetwork as INeuralNetwork } from "../types";
 import { sigmoid } from "../NeuralNetworkActivations";
 import { deserializeWeights, serializeWeights, generateRandomWeights } from "../NeuralNetworkMatrix";
@@ -144,7 +145,12 @@ export class NeuralNetworkCore implements INeuralNetwork {
     
     const metadata = {
       best_score: this.bestScore,
-      games_played: this.gamesPlayed
+      games_played: this.gamesPlayed,
+      performance: {
+        learningAttempts: this.learningAttempts,
+        successfulMoves: this.successfulMoves,
+        failedMoves: this.failedMoves
+      }
     };
     
     const id = await saveModelToDb(this.id, this.getWeights(), score, this.generation, metadata);
