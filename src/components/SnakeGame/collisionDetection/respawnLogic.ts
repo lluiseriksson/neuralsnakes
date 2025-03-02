@@ -1,4 +1,3 @@
-
 import { Snake } from '../types';
 import { createSnake, generateSnakeSpawnConfig } from '../hooks/useSnakeCreation';
 import { incrementGeneration } from '../hooks/snakeCreation/modelCache';
@@ -23,26 +22,35 @@ export const handleRespawn = (snakes: Snake[]): Snake[] => {
       // Generate respawn configuration
       const [spawnX, spawnY, direction, color] = generateSnakeSpawnConfig(snake.id);
       
-      // Schedule respawn after a delay
+      // Create a new snake immediately with fallback positions
+      const fallbackPositions = [
+        { x: spawnX, y: spawnY },
+        { x: spawnX, y: spawnY + 1 },
+        { x: spawnX, y: spawnY + 2 }
+      ];
+      
+      // Update the snake with basic fallback values for immediate display
+      updatedSnakes[i].positions = fallbackPositions;
+      updatedSnakes[i].direction = direction;
+      updatedSnakes[i].color = color;
+      updatedSnakes[i].alive = true;
+      
+      // Schedule full respawn after a delay
       setTimeout(() => {
         createSnake(snake.id, spawnX, spawnY, direction, color)
           .then(newSnake => {
-            // Update the snake with new properties while keeping the reference
-            Object.assign(updatedSnakes[i], newSnake);
-            updatedSnakes[i].alive = true;
-            console.log(`Snake ${snake.id} respawned with generation ${newSnake.brain.getGeneration()}`);
+            if (newSnake && newSnake.brain) {
+              // Update the snake with new properties while keeping the reference
+              Object.assign(updatedSnakes[i], newSnake);
+              updatedSnakes[i].alive = true;
+              console.log(`Snake ${snake.id} respawned with generation ${newSnake.brain.getGeneration()}`);
+            } else {
+              console.error(`Created snake ${snake.id} has invalid brain`);
+            }
           })
           .catch(error => {
             console.error(`Error respawning snake ${snake.id}:`, error);
-            // Try again with default settings
-            const fallbackPositions = [
-              { x: spawnX, y: spawnY },
-              { x: spawnX, y: spawnY + 1 },
-              { x: spawnX, y: spawnY + 2 }
-            ];
-            updatedSnakes[i].positions = fallbackPositions;
-            updatedSnakes[i].direction = direction;
-            updatedSnakes[i].alive = true;
+            // Snake already has fallback values set above
           });
       }, 1000);
     }

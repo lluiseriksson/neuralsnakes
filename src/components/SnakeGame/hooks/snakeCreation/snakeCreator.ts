@@ -1,19 +1,32 @@
-
 import { Direction, Snake } from '../../types';
 import { generateInitialSnake } from '../../snakeMovement';
 import { createBestModelBrain, createCombinedModelBrain, createRandomBrain } from './createSnakeBrain';
 
 export const createSnake = async (id: number, x: number, y: number, direction: Direction, color: string): Promise<Snake> => {
   try {
-    console.log(`Creando serpiente ${id} en posición (${x},${y})`);
+    console.log(`Creating snake ${id} at position (${x},${y}) with color ${color}`);
     let brain;
     
     // Select the appropriate brain creation strategy based on snake ID
     if (id === 0) {
-      brain = await createBestModelBrain();
+      // Yellow snake - best model brain
+      brain = await createBestModelBrain().catch(error => {
+        console.error(`Error creating best model brain: ${error.message}`);
+        return createRandomBrain(id);
+      });
     } else if (id === 1) {
-      brain = await createCombinedModelBrain();
+      // Blue snake - combined model brain
+      brain = await createCombinedModelBrain().catch(error => {
+        console.error(`Error creating combined model brain: ${error.message}`);
+        return createRandomBrain(id);
+      });
     } else {
+      // Other snakes - random brains
+      brain = createRandomBrain(id);
+    }
+
+    if (!brain) {
+      console.error(`Failed to create brain for snake ${id}, creating fallback random brain`);
       brain = createRandomBrain(id);
     }
 
@@ -21,14 +34,14 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
     const positions = generateInitialSnake(x, y);
     
     if (!positions || positions.length === 0) {
-      console.error(`Error al generar posiciones iniciales para serpiente ${id}`);
+      console.error(`Error generating initial positions for snake ${id}`);
       // Create simple initial positions as fallback
       const fallbackPositions = [
         { x, y },
         { x, y: y + 1 },
         { x, y: y + 2 }
       ];
-      console.log(`Usando posiciones de respaldo para serpiente ${id}`);
+      console.log(`Using fallback positions for snake ${id}`);
       
       return {
         id,
@@ -42,11 +55,11 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       };
     }
     
-    console.log(`Serpiente ${id} creada en (${x}, ${y}) con ${positions.length} segmentos y generación ${brain.getGeneration()}`);
+    console.log(`Snake ${id} created at (${x}, ${y}) with ${positions.length} segments and generation ${brain.getGeneration()}`);
 
     return {
       id,
-      positions: positions,
+      positions,
       direction,
       color,
       score: 0,
@@ -55,14 +68,14 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       gridSize: 30
     };
   } catch (error) {
-    console.error(`Error al crear serpiente ${id}:`, error);
+    console.error(`Error creating snake ${id}:`, error);
     // Create a snake with default values in case of error
     const fallbackPositions = [
       { x, y },
       { x, y: y + 1 },
       { x, y: y + 2 }
     ];
-    console.log(`Creando serpiente fallback para ${id}`);
+    console.log(`Creating fallback snake for ${id}`);
     
     // Create fallback brain
     const fallbackBrain = createRandomBrain(id);
