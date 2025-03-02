@@ -48,12 +48,6 @@ const NetworkCanvas: React.FC<NetworkCanvasProps> = ({ activeSnake }) => {
     ctx.fillStyle = '#111827';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw title
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '14px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Neural Network Decision Visualization', canvas.width / 2, 20);
-
     // Draw network nodes (inputs, outputs, connections)
     drawNetworkNodes(ctx, nodeValues, canvas, activeSnake);
     
@@ -69,7 +63,7 @@ const NetworkCanvas: React.FC<NetworkCanvasProps> = ({ activeSnake }) => {
       ref={canvasRef} 
       width={550}
       height={300} 
-      className="w-full h-full"
+      className="w-full h-full transition-all duration-300 animate-fade-in"
     />
   );
 };

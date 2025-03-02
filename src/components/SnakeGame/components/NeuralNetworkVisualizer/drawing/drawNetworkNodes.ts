@@ -1,4 +1,3 @@
-
 interface NodeValues {
   inputs: number[];
   outputs: number[];
@@ -13,23 +12,28 @@ type NodePosition = {
 
 // Draw the title and explanation text for the network visualization
 const drawNetworkTitle = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-  // Draw title
+  // Draw title with subtle animation effect (achieved with sin wave)
+  const titleYOffset = Math.sin(Date.now() / 1000) * 2;
   ctx.fillStyle = '#FFFFFF';
   ctx.font = '14px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('Neural Network Decision Visualization', canvas.width / 2, 20);
+  ctx.fillText('Neural Network Decision Visualization', canvas.width / 2, 20 + titleYOffset);
 
-  // Draw explanation text
-  ctx.fillStyle = '#AAAAAA';
+  // Draw explanation text with a slight fade effect
+  const textOpacity = 0.7 + Math.sin(Date.now() / 1500) * 0.3;
+  ctx.fillStyle = `rgba(170, 170, 170, ${textOpacity})`;
   ctx.font = '11px Arial';
   ctx.textAlign = 'center';
   ctx.fillText('Inputs represent apple locations and obstacles in each direction', canvas.width / 2, canvas.height - 30);
   ctx.fillText('Yellow outline shows the selected direction', canvas.width / 2, canvas.height - 15);
 };
 
-// Calculate node color based on its activation value
+// Calculate node color based on its activation value with pulsing effect
 const getNodeColor = (value: number, isInput: boolean): string => {
-  const intensity = Math.min(255, Math.max(0, Math.floor(value * 255)));
+  // Add slight pulsing effect based on time
+  const pulseEffect = (Math.sin(Date.now() / 500) * 0.1) + 0.9;
+  const adjustedValue = Math.min(1, Math.max(0, value * pulseEffect));
+  const intensity = Math.min(255, Math.max(0, Math.floor(adjustedValue * 255)));
   
   if (isInput) {
     // Input nodes: Red to Green spectrum with some blue
@@ -75,7 +79,7 @@ const drawNodeLabel = (
   ctx.fillText(text, textX, y + 4);
 };
 
-// Draw a single node (input or output)
+// Draw a single node (input or output) with animation
 const drawNode = (
   ctx: CanvasRenderingContext2D, 
   x: number, 
@@ -86,33 +90,54 @@ const drawNode = (
   isSelected: boolean = false,
   nodeRadius: number = 12
 ) => {
+  // Add subtle position animation
+  const animX = x + Math.sin(Date.now() / 1000 + (isInput ? 0 : Math.PI)) * 1;
+  const animY = y + Math.cos(Date.now() / 1200 + (isInput ? Math.PI : 0)) * 1;
+  
   // Get color based on activation value
   const color = getNodeColor(value, isInput);
   
-  // Draw node circle
+  // Draw node circle with pulsating effect
+  const pulseSize = isSelected ? (Math.sin(Date.now() / 300) * 0.15) + 1 : 1;
+  const animatedRadius = nodeRadius * pulseSize;
+  
   ctx.beginPath();
-  ctx.arc(x, y, nodeRadius, 0, 2 * Math.PI);
+  ctx.arc(animX, animY, animatedRadius, 0, 2 * Math.PI);
   ctx.fillStyle = color;
   ctx.fill();
   
-  // Draw node border
+  // Draw node border with glowing effect for selected nodes
   const borderWidth = isSelected ? 3 : 1;
   ctx.lineWidth = borderWidth;
-  ctx.strokeStyle = isSelected ? '#FFFF00' : '#FFFFFF';
+  
+  if (isSelected) {
+    // Create glowing effect for selected nodes
+    const glowIntensity = (Math.sin(Date.now() / 200) * 0.3) + 0.7;
+    ctx.strokeStyle = `rgba(255, 255, 0, ${glowIntensity})`;
+    
+    // Add outer glow
+    ctx.shadowColor = 'rgba(255, 255, 0, 0.5)';
+    ctx.shadowBlur = 10 * glowIntensity;
+  } else {
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.shadowBlur = 0;
+  }
+  
   ctx.stroke();
+  ctx.shadowBlur = 0; // Reset shadow for text
   
   // Draw node label
   const labelAlign = isInput ? 'right' : 'left';
   const offset = nodeRadius + 10;
-  drawNodeLabel(ctx, label, x, y, labelAlign, offset);
+  drawNodeLabel(ctx, label, animX, animY, labelAlign, offset);
   
   // Draw node value inside the circle
   ctx.font = '9px Arial';
   ctx.textAlign = 'center';
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillText(value.toFixed(2), x, y + 4);
+  ctx.fillText(value.toFixed(2), animX, animY + 4);
   
-  return { x, y };
+  return { x: animX, y: animY };
 };
 
 // Draw input nodes
@@ -179,7 +204,7 @@ const drawOutputNodes = (
   return { positions, selectedIndex };
 };
 
-// Draw connections between input and selected output nodes
+// Draw connections between input and selected output nodes with animation
 const drawConnections = (
   ctx: CanvasRenderingContext2D, 
   inputPositions: NodePosition[], 
@@ -195,14 +220,32 @@ const drawConnections = (
   inputPositions.forEach((inputPos, inputIndex) => {
     const inputValue = nodeValues.inputs[inputIndex];
     
-    // Draw line with opacity based on input strength
+    // Draw line with opacity based on input strength and animated flow
     const opacity = Math.max(0.1, inputValue);
+    const flowOffset = (Date.now() / 300) % 20; // Creates the flowing effect
+    
+    // Create dashed line effect for animation
     ctx.beginPath();
+    ctx.setLineDash([2, 3]);
+    ctx.lineDashOffset = -flowOffset; // Negative to make it flow toward output
+    
     ctx.moveTo(inputPos.x + nodeRadius, inputPos.y);
     ctx.lineTo(selectedOutput.x - nodeRadius, selectedOutput.y);
-    ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+    
+    // Gradient effect to show direction
+    const gradient = ctx.createLinearGradient(
+      inputPos.x + nodeRadius, inputPos.y, 
+      selectedOutput.x - nodeRadius, selectedOutput.y
+    );
+    gradient.addColorStop(0, `rgba(150, 150, 255, ${opacity})`);
+    gradient.addColorStop(1, `rgba(255, 255, 150, ${opacity})`);
+    
+    ctx.strokeStyle = gradient;
     ctx.lineWidth = Math.max(0.5, inputValue * 3);
     ctx.stroke();
+    
+    // Reset dash for other drawings
+    ctx.setLineDash([]);
   });
 };
 
@@ -222,21 +265,23 @@ export const drawNetworkNodes = (
   const inputSpacing = 30;
   const outputSpacing = 40;
   
-  // Draw title and explanation
-  drawNetworkTitle(ctx, canvas);
-  
-  // Draw input nodes and get their positions
-  const inputPositions = drawInputNodes(
-    ctx, nodeValues, inputLayerX, inputStartY, inputSpacing, nodeRadius
-  );
-  
-  // Draw output nodes and get their positions + selected index
-  const { positions: outputPositions, selectedIndex } = drawOutputNodes(
-    ctx, nodeValues, outputLayerX, outputStartY, outputSpacing, nodeRadius
-  );
-  
-  // Draw connections between input nodes and selected output
-  drawConnections(
-    ctx, inputPositions, outputPositions, selectedIndex, nodeValues, nodeRadius
-  );
+  // Request animation frame for continuous updates
+  requestAnimationFrame(() => {
+    drawNetworkTitle(ctx, canvas);
+    
+    // Draw input nodes and get their positions
+    const inputPositions = drawInputNodes(
+      ctx, nodeValues, inputLayerX, inputStartY, inputSpacing, nodeRadius
+    );
+    
+    // Draw output nodes and get their positions + selected index
+    const { positions: outputPositions, selectedIndex } = drawOutputNodes(
+      ctx, nodeValues, outputLayerX, outputStartY, outputSpacing, nodeRadius
+    );
+    
+    // Draw connections between input nodes and selected output
+    drawConnections(
+      ctx, inputPositions, outputPositions, selectedIndex, nodeValues, nodeRadius
+    );
+  });
 };
