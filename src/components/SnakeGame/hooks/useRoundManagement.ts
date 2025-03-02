@@ -30,8 +30,8 @@ export const useRoundManagement = (
     // Get current generation
     let currentGen = getModelCache().currentGeneration;
     
-    // FIXED: ALWAYS increment generation by at least 2 to force evolution
-    let newGeneration = currentGen + 2;
+    // FIXED: ALWAYS increment generation by at least 5 to force evolution
+    let newGeneration = currentGen + 5;
     console.log(`⚡ Forcing significant generation increment from ${currentGen} to ${newGeneration} ⚡`);
     forceGenerationUpdate(newGeneration);
     
@@ -42,8 +42,8 @@ export const useRoundManagement = (
       console.log(`⚡ Good score (${maxScore}) achieved! Incrementing generation again to ${newGeneration} ⚡`);
     }
     
-    // FIXED: Clear model caches more frequently - 50% chance instead of 25%
-    if (Math.random() < 0.5) { 
+    // FIXED: Clear model caches more frequently - 70% chance instead of 50%
+    if (Math.random() < 0.7) { 
       resetModelCaches();
       console.log("Model caches reset to force fresh model loading");
     }
@@ -69,8 +69,8 @@ export const useRoundManagement = (
           // Update the winner's best score first
           winner.brain.updateBestScore(winner.score);
           
-          // FIXED: Make sure the winning model has the latest generation + 1
-          const winnerNewGen = newGeneration + 1;
+          // FIXED: Make sure the winning model has the latest generation + 3
+          const winnerNewGen = newGeneration + 3;
           winner.brain.updateGeneration(winnerNewGen);
           
           // Save the model to DB
@@ -85,13 +85,13 @@ export const useRoundManagement = (
       }
     }
 
-    // FIXED: Save ALL snakes regardless of score
+    // FIXED: Save ALL snakes regardless of score with incrementing generations
     for (const snake of gameState.snakes) {
       try {
         snake.brain.updateBestScore(Math.max(snake.score, 0));
         
-        // FIXED: Make sure ALL models get the latest generation + random small increment
-        const randomIncrement = Math.floor(Math.random() * 2) + 1; // 1 or 2
+        // FIXED: Make sure ALL models get the latest generation + random increment
+        const randomIncrement = Math.floor(Math.random() * 3) + 3; // 3, 4, or 5
         const snakeNewGen = newGeneration + randomIncrement;
         snake.brain.updateGeneration(snakeNewGen);
         

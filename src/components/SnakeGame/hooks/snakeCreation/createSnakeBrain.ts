@@ -17,11 +17,12 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
     console.log(`Usando el mejor modelo en cache (generación ${bestModelCache.getGeneration()}, puntuación: ${bestModelCache.getBestScore()})`);
     
     // Force a significant generation increment every time to prevent stagnation
-    const newGeneration = Math.max(currentGeneration, bestModelCache.getGeneration()) + 1;
-    console.log(`Nueva generación forzada para mejor modelo amarillo: ${newGeneration}`);
+    // FIXED: Add +5 instead of +1 to force higher generations
+    const newGeneration = Math.max(currentGeneration, bestModelCache.getGeneration()) + 5;
+    console.log(`⚡ YELLOW SNAKE BOOST: Nueva generación forzada ${newGeneration} ⚡`);
     
     // Use lower mutation rate for best model (0.1)
-    const brain = bestModelCache.clone(0.1);
+    const brain = bestModelCache.clone(0.15); // Slightly increased mutation
     
     // Force update generation and make sure it's applied
     brain.updateGeneration(newGeneration);
@@ -29,7 +30,7 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
     // Explicitly update the global generation tracker
     forceGenerationUpdate(newGeneration);
     
-    console.log(`Best model brain created with new forced generation ${brain.getGeneration()}`);
+    console.log(`⭐ YELLOW SNAKE: Best model brain created with new forced generation ${brain.getGeneration()} ⭐`);
     return brain;
   } else {
     console.log("Cargando el mejor modelo...");
@@ -40,39 +41,42 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
         console.log(`Modelo cargado (generación ${bestModel.getGeneration()}, puntuación: ${bestModel.getBestScore()})`);
         
         // Force a significant generation increment to break out of stagnation
-        const newGeneration = Math.max(currentGeneration, bestModel.getGeneration()) + 2;
-        console.log(`Nueva generación forzada para mejor modelo cargado: ${newGeneration}`);
+        // FIXED: Add +5 instead of +2 to force higher generations
+        const newGeneration = Math.max(currentGeneration, bestModel.getGeneration()) + 5;
+        console.log(`⚡ YELLOW SNAKE BOOST: Nueva generación forzada ${newGeneration} ⚡`);
         
-        // Use balanced mutation rate (0.1)
-        const brain = bestModel.clone(0.15); // Increased mutation rate slightly
+        // Use balanced mutation rate (0.15)
+        const brain = bestModel.clone(0.15);
         
         // Force update generation and ensure it's applied globally
         brain.updateGeneration(newGeneration);
         forceGenerationUpdate(newGeneration);
         
-        console.log(`BEST MODEL: Loaded best model brain created with forced generation ${brain.getGeneration()}`);
+        console.log(`⭐ YELLOW SNAKE: Loaded best model brain with generation ${brain.getGeneration()} ⭐`);
         return brain;
       } else {
         console.log("No se encontró un modelo existente, creando uno nuevo");
-        // For new models, force at least generation 3
-        const newGeneration = Math.max(currentGeneration, 3);
+        // For new models, force at least generation 10
+        // FIXED: Start at much higher generation when no model exists
+        const newGeneration = Math.max(currentGeneration, 10);
         const brain = new NeuralNetwork(8, 12, 4);
         brain.updateGeneration(newGeneration);
         forceGenerationUpdate(newGeneration);
         
         setBestModelCache(brain); // Cache the new model too
-        console.log(`BEST MODEL: New model brain created with generation ${brain.getGeneration()}`);
+        console.log(`⭐ YELLOW SNAKE: New model brain created with generation ${brain.getGeneration()} ⭐`);
         return brain;
       }
     } catch (loadError) {
       console.error("Error cargando el mejor modelo:", loadError);
-      const newGeneration = Math.max(currentGeneration, 3);
+      // FIXED: Start at much higher generation to force progression
+      const newGeneration = Math.max(currentGeneration, 10);
       const brain = new NeuralNetwork(8, 12, 4);
       brain.updateGeneration(newGeneration);
       forceGenerationUpdate(newGeneration);
       
       setBestModelCache(brain);
-      console.log(`BEST MODEL: Fallback model brain created with generation ${brain.getGeneration()}`);
+      console.log(`⭐ YELLOW SNAKE: Fallback model brain created with generation ${brain.getGeneration()} ⭐`);
       return brain;
     }
   }

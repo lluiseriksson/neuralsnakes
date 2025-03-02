@@ -12,19 +12,22 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
     // Select the appropriate brain creation strategy based on snake ID
     if (id === 0) {
       // Yellow snake - best model brain
-      console.log(`Creating best model brain for yellow snake ${id} with color ${color}`);
+      console.log(`⭐ Creating YELLOW SNAKE ${id} with color ${color} ⭐`);
       brain = await createBestModelBrain().catch(error => {
         console.error(`Error creating best model brain: ${error.message}`);
         return createRandomBrain(id);
       });
       
       // Log the generation of yellow snake for debugging
-      console.log(`YELLOW SNAKE GENERATION CHECK: ${brain.getGeneration()}`);
+      console.log(`⭐ YELLOW SNAKE GENERATION CHECK: ${brain.getGeneration()} ⭐`);
       
-      // Force generation update from yellow snake to ensure it's spreading to other snakes
+      // FIXED: Force significant generation update from yellow snake to ensure it's spreading to other snakes
       const yellowSnakeGeneration = brain.getGeneration();
       if (yellowSnakeGeneration > 0) {
-        forceGenerationUpdate(yellowSnakeGeneration);
+        // FIXED: Add +5 instead of +1 to force significantly higher generations
+        const newGeneration = yellowSnakeGeneration + 5;
+        console.log(`⚡ YELLOW SNAKE is forcing global generation to ${newGeneration} ⚡`);
+        forceGenerationUpdate(newGeneration);
       }
     } else if (id === 1) {
       // Blue snake - combined model brain
@@ -42,6 +45,13 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
     if (!brain) {
       console.error(`Failed to create brain for snake ${id}, creating fallback random brain`);
       brain = createRandomBrain(id);
+    }
+
+    // FIXED: Ensure brain has a valid generation
+    if (brain.getGeneration() < 5) {
+      const newGeneration = Math.max(5, getModelCache().currentGeneration);
+      console.log(`⚡ Fixing low generation (${brain.getGeneration()}) for snake ${id} to ${newGeneration} ⚡`);
+      brain.updateGeneration(newGeneration);
     }
 
     // Generate initial positions with safety check
@@ -101,6 +111,13 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
     
     // Create fallback brain
     const fallbackBrain = createRandomBrain(id);
+    
+    // FIXED: Ensure fallback brain has a valid generation
+    if (fallbackBrain.getGeneration() < 5) {
+      const newGeneration = Math.max(5, getModelCache().currentGeneration);
+      console.log(`⚡ Fixing low generation in fallback brain for snake ${id} to ${newGeneration} ⚡`);
+      fallbackBrain.updateGeneration(newGeneration);
+    }
     
     return {
       id,
