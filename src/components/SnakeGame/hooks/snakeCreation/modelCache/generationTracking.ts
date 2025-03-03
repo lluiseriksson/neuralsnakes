@@ -1,4 +1,7 @@
 
+// We need to fix the imports to resolve circular dependencies
+// Import from modelCache directory structure 
+import { getModelCache } from './cacheManagement';
 import { resetGamesSinceLastIncrement } from './gameTracking';
 
 // Reset to generation 1 as requested
@@ -116,9 +119,7 @@ export const purgeAllModelCaches = (): void => {
   currentGeneration += 50;
   console.log(`⚡ Post-reset generation set to ${currentGeneration} ⚡`);
   
+  // Resolve circular dependency by using a direct import to reset model caches
   const { resetModelCaches } = require('./cacheManagement');
   resetModelCaches(true); // true for deep reset
 };
-
-// Import from other modules to avoid circular dependencies
-import { getModelCache } from './cacheManagement';
