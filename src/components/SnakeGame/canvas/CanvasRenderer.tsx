@@ -57,25 +57,25 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     });
     
     // Skip redraw if nothing has changed and it's not an animation frame
-    if (currentStateHash === lastDrawnStateRef.current && frameCount % 5 !== 0) {
+    // Reduced the skip condition to ensure more frequent redraws
+    if (currentStateHash === lastDrawnStateRef.current && frameCount % 2 !== 0) {
       return;
     }
     
     lastDrawnStateRef.current = currentStateHash;
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Clear canvas with a solid background to ensure visibility
+    ctx.fillStyle = '#121212';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw game elements
+    // Draw game elements with improved contrast
     drawGrid(ctx, GRID_SIZE, CELL_SIZE);
     drawApples(ctx, gameState.apples, frameCount, CELL_SIZE);
     drawSnakes(ctx, gameState.snakes, CELL_SIZE, effectiveSelectedSnakeId);
     
-    // Draw debug info for living snakes
+    // Draw debug info for all snakes to improve visibility
     gameState.snakes.forEach(snake => {
-      if (snake.alive) {
-        drawDebugInfo(ctx, snake, CELL_SIZE);
-      }
+      drawDebugInfo(ctx, snake, CELL_SIZE);
     });
 
     // Update frame counter
@@ -102,7 +102,7 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             
             // Add visual feedback for the click
             const clickEffect = document.createElement('div');
-            clickEffect.className = 'absolute pointer-events-none rounded-full bg-white bg-opacity-40';
+            clickEffect.className = 'absolute pointer-events-none rounded-full bg-white bg-opacity-70';
             clickEffect.style.left = `${e.clientX - 15}px`;
             clickEffect.style.top = `${e.clientY - 15}px`;
             clickEffect.style.width = '30px';
@@ -181,7 +181,7 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
         display: 'block',
         cursor: 'pointer',
       }}
-      className="border border-gray-800 bg-black rounded-lg shadow-lg"
+      className="border-2 border-gray-700 bg-black rounded-lg shadow-lg"
       title="Click on a snake to select it"
     />
   );

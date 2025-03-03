@@ -47,7 +47,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onSelectSnake }) => 
     : null;
 
   return (
-    <div className="relative overflow-hidden rounded-xl border-2 border-gray-700 shadow-lg">
+    <div className="relative overflow-hidden rounded-xl border-2 border-gray-700 shadow-lg bg-black">
       <CanvasRenderer 
         gameState={gameState}
         width={canvasWidth}
@@ -62,7 +62,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onSelectSnake }) => 
       )}
       
       {selectedSnakeId !== null && selectedSnake && (
-        <div className="absolute top-3 left-3 bg-black bg-opacity-80 backdrop-blur-md text-white px-4 py-3 text-sm rounded-lg border border-gray-700 shadow-lg animate-fade-in">
+        <div className="absolute top-3 left-3 bg-black bg-opacity-90 backdrop-blur-md text-white px-4 py-3 text-sm rounded-lg border border-gray-700 shadow-lg animate-fade-in">
           <div className="font-bold text-yellow-400">Snake #{selectedSnakeId}</div>
           <div className="grid grid-cols-2 gap-x-4 mt-1 text-xs">
             <div className="flex items-center">

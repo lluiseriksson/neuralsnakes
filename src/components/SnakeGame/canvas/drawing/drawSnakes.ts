@@ -20,6 +20,7 @@ export const drawSnakes = (
     // Draw snake body with gradient effect based on snake color
     const baseColor = snake.color;
     const darkColor = getAdjustedColor(baseColor, -30); // darker version for shading
+    const lightColor = getAdjustedColor(baseColor, 50); // lighter version for highlights
     
     // Draw segments from tail to head (excluding head)
     for (let i = snake.positions.length - 1; i > 0; i--) {
@@ -41,17 +42,22 @@ export const drawSnakes = (
         cellSize - 2,
         cellSize / 5
       );
+      
+      // Add highlight edge on body segments for better visibility
+      ctx.strokeStyle = lightColor;
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
     
     // Draw snake head with special styling
     const head = snake.positions[0];
     
-    // Highlight selected snake with a glow effect
+    // Highlight selected snake with a stronger glow effect
     if (isSelected) {
       ctx.save();
       ctx.shadowColor = 'white';
       ctx.shadowBlur = 15;
-      ctx.fillStyle = baseColor;
+      ctx.fillStyle = lightColor; // Use lighter color for selected snake head
       
       // Draw head as a rounded rectangle
       roundedRect(
@@ -64,7 +70,7 @@ export const drawSnakes = (
       );
       ctx.restore();
     } else {
-      // Regular head with slightly rounded corners
+      // Regular head with slightly rounded corners and border for better visibility
       ctx.fillStyle = baseColor;
       roundedRect(
         ctx,
@@ -74,6 +80,11 @@ export const drawSnakes = (
         cellSize,
         cellSize / 3
       );
+      
+      // Add highlight border
+      ctx.strokeStyle = lightColor;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
     }
     
     // Draw eyes on snake head
@@ -179,6 +190,8 @@ function getAdjustedColor(hex: string, amount: number): string {
   // Handle named colors
   if (hex === 'blue') hex = '#0000FF';
   if (hex === 'green') hex = '#00FF00';
+  if (hex === 'yellow') hex = '#FFFF00';
+  if (hex === '#9b87f5') hex = '#9b87f5'; // Keep purple as is
   
   // Parse the hex color
   let r = 0, g = 0, b = 0;
