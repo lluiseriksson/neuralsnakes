@@ -13,7 +13,7 @@ export const getCurrentGeneration = (): number => {
 
 export const incrementGeneration = (): number => {
   // More aggressive incrementation to push evolution faster
-  currentGeneration += 10;
+  currentGeneration += 25; // Aumentado de 10 a 25 para avanzar más rápido
   resetGamesSinceLastIncrement();
   console.log(`⚡ Generation aggressively incremented to ${currentGeneration} ⚡`);
   return currentGeneration;
@@ -41,10 +41,11 @@ export const advanceGenerationBasedOnMetrics = (
   const performanceIndex = calculatePerformanceIndex(score, applesEaten, kills, deaths, suicides);
   
   // Calculate significant generation boost based on performance
-  const generationBoost = Math.floor(performanceIndex * 10) + 5;
+  // Significantly increased generation boost to overcome stagnation
+  const generationBoost = Math.floor(performanceIndex * 25) + 10;
   
-  // Always increment by at least 5 to ensure progression
-  const newGeneration = currentGeneration + Math.max(generationBoost, 5);
+  // Always increment by at least 15 to ensure progression
+  const newGeneration = currentGeneration + Math.max(generationBoost, 15);
   
   console.log(`⚡ Advanced generation from ${currentGeneration} to ${newGeneration} based on metrics ⚡`);
   console.log(`Performance metrics: score=${score}, apples=${applesEaten}, kills=${kills}, deaths=${deaths}, suicides=${suicides}`);
@@ -67,12 +68,12 @@ const calculatePerformanceIndex = (
   deaths: number, 
   suicides: number
 ): number => {
-  // Weight factors for different metrics
-  const scoreWeight = 1.0;
-  const appleWeight = 1.5;
-  const killWeight = 2.0;
-  const deathPenalty = -0.5;
-  const suicidePenalty = -1.0;
+  // Weight factors for different metrics - adjusted for better performance
+  const scoreWeight = 1.5;
+  const appleWeight = 2.0; 
+  const killWeight = 2.5;
+  const deathPenalty = -0.3;
+  const suicidePenalty = -0.5;
   
   // Calculate positive contribution
   const positiveFactors = (score * scoreWeight) + (applesEaten * appleWeight) + (kills * killWeight);
@@ -81,12 +82,12 @@ const calculatePerformanceIndex = (
   const negativeFactors = (deaths * deathPenalty) + (suicides * suicidePenalty);
   
   // Calculate overall index (ensure it's at least 0.1)
-  return Math.max(0.1, positiveFactors + negativeFactors);
+  return Math.max(0.2, positiveFactors + negativeFactors);
 };
 
 export const forceGenerationUpdate = (generation: number): number => {
   // Even more aggressive boost when forcing updates
-  const newGeneration = Math.max(generation, currentGeneration) + 10;
+  const newGeneration = Math.max(generation, currentGeneration) + 20; // Increased from 10 to 20
   console.log(`⚡ Generation forcefully set from ${currentGeneration} to ${newGeneration} ⚡`);
   currentGeneration = newGeneration;
   resetGamesSinceLastIncrement();
@@ -116,7 +117,7 @@ export const purgeAllModelCaches = (): void => {
   console.log("🔄 PURGING ALL MODEL CACHES - FORCING COMPLETE RESET 🔄");
   
   // Force a generation jump to prevent stagnation
-  currentGeneration += 50;
+  currentGeneration += 100; // Increased to force larger generation jumps
   console.log(`⚡ Post-reset generation set to ${currentGeneration} ⚡`);
   
   // Break circular dependency using dynamic import

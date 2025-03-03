@@ -8,7 +8,7 @@ const GAMES_TO_FORCE_INCREMENT = 1; // Force increment after EVERY game
 
 // Track games since last complete reset
 let gamesSinceLastReset = 0;
-const GAMES_TO_FORCE_RESET = 10; // Force complete neural network reset every 10 games
+const GAMES_TO_FORCE_RESET = 5; // Reduced from 10 to 5 for more frequent resets
 
 export const getGamesSinceLastIncrement = (): number => {
   return gamesSinceLastIncrement;
@@ -34,10 +34,10 @@ export const trackGamePlayed = (): number => {
     return getCurrentGeneration();
   }
   
-  // Force generation increment EVERY game
+  // Force generation increment EVERY game with larger increments
   if (gamesSinceLastIncrement >= GAMES_TO_FORCE_INCREMENT) {
     console.log(`⚡ Forcing generation increment after ${GAMES_TO_FORCE_INCREMENT} games ⚡`);
-    const newGeneration = getCurrentGeneration() + 10; // Add +10 instead of +3
+    const newGeneration = getCurrentGeneration() + 20; // Increased from 10 to 20
     resetGamesSinceLastIncrement();
     console.log(`⚡ New generation: ${newGeneration} ⚡`);
     return incrementGeneration();

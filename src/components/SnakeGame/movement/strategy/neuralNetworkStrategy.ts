@@ -25,23 +25,28 @@ export const getNeuralNetworkDirection = (
     // Significant penalty for opposite directions
     const isOpposite = isOppositeDirection(snake.direction, dir);
     if (isOpposite) {
-      score *= 0.2; // 80% reduction for opposite directions
+      score *= 0.05; // Increased penalty from 0.2 to 0.05 (95% reduction) for opposite directions
     }
     
     // Severe penalty for immediate obstacles
     const isObstacle = adjacentObstacles.some(obs => obs.dir === dir);
     if (isObstacle) {
-      score *= 0.1; // 90% reduction for obstacles
+      score *= 0.01; // Increased penalty from 0.1 to 0.01 (99% reduction) for obstacles
     }
     
     // Slight preference for continuing in the same direction for momentum
     if (dir === snake.direction) {
-      score *= 1.2; // 20% bonus for same direction
+      score *= 1.3; // Increased from 1.2 to 1.3 (30% bonus for same direction)
     }
     
     // Prevent complete stagnation by slightly preferring different directions occasionally
-    if (snake.movesWithoutEating && snake.movesWithoutEating > 10 && dir !== snake.direction) {
-      score *= 1.1; // 10% bonus for different directions when stuck
+    if (snake.movesWithoutEating && snake.movesWithoutEating > 5 && dir !== snake.direction) {
+      score *= 1.4; // Increased bonus from 1.1 to 1.4 when stuck
+    }
+    
+    // Add randomization to break symmetry and overcome straight-line movement
+    if (snake.brain.getGeneration() < 5) {
+      score += Math.random() * 0.3; // Add noise for younger networks to encourage exploration
     }
     
     return {
@@ -85,11 +90,25 @@ export const getNeuralNetworkDirection = (
   // Check if the best score has a significant margin over second best
   if (sortedEvaluations.length >= 2) {
     const margin = sortedEvaluations[0].adjustedScore - sortedEvaluations[1].adjustedScore;
-    const confident = margin > 0.2; // Require 20% margin for confidence
+    const confident = margin > 0.15; // Reduced margin from 0.2 to 0.15 for confidence
     
     if (confident) {
       console.log(`Snake ${snake.id} using high-confidence direction ${sortedEvaluations[0].direction} (margin: ${margin.toFixed(2)})`);
       return sortedEvaluations[0].direction;
+    }
+  }
+  
+  // Add randomness to break out of loops
+  if (snake.movesWithoutEating && snake.movesWithoutEating > 15) {
+    // After many moves without progress, introduce more randomness
+    if (Math.random() < 0.3) { // 30% chance of random valid direction
+      // Get a valid direction (not opposite and not obstacle if possible)
+      const validChoices = sortedEvaluations.filter(e => !e.isOpposite && !e.isObstacle);
+      if (validChoices.length > 0) {
+        const randomIndex = Math.floor(Math.random() * validChoices.length);
+        console.log(`Snake ${snake.id} using RANDOM direction to break pattern: ${validChoices[randomIndex].direction}`);
+        return validChoices[randomIndex].direction;
+      }
     }
   }
   

@@ -42,7 +42,7 @@ export const combineWeights = (
   }
   
   // Calculate the new generation - take maximum and add a significant boost
-  const newGeneration = Math.max(...models.map(model => model.generation || 1)) + 20;
+  const newGeneration = Math.max(...models.map(model => model.generation || 1)) + 30; // Increased from 20 to 30
   
   return { combinedWeights, newGeneration };
 };
@@ -51,7 +51,7 @@ export const combineWeights = (
  * Applies random mutations to weights based on a mutation probability
  * with enhanced mutation strategies
  */
-export const mutateWeights = (weights: number[], mutationProbability: number = 0.1, mutationRange: number = 0.2): number[] => {
+export const mutateWeights = (weights: number[], mutationProbability: number = 0.3, mutationRange: number = 0.4): number[] => {
   // Count total mutations for logging
   let mutationCount = 0;
   
@@ -62,8 +62,8 @@ export const mutateWeights = (weights: number[], mutationProbability: number = 0
       // Use different mutation strategies with different probabilities
       const strategy = Math.random();
       
-      if (strategy < 0.7) {
-        // 70% chance: Normal distribution for more natural mutations
+      if (strategy < 0.5) { // Reduced from 0.7 to 0.5 to increase variety
+        // 50% chance: Normal distribution for more natural mutations
         // This creates a bell curve of mutations centered on the current weight
         const gaussianRandom = () => {
           let u = 0, v = 0;
@@ -74,13 +74,13 @@ export const mutateWeights = (weights: number[], mutationProbability: number = 0
         
         return w + gaussianRandom() * mutationRange;
       } 
-      else if (strategy < 0.9) {
-        // 20% chance: Sign flip with small adjustment (create opposite behaviors)
+      else if (strategy < 0.8) { // Increased from 0.9 to 0.8
+        // 30% chance: Sign flip with small adjustment (create opposite behaviors)
         return -w * (0.8 + Math.random() * 0.4); // Flip sign and adjust magnitude slightly
       }
       else {
-        // 10% chance: Complete reset to random value for more exploration
-        return (Math.random() * 2 - 1) * 2; // Range [-2, 2]
+        // 20% chance: Complete reset to random value for more exploration
+        return (Math.random() * 4 - 2); // Increased range from [-2, 2] to [-4, 4]
       }
     }
     return w;
