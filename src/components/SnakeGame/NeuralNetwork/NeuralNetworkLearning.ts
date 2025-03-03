@@ -20,18 +20,18 @@ export const applyLearning = (
   // Calculate learning rate with adaptive approach based on generation
   // Higher generations get smaller learning rates to fine-tune rather than drastically change
   const generation = network.getGeneration();
-  const adaptiveFactor = Math.max(0.2, 1.0 - (generation / 100)); // Adjusted curve, slower decay
+  const adaptiveFactor = Math.max(0.3, 1.0 - (generation / 150)); // Adjusted curve, slower decay, increased minimum
   
   // Calculate learning rate - more sophisticated approach
-  const baseRate = success ? 0.5 * adaptiveFactor : 0.6 * adaptiveFactor; // Increased from 0.3/0.35 to 0.5/0.6
+  const baseRate = success ? 0.6 * adaptiveFactor : 0.7 * adaptiveFactor; // Increased from 0.5/0.6 to 0.6/0.7
   // Cap maximum reward to prevent wild oscillations but allow significant learning
-  const learningRate = baseRate * Math.min(reward, 3.0);
+  const learningRate = baseRate * Math.min(reward, 3.5);
   
   // Get current weights
   const currentWeights = network.getWeights();
   
   // Apply regularization to prevent overfitting - stronger for higher generations
-  const regularizationStrength = 0.005 + (generation / 20000); // Reduced from 0.01 to 0.005
+  const regularizationStrength = 0.003 + (generation / 25000); // Reduced strength to allow more learning
   
   // Apply adjustments to weights based on input values with regularization
   const newWeights = currentWeights.map((weight, index) => {
@@ -42,7 +42,7 @@ export const applyLearning = (
       const inputValue = inputs[inputIndex];
       
       // Weight adjustment proportional to input value and learning outcome
-      const inputStrength = Math.abs(inputValue) > 0.5 ? 2.0 : 1.0; // Increased from 1.5 to 2.0
+      const inputStrength = Math.abs(inputValue) > 0.5 ? 2.5 : 1.2; // Increased from 2.0 to 2.5
       // More nuanced adjustment based on success/failure
       const adjustment = inputValue * learningRate * inputStrength * (success ? 1 : -1);
       
@@ -50,7 +50,7 @@ export const applyLearning = (
       if (success && outputs.length > 0) {
         const outputConfidence = outputs[outputIndex];
         // Scale reinforcement based on the confidence of the output
-        const confidenceBonus = outputConfidence > 0.5 ? 3.0 : 1.0; // Increased from 2.0 to 3.0
+        const confidenceBonus = outputConfidence > 0.5 ? 3.5 : 1.2; // Increased from 3.0 to 3.5
         
         // Apply regularization term to prevent weights from growing too large
         const regularization = regularizationStrength * weight;
@@ -64,7 +64,7 @@ export const applyLearning = (
     
     // For weights not directly related to inputs, apply smaller adjustments
     // with regularization to prevent overfitting
-    const randomFactor = (Math.random() * 0.3 - 0.15) * (success ? 1 : -1); // Increased from 0.2-0.1 to 0.3-0.15
+    const randomFactor = (Math.random() * 0.4 - 0.2) * (success ? 1 : -1); // Increased from 0.3-0.15 to 0.4-0.2
     const regularization = regularizationStrength * weight;
     return weight + (randomFactor * learningRate) - regularization;
   });
@@ -82,14 +82,13 @@ export const applyLearning = (
 
 export const mutateNetwork = (
   network: NeuralNetworkCore, 
-  mutationRate: number = 0.2 // Increased from 0.1 to 0.2
+  mutationRate: number = 0.25 // Increased from 0.2 to 0.25
 ): void => {
   const weights = network.getWeights();
   const generation = network.getGeneration();
   
-  // Adaptive mutation - more focused mutations for higher generations
-  // to refine behavior rather than make dramatic changes
-  const adaptiveMutationRate = mutationRate * Math.max(0.25, 1.0 - (generation / 200)); // Adjusted curve
+  // Adaptive mutation - less decay for higher generations to maintain exploration
+  const adaptiveMutationRate = mutationRate * Math.max(0.3, 1.0 - (generation / 300)); // Adjusted curve, higher minimum
   
   // Track how often a weight is actually mutated
   let mutationCount = 0;
@@ -99,7 +98,7 @@ export const mutateNetwork = (
     if (Math.random() < adaptiveMutationRate) {
       mutationCount++;
       
-      if (Math.random() < 0.8) { // Reduced from 0.9 to 0.8 for more radical mutations
+      if (Math.random() < 0.7) { // Reduced from 0.8 to 0.7 for more radical mutations
         // Normal adjustment with bell curve distribution for more natural mutations
         const gaussianRandom = () => {
           let u = 0, v = 0;
@@ -109,12 +108,12 @@ export const mutateNetwork = (
         };
         
         // Adaptive mutation strength - more precise for higher generations
-        const adaptiveStrength = Math.max(0.2, 1.0 - (generation / 300)); // Increased minimum from 0.1 to 0.2
-        return weight + gaussianRandom() * adaptiveStrength; 
+        const adaptiveStrength = Math.max(0.3, 1.0 - (generation / 400)); // Increased minimum from 0.2 to 0.3
+        return weight + gaussianRandom() * adaptiveStrength * 1.5; // Multiplied by 1.5 for stronger mutations
       } else {
-        // Complete reset (20% of the time) - allows exploring completely new solutions
+        // Complete reset (30% of the time) - allows exploring completely new solutions
         // More contained range for more stable evolution
-        return Math.random() * 4 - 2; // Increased range from [-1, 1] to [-2, 2]
+        return Math.random() * 6 - 3; // Increased range from [-2, 2] to [-3, 3]
       }
     }
     return weight;
@@ -127,7 +126,7 @@ export const mutateNetwork = (
 
 export const cloneNetwork = (
   network: NeuralNetworkCore, 
-  mutationRate: number = 0.2 // Increased from 0.1 to 0.2
+  mutationRate: number = 0.25 // Increased from 0.2 to 0.25
 ): NeuralNetworkCore => {
   const inputSize = 8; // Standard input size
   const hiddenSize = 12; // Standard hidden size
@@ -137,7 +136,7 @@ export const cloneNetwork = (
   
   // IMPORTANT: Explicitly increment generation when cloning
   // More aggressive generational increment for faster evolution
-  const nextGeneration = network.getGeneration() + 10; // Increased from 5 to 10
+  const nextGeneration = network.getGeneration() + 15; // Increased from 10 to 15
   console.log(`Cloning network: incrementing generation from ${network.getGeneration()} to ${nextGeneration}`);
   
   const clone = new NeuralNetworkCore(

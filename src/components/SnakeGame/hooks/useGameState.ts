@@ -3,8 +3,12 @@ import { useState } from 'react';
 import { GameState } from '../types';
 import { GRID_SIZE, APPLE_COUNT } from '../constants';
 import { generateApple } from './useAppleGeneration';
+import { getCurrentGeneration } from './snakeCreation/modelCache';
 
 export const useGameState = () => {
+  // Get the current generation from cache when initializing
+  const initialGeneration = getCurrentGeneration() || 1;
+  
   const [gameState, setGameState] = useState<GameState>({
     snakes: [],
     apples: Array.from({ length: APPLE_COUNT }, generateApple),
@@ -18,15 +22,22 @@ export const useGameState = () => {
     3: 0,
   });
   
-  // Simplified generation tracking with only essential metrics
+  // Enhanced generation tracking with proper initialization
   const [generationInfo, setGenerationInfo] = useState<{ 
     generation: number, 
     bestScore: number, 
-    progress: number
+    progress: number,
+    snakeGenerations: { [key: number]: number } // Track individual snake generations
   }>({
-    generation: 1,
+    generation: initialGeneration,
     bestScore: 0,
-    progress: 0
+    progress: 0,
+    snakeGenerations: {
+      0: initialGeneration, // Yellow snake
+      1: initialGeneration,
+      2: initialGeneration,
+      3: initialGeneration
+    }
   });
 
   const [startTime, setStartTime] = useState(Date.now());

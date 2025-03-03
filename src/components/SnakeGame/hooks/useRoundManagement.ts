@@ -8,7 +8,8 @@ import {
   trackGamePlayed, 
   resetModelCaches, 
   forceGenerationUpdate,
-  advanceGenerationBasedOnMetrics 
+  advanceGenerationBasedOnMetrics,
+  getCurrentGeneration 
 } from './snakeCreation/modelCache';
 
 export const useRoundManagement = (
@@ -44,7 +45,8 @@ export const useRoundManagement = (
     trackGamePlayed();
     
     // Get current generation before updates
-    let currentGen = getModelCache().currentGeneration;
+    let currentGen = getCurrentGeneration();
+    console.log(`Current generation at end of round: ${currentGen}`);
     
     // Use advanced metrics-based generation advancement
     let newGeneration = advanceGenerationBasedOnMetrics(
@@ -58,14 +60,14 @@ export const useRoundManagement = (
     console.log(`⚡ Advanced to generation ${newGeneration} based on performance metrics ⚡`);
     
     // Additional increment if exceptional score achieved
-    if (totalScore >= 3 || totalApplesEaten >= 5 || totalKills >= 2) {
+    if (totalScore >= 2 || totalApplesEaten >= 3 || totalKills >= 1) {
       // For exceptional performance, increment generation again to advance faster
       newGeneration = incrementGeneration();
       console.log(`⚡ Exceptional performance! Incrementing generation again to ${newGeneration} ⚡`);
     }
     
-    // More aggressive cache reset - 80% chance instead of 70%
-    if (Math.random() < 0.8) { 
+    // More aggressive cache reset - 90% chance instead of 80%
+    if (Math.random() < 0.9) { 
       resetModelCaches();
       console.log("Model caches reset to force fresh model loading");
     }
@@ -95,7 +97,7 @@ export const useRoundManagement = (
           winner.brain.updateBestScore(winner.score);
           
           // Give winning models an extra generation boost
-          const winnerNewGen = newGeneration + 15;
+          const winnerNewGen = newGeneration + 25; // Increased from 15 to 25
           winner.brain.updateGeneration(winnerNewGen);
           
           // Save the model to DB
@@ -117,8 +119,8 @@ export const useRoundManagement = (
         
         // Assign varied generation increments based on performance
         const baseIncrement = newGeneration;
-        const performanceBonus = snake.score * 5 + (snake.decisionMetrics?.applesEaten || 0) * 3 - (snake.decisionMetrics?.badDirections || 0) * 0.5;
-        const finalIncrement = Math.max(5, Math.floor(performanceBonus));
+        const performanceBonus = snake.score * 8 + (snake.decisionMetrics?.applesEaten || 0) * 5 - (snake.decisionMetrics?.badDirections || 0) * 0.5;
+        const finalIncrement = Math.max(10, Math.floor(performanceBonus));
         
         const snakeNewGen = baseIncrement + finalIncrement;
         snake.brain.updateGeneration(snakeNewGen);

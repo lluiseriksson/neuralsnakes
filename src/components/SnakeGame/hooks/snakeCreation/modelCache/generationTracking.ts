@@ -4,7 +4,7 @@
 import { resetGamesSinceLastIncrement } from './gameTracking';
 import { getModelCache } from './cacheManagement';
 
-// Reset to generation 1 as requested
+// Start with previous generation if available, otherwise reset to 1
 let currentGeneration = 1; 
 
 export const getCurrentGeneration = (): number => {
@@ -13,9 +13,13 @@ export const getCurrentGeneration = (): number => {
 
 export const incrementGeneration = (): number => {
   // More aggressive incrementation to push evolution faster
-  currentGeneration += 25; // Aumentado de 10 a 25 para avanzar más rápido
+  currentGeneration += 25; // Increased from 10 to 25 for faster advancement
   resetGamesSinceLastIncrement();
   console.log(`⚡ Generation aggressively incremented to ${currentGeneration} ⚡`);
+  
+  // Also update model caches with new generation
+  updateModelCachesGeneration(currentGeneration);
+  
   return currentGeneration;
 };
 
@@ -25,6 +29,9 @@ export const updateCurrentGeneration = (generation: number): number => {
     console.log(`⚡ Generation updated from ${currentGeneration} to ${generation} ⚡`);
     currentGeneration = generation;
     resetGamesSinceLastIncrement();
+    
+    // Also update model caches with the new generation
+    updateModelCachesGeneration(currentGeneration);
   }
   return currentGeneration;
 };
@@ -42,10 +49,10 @@ export const advanceGenerationBasedOnMetrics = (
   
   // Calculate significant generation boost based on performance
   // Significantly increased generation boost to overcome stagnation
-  const generationBoost = Math.floor(performanceIndex * 25) + 10;
+  const generationBoost = Math.floor(performanceIndex * 30) + 15; // Increased boost values
   
-  // Always increment by at least 15 to ensure progression
-  const newGeneration = currentGeneration + Math.max(generationBoost, 15);
+  // Always increment by at least 20 to ensure progression
+  const newGeneration = currentGeneration + Math.max(generationBoost, 20);
   
   console.log(`⚡ Advanced generation from ${currentGeneration} to ${newGeneration} based on metrics ⚡`);
   console.log(`Performance metrics: score=${score}, apples=${applesEaten}, kills=${kills}, deaths=${deaths}, suicides=${suicides}`);
@@ -81,13 +88,13 @@ const calculatePerformanceIndex = (
   // Calculate negative factors
   const negativeFactors = (deaths * deathPenalty) + (suicides * suicidePenalty);
   
-  // Calculate overall index (ensure it's at least 0.1)
+  // Calculate overall index (ensure it's at least 0.2)
   return Math.max(0.2, positiveFactors + negativeFactors);
 };
 
 export const forceGenerationUpdate = (generation: number): number => {
   // Even more aggressive boost when forcing updates
-  const newGeneration = Math.max(generation, currentGeneration) + 20; // Increased from 10 to 20
+  const newGeneration = Math.max(generation, currentGeneration) + 30; // Increased boost
   console.log(`⚡ Generation forcefully set from ${currentGeneration} to ${newGeneration} ⚡`);
   currentGeneration = newGeneration;
   resetGamesSinceLastIncrement();
@@ -117,7 +124,7 @@ export const purgeAllModelCaches = (): void => {
   console.log("🔄 PURGING ALL MODEL CACHES - FORCING COMPLETE RESET 🔄");
   
   // Force a generation jump to prevent stagnation
-  currentGeneration += 100; // Increased to force larger generation jumps
+  currentGeneration += 150; // Increased to force larger generation jumps
   console.log(`⚡ Post-reset generation set to ${currentGeneration} ⚡`);
   
   // Break circular dependency using dynamic import

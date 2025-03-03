@@ -7,7 +7,8 @@ import {
   setCombinedModelCache, 
   incrementGeneration,
   updateCurrentGeneration,
-  forceGenerationUpdate
+  forceGenerationUpdate,
+  getCurrentGeneration
 } from './modelCache';
 
 export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
@@ -17,11 +18,11 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
     console.log(`Usando el mejor modelo en cache (generación ${bestModelCache.getGeneration()}, puntuación: ${bestModelCache.getBestScore()})`);
     
     // Force a significant generation increment every time to prevent stagnation
-    // FIXED: Add +5 instead of +1 to force higher generations
-    const newGeneration = Math.max(currentGeneration, bestModelCache.getGeneration()) + 5;
+    // FIXED: Add +15 instead of +1 to force higher generations
+    const newGeneration = Math.max(currentGeneration, bestModelCache.getGeneration()) + 15;
     console.log(`⚡ YELLOW SNAKE BOOST: Nueva generación forzada ${newGeneration} ⚡`);
     
-    // Use lower mutation rate for best model (0.1)
+    // Use lower mutation rate for best model (0.15)
     const brain = bestModelCache.clone(0.15); // Slightly increased mutation
     
     // Force update generation and make sure it's applied
@@ -41,12 +42,12 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
         console.log(`Modelo cargado (generación ${bestModel.getGeneration()}, puntuación: ${bestModel.getBestScore()})`);
         
         // Force a significant generation increment to break out of stagnation
-        // FIXED: Add +5 instead of +2 to force higher generations
-        const newGeneration = Math.max(currentGeneration, bestModel.getGeneration()) + 5;
+        // FIXED: Add +15 instead of +5 to force higher generations
+        const newGeneration = Math.max(currentGeneration, bestModel.getGeneration()) + 15;
         console.log(`⚡ YELLOW SNAKE BOOST: Nueva generación forzada ${newGeneration} ⚡`);
         
-        // Use balanced mutation rate (0.15)
-        const brain = bestModel.clone(0.15);
+        // Use balanced mutation rate (0.2)
+        const brain = bestModel.clone(0.2); // Increased mutation rate
         
         // Force update generation and ensure it's applied globally
         brain.updateGeneration(newGeneration);
@@ -56,8 +57,8 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
         return brain;
       } else {
         console.log("No se encontró un modelo existente, creando uno nuevo");
-        // Start at generation 1 as requested
-        const newGeneration = 1;
+        // Use current generation or at least 10 if starting fresh
+        const newGeneration = Math.max(currentGeneration, 10);
         const brain = new NeuralNetwork(8, 12, 4);
         brain.updateGeneration(newGeneration);
         forceGenerationUpdate(newGeneration);
@@ -68,8 +69,8 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
       }
     } catch (loadError) {
       console.error("Error cargando el mejor modelo:", loadError);
-      // Start at generation 1 as requested
-      const newGeneration = 1;
+      // Use current generation or at least 10 if starting fresh
+      const newGeneration = Math.max(currentGeneration, 10);
       const brain = new NeuralNetwork(8, 12, 4);
       brain.updateGeneration(newGeneration);
       forceGenerationUpdate(newGeneration);
@@ -87,12 +88,12 @@ export const createCombinedModelBrain = async (): Promise<INeuralNetwork> => {
   if (combinedModelCache) {
     console.log(`Usando modelo combinado en cache (generación ${combinedModelCache.getGeneration()})`);
     
-    // Always create a new generation for evolution
-    const newGeneration = Math.max(currentGeneration, combinedModelCache.getGeneration()) + 1;
+    // Always create a new generation for evolution, more aggressive
+    const newGeneration = Math.max(currentGeneration, combinedModelCache.getGeneration()) + 10;
     console.log(`Nueva generación para modelo combinado: ${newGeneration}`);
     
-    // Moderate mutation rate for combined model (0.15)
-    const brain = combinedModelCache.clone(0.15);
+    // Higher mutation rate for combined model (0.25)
+    const brain = combinedModelCache.clone(0.25);
     
     // Force update generation to ensure progression
     brain.updateGeneration(newGeneration);
@@ -108,12 +109,12 @@ export const createCombinedModelBrain = async (): Promise<INeuralNetwork> => {
         setCombinedModelCache(combinedModel);
         console.log(`Modelo combinado creado (generación ${combinedModel.getGeneration()})`);
         
-        // Always create a new generation for evolution
-        const newGeneration = Math.max(currentGeneration, combinedModel.getGeneration()) + 1;
+        // Always create a new generation for evolution, more aggressive
+        const newGeneration = Math.max(currentGeneration, combinedModel.getGeneration()) + 10;
         console.log(`Nueva generación para modelo combinado nuevo: ${newGeneration}`);
         
-        // Moderate mutation rate
-        const brain = combinedModel.clone(0.15);
+        // Higher mutation rate
+        const brain = combinedModel.clone(0.25);
         
         // Force update generation to ensure progression
         brain.updateGeneration(newGeneration);
@@ -123,8 +124,8 @@ export const createCombinedModelBrain = async (): Promise<INeuralNetwork> => {
         return brain;
       } else {
         console.log("No se pudo combinar modelos, creando uno nuevo");
-        // Start at generation 1 as requested
-        const newGeneration = 1;
+        // Use current generation or at least 5
+        const newGeneration = Math.max(currentGeneration, 5);
         const brain = new NeuralNetwork(8, 12, 4);
         brain.updateGeneration(newGeneration);
         updateCurrentGeneration(newGeneration);
@@ -135,8 +136,8 @@ export const createCombinedModelBrain = async (): Promise<INeuralNetwork> => {
       }
     } catch (combineError) {
       console.error("Error combining models:", combineError);
-      // Start at generation 1 as requested
-      const newGeneration = 1;
+      // Use current generation or at least 5
+      const newGeneration = Math.max(currentGeneration, 5);
       const brain = new NeuralNetwork(8, 12, 4);
       brain.updateGeneration(newGeneration);
       updateCurrentGeneration(newGeneration);
@@ -156,18 +157,18 @@ export const createRandomBrain = (baseId: number): INeuralNetwork => {
     // Create a mutated clone from one of our base models
     console.log(`Creando un nuevo modelo con mutaciones para la serpiente ${baseId} (generación ${currentGeneration})`);
     
-    // Force generation to current or higher
-    // Always add at least 1 to ensure progression
-    const newGeneration = Math.max(currentGeneration, baseModel.getGeneration()) + 1;
+    // Force generation to current or higher, more aggressive
+    // Always add at least 5 to ensure progression
+    const newGeneration = Math.max(currentGeneration, baseModel.getGeneration()) + 5;
     
-    // Balanced mutation rate for random models (0.2)
-    const brain = baseModel.clone(0.2);
+    // Higher mutation rate for random models (0.3)
+    const brain = baseModel.clone(0.3);
     
     // Ensure this brain has the current generation
     brain.updateGeneration(newGeneration);
     
-    // Apply moderate mutation rate for exploration
-    brain.mutate(0.25);
+    // Apply higher mutation rate for exploration
+    brain.mutate(0.35);
     
     console.log(`Random model brain created from base with generation ${brain.getGeneration()}`);
     return brain;
@@ -177,10 +178,10 @@ export const createRandomBrain = (baseId: number): INeuralNetwork => {
     
     const brain = new NeuralNetwork(8, 12, 4);
     
-    // Ensure this brain has at least the current generation + 1
-    brain.updateGeneration(Math.max(currentGeneration, 1) + 1);
+    // Ensure this brain has at least the current generation + 5
+    brain.updateGeneration(Math.max(currentGeneration, 1) + 5);
     
-    brain.mutate(0.3); // Moderate mutation for new models
+    brain.mutate(0.4); // Higher mutation for new models
     
     console.log(`Brand new random model brain created with generation ${brain.getGeneration()}`);
     return brain;
