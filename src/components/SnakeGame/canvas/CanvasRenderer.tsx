@@ -56,17 +56,15 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       frame: frameCount
     });
     
-    // Skip redraw if nothing has changed
-    if (currentStateHash === lastDrawnStateRef.current) {
+    // Skip redraw if nothing has changed and it's not an animation frame
+    if (currentStateHash === lastDrawnStateRef.current && frameCount % 5 !== 0) {
       return;
     }
     
     lastDrawnStateRef.current = currentStateHash;
-    console.log("Dibujando nuevo estado", frameCount);
 
     // Clear canvas
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw game elements
     drawGrid(ctx, GRID_SIZE, CELL_SIZE);
@@ -81,7 +79,7 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     });
 
     // Update frame counter
-    setFrameCount(prev => (prev + 1) % 30);
+    setFrameCount(prev => (prev + 1) % 60);
   };
 
   // Handle canvas click events
@@ -96,15 +94,34 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       
       // Check if a snake head was clicked
       gameState.snakes.forEach(snake => {
-        if (snake.alive && snake.positions[0].x === x && snake.positions[0].y === y) {
-          setActiveSnakeId(snake.id);
-          
-          // Dispatch custom event for parent components
-          const selectSnakeEvent = new CustomEvent('selectSnake', { 
-            bubbles: true, 
-            detail: { snakeId: snake.id } 
-          });
-          canvas.dispatchEvent(selectSnakeEvent);
+        if (snake.alive && snake.positions && snake.positions.length > 0) {
+          const head = snake.positions[0];
+          // Create a slightly larger hit area for easier selection
+          if (Math.abs(head.x - x) <= 1 && Math.abs(head.y - y) <= 1) {
+            setActiveSnakeId(snake.id);
+            
+            // Add visual feedback for the click
+            const clickEffect = document.createElement('div');
+            clickEffect.className = 'absolute pointer-events-none rounded-full bg-white bg-opacity-40';
+            clickEffect.style.left = `${e.clientX - 15}px`;
+            clickEffect.style.top = `${e.clientY - 15}px`;
+            clickEffect.style.width = '30px';
+            clickEffect.style.height = '30px';
+            clickEffect.style.animation = 'ping 1s cubic-bezier(0, 0, 0.2, 1)';
+            document.body.appendChild(clickEffect);
+            
+            // Remove the effect after animation completes
+            setTimeout(() => {
+              document.body.removeChild(clickEffect);
+            }, 1000);
+            
+            // Dispatch custom event for parent components
+            const selectSnakeEvent = new CustomEvent('selectSnake', { 
+              bubbles: true, 
+              detail: { snakeId: snake.id } 
+            });
+            canvas.dispatchEvent(selectSnakeEvent);
+          }
         }
       });
     };

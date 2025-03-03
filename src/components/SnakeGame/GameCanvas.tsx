@@ -47,7 +47,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onSelectSnake }) => 
     : null;
 
   return (
-    <div className="relative">
+    <div className="relative overflow-hidden rounded-xl border-2 border-gray-700 shadow-lg">
       <CanvasRenderer 
         gameState={gameState}
         width={canvasWidth}
@@ -61,22 +61,27 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onSelectSnake }) => 
         <GenerationTracker snakes={gameState.snakes} />
       )}
       
-      {selectedSnakeId !== null && (
-        <div className="absolute top-2 left-2 bg-black bg-opacity-80 text-white px-3 py-2 text-sm rounded">
-          <div className="font-semibold">Snake #{selectedSnakeId} selected</div>
-          {selectedSnake && (
-            <div className="text-xs mt-1">
-              <div>Score: {selectedSnake.score}</div>
-              <div>Direction: {selectedSnake.direction}</div>
-              <div>Moves without eating: {selectedSnake.movesWithoutEating || 0}</div>
-              {selectedSnake.debugInfo?.lastDecision && (
-                <div className="text-xs mt-1 text-green-400">
-                  <div>Decision: {selectedSnake.debugInfo.lastDecision.reason}</div>
-                  {selectedSnake.debugInfo.lastDecision.confidence !== undefined && (
-                    <div>Confidence: {selectedSnake.debugInfo.lastDecision.confidence.toFixed(2)}</div>
-                  )}
-                </div>
-              )}
+      {selectedSnakeId !== null && selectedSnake && (
+        <div className="absolute top-3 left-3 bg-black bg-opacity-80 backdrop-blur-md text-white px-4 py-3 text-sm rounded-lg border border-gray-700 shadow-lg animate-fade-in">
+          <div className="font-bold text-yellow-400">Snake #{selectedSnakeId}</div>
+          <div className="grid grid-cols-2 gap-x-4 mt-1 text-xs">
+            <div className="flex items-center">
+              <div className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: selectedSnake.color }}></div>
+              <span>Score: {selectedSnake.score}</span>
+            </div>
+            <div>Direction: {selectedSnake.direction}</div>
+            <div>Apples eaten: {selectedSnake.decisionMetrics?.applesEaten || 0}</div>
+            <div>No eating: {selectedSnake.movesWithoutEating || 0}</div>
+          </div>
+          {selectedSnake.debugInfo?.lastDecision && (
+            <div className="text-xs mt-2 p-1 bg-gray-800 bg-opacity-60 rounded border-l-2 border-green-500">
+              <div className="font-semibold text-green-400">Last Decision:</div>
+              <div className="flex justify-between">
+                <div>{selectedSnake.debugInfo.lastDecision.reason}</div>
+                {selectedSnake.debugInfo.lastDecision.confidence !== undefined && (
+                  <div>Confidence: {(selectedSnake.debugInfo.lastDecision.confidence * 100).toFixed(0)}%</div>
+                )}
+              </div>
             </div>
           )}
         </div>
