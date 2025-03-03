@@ -14,6 +14,12 @@ export const checkSelfCollision = (snake: Snake): boolean => {
   for (let j = 1; j < snake.positions.length; j++) {
     if (head.x === snake.positions[j].x && head.y === snake.positions[j].y) {
       console.log(`Snake ${snake.id} collided with itself at (${head.x}, ${head.y})`);
+      
+      // Update suicide metrics
+      if (snake.decisionMetrics) {
+        snake.decisionMetrics.suicides = (snake.decisionMetrics.suicides || 0) + 1;
+      }
+      
       return true;
     }
   }
@@ -54,6 +60,14 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
             // Mark both snakes as dead
             snake.alive = false;
             otherSnake.alive = false;
+            
+            // Count as death for both
+            if (snake.decisionMetrics) {
+              snake.decisionMetrics.suicides = (snake.decisionMetrics.suicides || 0) + 1;
+            }
+            if (otherSnake.decisionMetrics) {
+              otherSnake.decisionMetrics.suicides = (otherSnake.decisionMetrics.suicides || 0) + 1;
+            }
           } else {
             // Head-to-body collision
             // Apply learning to the colliding snake
@@ -65,6 +79,11 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
             // The other snake gets the points
             const totalSegmentsToAdd = snake.positions.length;
             otherSnake.score += totalSegmentsToAdd;
+            
+            // Track kill for the surviving snake
+            if (otherSnake.decisionMetrics) {
+              otherSnake.decisionMetrics.killCount = (otherSnake.decisionMetrics.killCount || 0) + 1;
+            }
             
             // Add segments to the surviving snake
             for (let n = 0; n < totalSegmentsToAdd; n++) {
