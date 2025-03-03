@@ -29,16 +29,18 @@ const NetworkCanvas: React.FC<NetworkCanvasProps> = ({ activeSnake }) => {
     }
   }, [activeSnake]);
 
-  // Draw the neural network visualization
+  // Draw the neural network visualization with animation frame for smoother updates
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !activeSnake) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Animation frame for continuous updates
-    const animationId = requestAnimationFrame(() => {
+    // Use requestAnimationFrame for smoother rendering
+    let animationFrameId: number;
+
+    const renderFrame = () => {
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
@@ -54,15 +56,30 @@ const NetworkCanvas: React.FC<NetworkCanvasProps> = ({ activeSnake }) => {
         const learningEvents = activeSnake.debugInfo.learningEvents as LearningEvent[];
         drawLearningHistory(ctx, learningEvents, canvas);
       }
-    });
+
+      // Get generation info for display
+      ctx.fillStyle = '#AAAAAA';
+      ctx.font = '10px Arial';
+      ctx.textAlign = 'right';
+      ctx.fillText(`Generation: ${activeSnake.brain.getGeneration()}`, canvas.width - 10, 20);
+      
+      // Continue animation loop
+      animationFrameId = requestAnimationFrame(renderFrame);
+    };
+    
+    // Start animation loop
+    animationFrameId = requestAnimationFrame(renderFrame);
     
     return () => {
-      cancelAnimationFrame(animationId);
+      // Clean up animation on unmount
+      cancelAnimationFrame(animationFrameId);
     };
   }, [nodeValues, activeSnake]);
 
   // Add animation class based on snake type
   const getAnimationClass = () => {
+    if (!activeSnake) return "border-gray-600";
+    
     switch(activeSnake.id) {
       case 0: return "border-yellow-400";  // Yellow snake
       case 1: return "border-blue-400";    // Blue snake

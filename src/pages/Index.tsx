@@ -174,10 +174,9 @@ const Index = () => {
         </Button>
       </div>
       
-      {/* Estado del aprendizaje - Updated with new evolution system description */}
+      {/* Estado del aprendizaje - Simplified with focus on decision visualization */}
       <div className="mt-6 p-4 bg-gray-900 rounded-xl border border-gray-700 text-white text-sm max-w-2xl shadow-lg">
-        <p className="font-bold mb-2 text-purple-400">Sistema de evolución neural mejorado:</p>
-        <p className="mb-3 text-yellow-400 text-sm">El sistema de evolución ha sido completamente mejorado con generaciones infinitas y criterios de aprendizaje más inteligentes. Ahora se realiza seguimiento de manzanas comidas, puntuaciones, eliminaciones, muertes y suicidios para determinar el avance de la generación.</p>
+        <p className="font-bold mb-2 text-purple-400">Sistema de evolución neural:</p>
         <div className="grid grid-cols-2 gap-4">
           <ul className="list-disc list-inside mt-1 text-xs space-y-1 text-gray-300">
             <li className="text-yellow-400">Serpiente amarilla: modelo óptimo (mutación baja)</li>
@@ -185,10 +184,10 @@ const Index = () => {
             <li className="text-gray-400">Otras serpientes: modelos experimentales (mutación alta)</li>
           </ul>
           <div className="bg-gray-800 p-2 rounded text-xs">
-            <p className="text-green-400 font-semibold mb-1">Estadísticas de evolución:</p>
-            <p>Generaciones: {generationInfo.generation}</p>
+            <p className="text-green-400 font-semibold mb-1">Información:</p>
+            <p>Generación actual: {generationInfo.generation}</p>
             <p>Mejor puntuación: {generationInfo.bestScore}</p>
-            <p>Eficiencia: {(generationInfo.efficiency || 0).toFixed(2)}%</p>
+            <p>Serpientes vivas: {gameState.snakes?.filter(s => s.alive).length || 0}</p>
           </div>
         </div>
       </div>

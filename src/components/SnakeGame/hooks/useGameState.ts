@@ -18,25 +18,15 @@ export const useGameState = () => {
     3: 0,
   });
   
-  // Enhanced generation tracking with more detailed metrics
+  // Simplified generation tracking with only essential metrics
   const [generationInfo, setGenerationInfo] = useState<{ 
     generation: number, 
     bestScore: number, 
-    progress: number,
-    totalApplesEaten: number,
-    killCount: number,
-    totalDeaths: number,
-    suicides: number,
-    efficiency: number
+    progress: number
   }>({
     generation: 1,
     bestScore: 0,
-    progress: 0,
-    totalApplesEaten: 0,
-    killCount: 0,
-    totalDeaths: 0,
-    suicides: 0,
-    efficiency: 0
+    progress: 0
   });
 
   const [startTime, setStartTime] = useState(Date.now());

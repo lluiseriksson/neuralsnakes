@@ -16,12 +16,8 @@ const ScoreBoard: React.FC<ScoreBoardProps> = ({ snakes, generationInfo }) => {
     <div className="mt-4 space-y-4">
       {generationInfo && (
         <div className="bg-gray-800 p-3 rounded-lg text-white">
-          <h3 className="text-lg font-semibold mb-2">Estadísticas de Evolución</h3>
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <span className="text-gray-400 text-sm">Generación:</span>
-              <p className="font-medium">{generationInfo.generation}</p>
-            </div>
+          <h3 className="text-lg font-semibold mb-2">Generación Actual: {generationInfo.generation}</h3>
+          <div className="grid grid-cols-2 gap-2">
             <div>
               <span className="text-gray-400 text-sm">Mejor Puntaje:</span>
               <p className="font-medium">{generationInfo.bestScore}</p>
