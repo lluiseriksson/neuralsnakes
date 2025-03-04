@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Snake } from '../../types';
 import { updateHighestScore } from '../../hooks/snakeCreation/modelCache';
@@ -6,6 +7,9 @@ interface SnakeScoreCardProps {
   snake: Snake;
   score: number;
 }
+
+// Maximum generation to display to prevent visual inconsistencies
+const MAX_GENERATION_DISPLAY = 100;
 
 const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
   // Use local state to track score and ensure it updates visually
@@ -33,7 +37,8 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
         const generation = snake.brain.getGeneration();
         // Only update if we get a valid generation number
         if (typeof generation === 'number' && generation >= 0) {
-          setCurrentGeneration(generation);
+          // Cap generation to prevent display issues with extremely high values
+          setCurrentGeneration(Math.min(generation, MAX_GENERATION_DISPLAY));
         }
       } catch (error) {
         console.error("Error getting generation from snake brain:", error);

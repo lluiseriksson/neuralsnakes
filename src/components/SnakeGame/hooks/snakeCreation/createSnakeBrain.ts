@@ -38,8 +38,8 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
         setBestModelCache(bestModel); // Store in cache
         console.log(`Modelo cargado (generación ${bestModel.getGeneration()}, puntuación: ${bestModel.getBestScore()})`);
         
-        // Use global generation value
-        const globalGen = getCurrentGeneration();
+        // Use global generation value - limit maximum generation
+        const globalGen = Math.min(getCurrentGeneration(), 100); // Add cap to prevent extremely high values
         console.log(`🟡 YELLOW SNAKE: Using global generation ${globalGen} 🟡`);
         
         // Use balanced mutation rate (0.3)
@@ -53,7 +53,7 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
       } else {
         console.log("No se encontró un modelo existente, creando uno nuevo");
         // Use global generation
-        const globalGen = getCurrentGeneration();
+        const globalGen = Math.min(getCurrentGeneration(), 100); // Add cap to prevent extremely high values
         const brain = new NeuralNetwork(8, 12, 4);
         brain.updateGeneration(globalGen);
         
@@ -64,7 +64,7 @@ export const createBestModelBrain = async (): Promise<INeuralNetwork> => {
     } catch (loadError) {
       console.error("Error cargando el mejor modelo:", loadError);
       // Use global generation
-      const globalGen = getCurrentGeneration();
+      const globalGen = Math.min(getCurrentGeneration(), 100); // Add cap to prevent extremely high values
       const brain = new NeuralNetwork(8, 12, 4);
       brain.updateGeneration(globalGen);
       
@@ -81,8 +81,8 @@ export const createCombinedModelBrain = async (): Promise<INeuralNetwork> => {
   if (combinedModelCache) {
     console.log(`Usando modelo combinado en cache (generación ${combinedModelCache.getGeneration()})`);
     
-    // Use global generation
-    const globalGen = getCurrentGeneration();
+    // Use global generation with a cap to prevent extremely high values
+    const globalGen = Math.min(getCurrentGeneration(), 100);
     console.log(`🔵 BLUE SNAKE: Using global generation ${globalGen} 🔵`);
     
     // Higher mutation rate for combined model (0.35)
@@ -101,22 +101,22 @@ export const createCombinedModelBrain = async (): Promise<INeuralNetwork> => {
         setCombinedModelCache(combinedModel);
         console.log(`Modelo combinado creado (generación ${combinedModel.getGeneration()})`);
         
-        // Use global generation
-        const globalGen = getCurrentGeneration();
+        // Use global generation with cap
+        const globalGen = Math.min(getCurrentGeneration(), 100);
         console.log(`🔵 BLUE SNAKE: Using global generation ${globalGen} 🔵`);
         
         // Higher mutation rate
         const brain = combinedModel.clone(0.35);
         
-        // Force update to global generation
+        // Force update to global generation with cap
         brain.updateGeneration(globalGen);
         
         console.log(`🔵 BLUE SNAKE: Loaded combined model brain with generation ${brain.getGeneration()} 🔵`);
         return brain;
       } else {
         console.log("No se pudo combinar modelos, creando uno nuevo");
-        // Use global generation
-        const globalGen = getCurrentGeneration();
+        // Use global generation with cap
+        const globalGen = Math.min(getCurrentGeneration(), 100);
         const brain = new NeuralNetwork(8, 12, 4);
         brain.updateGeneration(globalGen);
         
@@ -126,8 +126,8 @@ export const createCombinedModelBrain = async (): Promise<INeuralNetwork> => {
       }
     } catch (combineError) {
       console.error("Error combining models:", combineError);
-      // Use global generation
-      const globalGen = getCurrentGeneration();
+      // Use global generation with cap
+      const globalGen = Math.min(getCurrentGeneration(), 100);
       const brain = new NeuralNetwork(8, 12, 4);
       brain.updateGeneration(globalGen);
       
@@ -146,13 +146,13 @@ export const createRandomBrain = (baseId: number): INeuralNetwork => {
     // Create a mutated clone from one of our base models
     console.log(`Creando un nuevo modelo con mutaciones para la serpiente ${baseId} (generación ${currentGeneration})`);
     
-    // Use global generation directly
-    const globalGen = getCurrentGeneration();
+    // Use global generation directly with cap
+    const globalGen = Math.min(getCurrentGeneration(), 100);
     
     // Higher mutation rate for random models (0.4)
     const brain = baseModel.clone(0.4);
     
-    // Force update to global generation
+    // Force update to global generation with cap
     brain.updateGeneration(globalGen);
     
     // Apply higher mutation rate for exploration
@@ -166,8 +166,8 @@ export const createRandomBrain = (baseId: number): INeuralNetwork => {
     
     const brain = new NeuralNetwork(8, 12, 4);
     
-    // Force global generation
-    const globalGen = getCurrentGeneration();
+    // Force global generation with cap
+    const globalGen = Math.min(getCurrentGeneration(), 100);
     brain.updateGeneration(globalGen);
     
     brain.mutate(0.5); // Higher mutation for new models
@@ -176,3 +176,4 @@ export const createRandomBrain = (baseId: number): INeuralNetwork => {
     return brain;
   }
 };
+

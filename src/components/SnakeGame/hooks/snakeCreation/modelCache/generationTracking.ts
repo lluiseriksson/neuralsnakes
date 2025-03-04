@@ -7,13 +7,19 @@ import { getModelCache } from './cacheManagement';
 // Start generation at 1 for more intuitive progression
 let currentGeneration = 1; 
 
+// Add a maximum generation cap to prevent unusually high values
+const MAX_GENERATION = 100;
+
 export const getCurrentGeneration = (): number => {
-  return currentGeneration;
+  // Apply cap when returning the generation to ensure consistency
+  return Math.min(currentGeneration, MAX_GENERATION);
 };
 
 export const incrementGeneration = (): number => {
   // More predictable incrementation - always increment by 1
   currentGeneration += 1;
+  // Apply cap to prevent extremely high values
+  currentGeneration = Math.min(currentGeneration, MAX_GENERATION);
   resetGamesSinceLastIncrement();
   console.log(`⚡ Generation incrementally increased to ${currentGeneration} ⚡`);
   
@@ -27,6 +33,8 @@ export const incrementGeneration = (): number => {
 export const incrementGenerationAfterVictory = (): number => {
   // Larger generation boost for victories
   currentGeneration += 3;
+  // Apply cap to prevent extremely high values
+  currentGeneration = Math.min(currentGeneration, MAX_GENERATION);
   resetGamesSinceLastIncrement();
   console.log(`🏆 Generation boosted to ${currentGeneration} after victory 🏆`);
   
@@ -37,10 +45,12 @@ export const incrementGenerationAfterVictory = (): number => {
 };
 
 export const updateCurrentGeneration = (generation: number): number => {
-  // Always take the highest generation value
-  if (generation > currentGeneration) {
-    console.log(`⚡ Generation updated from ${currentGeneration} to ${generation} ⚡`);
-    currentGeneration = generation;
+  // Always take the highest generation value, but cap it
+  const cappedGeneration = Math.min(generation, MAX_GENERATION);
+  
+  if (cappedGeneration > currentGeneration) {
+    console.log(`⚡ Generation updated from ${currentGeneration} to ${cappedGeneration} ⚡`);
+    currentGeneration = cappedGeneration;
     resetGamesSinceLastIncrement();
     
     // Also update model caches with the new generation
@@ -63,8 +73,8 @@ export const advanceGenerationBasedOnMetrics = (
   // More predictable generation boost - always increment by 1 for each apple eaten plus bonus
   const generationBoost = Math.min(3, 1 + applesEaten);
   
-  // Update to new generation
-  const newGeneration = currentGeneration + generationBoost;
+  // Update to new generation with cap
+  const newGeneration = Math.min(currentGeneration + generationBoost, MAX_GENERATION);
   
   console.log(`⚡ Advanced generation from ${currentGeneration} to ${newGeneration} based on metrics ⚡`);
   console.log(`Performance metrics: score=${score}, apples=${applesEaten}, kills=${kills}, deaths=${deaths}, suicides=${suicides}`);
@@ -105,28 +115,37 @@ const calculatePerformanceIndex = (
 };
 
 export const forceGenerationUpdate = (generation: number): number => {
+  // Apply cap to input generation first
+  const cappedGeneration = Math.min(generation, MAX_GENERATION);
+  
   // More predictable boost when forcing updates - increment by 1
-  const newGeneration = Math.max(generation, currentGeneration + 1);
-  console.log(`⚡ Generation forcefully set from ${currentGeneration} to ${newGeneration} ⚡`);
-  currentGeneration = newGeneration;
+  const newGeneration = Math.max(cappedGeneration, currentGeneration + 1);
+  // Apply final cap to ensure we never exceed MAX_GENERATION
+  const finalGeneration = Math.min(newGeneration, MAX_GENERATION);
+  
+  console.log(`⚡ Generation forcefully set from ${currentGeneration} to ${finalGeneration} ⚡`);
+  currentGeneration = finalGeneration;
   resetGamesSinceLastIncrement();
   
   // Update the model caches with the new generation
-  updateModelCachesGeneration(newGeneration);
+  updateModelCachesGeneration(finalGeneration);
   
   return currentGeneration;
 };
 
 // Update model cache generations
 const updateModelCachesGeneration = (newGeneration: number): void => {
+  // Apply cap to ensure consistency
+  const cappedGeneration = Math.min(newGeneration, MAX_GENERATION);
+  
   const { bestModelCache, combinedModelCache } = getModelCache();
   
   if (bestModelCache) {
-    bestModelCache.updateGeneration(newGeneration);
+    bestModelCache.updateGeneration(cappedGeneration);
     console.log(`Best model cache generation updated to ${bestModelCache.getGeneration()}`);
   }
   if (combinedModelCache) {
-    combinedModelCache.updateGeneration(newGeneration);
+    combinedModelCache.updateGeneration(cappedGeneration);
     console.log(`Combined model cache generation updated to ${combinedModelCache.getGeneration()}`);
   }
 };
@@ -146,3 +165,4 @@ export const purgeAllModelCaches = (): void => {
     console.error("Error importing resetModelCaches:", error);
   });
 };
+
