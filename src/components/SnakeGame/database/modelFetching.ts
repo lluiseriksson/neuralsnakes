@@ -30,8 +30,13 @@ export const fetchBestModelFromDb = async (): Promise<NeuralNetworkModel | null>
     
     // Convert to NeuralNetworkModel format
     const rawModel = data[0];
-    const best_score = rawModel.metadata?.best_score || rawModel.score || 0;
-    const games_played = rawModel.metadata?.games_played || 0;
+    
+    // Safely extract metadata values
+    const metadata = rawModel.metadata as Record<string, any> || {};
+    const best_score = typeof metadata === 'object' && metadata ? 
+      (metadata.best_score || rawModel.score || 0) : (rawModel.score || 0);
+    const games_played = typeof metadata === 'object' && metadata ? 
+      (metadata.games_played || 0) : 0;
     
     const model: NeuralNetworkModel = {
       id: rawModel.id,
@@ -42,7 +47,7 @@ export const fetchBestModelFromDb = async (): Promise<NeuralNetworkModel | null>
       updated_at: rawModel.updated_at,
       best_score: best_score,
       games_played: games_played,
-      metadata: rawModel.metadata
+      metadata: metadata
     };
     
     // Update localStorage cache
@@ -85,8 +90,12 @@ export const fetchAllModelsFromDb = async (): Promise<NeuralNetworkModel[]> => {
     
     // Convert to NeuralNetworkModel format
     const models: NeuralNetworkModel[] = data.map(rawModel => {
-      const best_score = rawModel.metadata?.best_score || rawModel.score || 0;
-      const games_played = rawModel.metadata?.games_played || 0;
+      // Safely extract metadata values
+      const metadata = rawModel.metadata as Record<string, any> || {};
+      const best_score = typeof metadata === 'object' && metadata ? 
+        (metadata.best_score || rawModel.score || 0) : (rawModel.score || 0);
+      const games_played = typeof metadata === 'object' && metadata ? 
+        (metadata.games_played || 0) : 0;
       
       return {
         id: rawModel.id,
@@ -97,7 +106,7 @@ export const fetchAllModelsFromDb = async (): Promise<NeuralNetworkModel[]> => {
         updated_at: rawModel.updated_at,
         best_score: best_score,
         games_played: games_played,
-        metadata: rawModel.metadata
+        metadata: metadata
       };
     });
     
