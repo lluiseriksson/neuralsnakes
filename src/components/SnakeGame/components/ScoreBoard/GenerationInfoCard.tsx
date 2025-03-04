@@ -13,7 +13,7 @@ const GenerationInfoCard: React.FC<GenerationInfoCardProps> = ({
   progress 
 }) => {
   // Ensure best score is always displayed as an integer and is at least 0
-  const displayScore = Math.max(0, Math.round(bestScore));
+  const displayScore = Math.max(0, Math.floor(bestScore));
   
   return (
     <div className="bg-gray-800 p-3 rounded-lg text-white">

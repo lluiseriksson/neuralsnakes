@@ -44,7 +44,6 @@ const GenerationInfo: React.FC<GenerationInfoProps> = ({
       </div>
       
       <div className="mt-2 text-sm text-gray-300 flex justify-between">
-        <span>Learning: {displayProgress}%</span>
         <span>Active: {snakeCount}</span>
         <span>Apples: {appleCount}</span>
       </div>

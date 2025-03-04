@@ -1,4 +1,3 @@
-
 import { Snake } from '../../types';
 import { getCurrentGeneration, getHighestScore } from '../snakeCreation/modelCache';
 

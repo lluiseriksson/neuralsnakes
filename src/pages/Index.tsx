@@ -8,7 +8,6 @@ import { Snake } from "../components/SnakeGame/types";
 import GameVisualizer from "../components/SnakeGame/components/GameVisualizer";
 import SnakeVisualizer from "../components/SnakeGame/components/SnakeVisualizer";
 import GenerationInfo from "../components/SnakeGame/components/GenerationInfo";
-import LearningHistory from "../components/SnakeGame/components/LearningHistory";
 
 const Index = () => {
   const [activeSnake, setActiveSnake] = useState<Snake | null>(null);
@@ -79,8 +78,6 @@ const Index = () => {
             activeSnake={activeSnake}
             onSelectSnake={handleSelectSnake}
           />
-          
-          {/* Removed LearningHistory component since it's not working properly */}
           
           <GenerationInfo
             generation={generationInfo.generation}
