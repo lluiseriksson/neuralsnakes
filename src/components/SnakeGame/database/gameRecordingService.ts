@@ -1,4 +1,4 @@
 
-// Re-export from new module structure with proper type exports
-export { GameRecorder } from './recording/GameRecorder';
+// Re-export from existing files with proper type exports
+export { GameRecorder } from '../database/recording/index';
 export type { GameRecordingData, GameRecording } from './recording/types';
