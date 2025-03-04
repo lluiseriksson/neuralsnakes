@@ -19,7 +19,6 @@ const Index = () => {
     startTime, 
     generationInfo, 
     initializeGame, 
-    restartGame, 
     isGameRunning
   } = useGameLogic();
   const { toast } = useToast();
@@ -32,7 +31,7 @@ const Index = () => {
     
     try {
       toast({
-        title: "Iniciando juego",
+        title: "Iniciando nueva generación",
         description: "Generando serpientes y preparando el tablero..."
       });
       
@@ -40,7 +39,7 @@ const Index = () => {
       console.log("Inicialización completada desde Index");
       
       toast({
-        title: "¡Juego iniciado!",
+        title: "¡Nueva generación iniciada!",
         description: `${gameState.snakes?.length || 0} serpientes están listas para competir (Generación ${generationInfo.generation})`
       });
     } catch (error) {
@@ -139,9 +138,7 @@ const Index = () => {
       
       <GameControls
         onInitializeGame={handleInitializeGame}
-        onRestartGame={restartGame}
         isInitializing={isInitializing}
-        isGameRunning={isGameRunning}
       />
     </div>
   );

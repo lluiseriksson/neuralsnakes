@@ -6,11 +6,11 @@ export const drawLearningHistory = (
   learningEvents: LearningEvent[],
   canvas: HTMLCanvasElement
 ) => {
-  // Draw a small learning history chart at the bottom
+  // Draw a small learning history chart at the bottom - moved lower to avoid text overlap
   const chartStartX = 40;
   const chartWidth = canvas.width - 80;
-  const chartY = canvas.height - 40; // Moved up slightly
-  const chartHeight = 30;
+  const chartY = canvas.height - 25; // Moved further down to avoid text overlap
+  const chartHeight = 20; // Made smaller to avoid text overlap
   
   // Background for chart with rounded corners
   ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
@@ -95,20 +95,20 @@ export const drawLearningHistory = (
     }
   });
   
-  // Draw legend
+  // Simplified legend to save space
   ctx.font = '8px Arial';
   ctx.fillStyle = '#AAA';
   ctx.textAlign = 'left';
   ctx.fillText('Rewards:', chartStartX, chartY + 10);
   
-  // Legend color boxes
+  // Legend color boxes (made smaller)
   ctx.fillStyle = '#4CAF50';
-  ctx.fillRect(chartStartX + 45, chartY + 5, 8, 8);
+  ctx.fillRect(chartStartX + 45, chartY + 5, 6, 6);
   ctx.fillStyle = '#AAA';
-  ctx.fillText('Good', chartStartX + 55, chartY + 10);
+  ctx.fillText('Good', chartStartX + 53, chartY + 10);
   
   ctx.fillStyle = '#F44336';
-  ctx.fillRect(chartStartX + 85, chartY + 5, 8, 8);
+  ctx.fillRect(chartStartX + 85, chartY + 5, 6, 6);
   ctx.fillStyle = '#AAA';
-  ctx.fillText('Bad', chartStartX + 95, chartY + 10);
+  ctx.fillText('Bad', chartStartX + 93, chartY + 10);
 };

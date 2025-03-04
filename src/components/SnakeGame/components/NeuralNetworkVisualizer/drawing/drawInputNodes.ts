@@ -16,10 +16,16 @@ export const drawInputNodes = (
   // Add a slight staggered animation effect
   const time = Date.now() / 1000;
   
+  // Increase space between inputs for better readability
+  const adjustedSpacing = inputSpacing + 2;
+  
   nodeValues.inputs.forEach((value, index) => {
     // Calculate y position with slight oscillation for visual appeal
-    const oscillation = Math.sin(time + index * 0.3) * 2;
-    const y = inputStartY + (index * inputSpacing) + oscillation;
+    const oscillation = Math.sin(time + index * 0.3) * 1.5; // Reduced oscillation
+    const y = inputStartY + (index * adjustedSpacing) + oscillation;
+    
+    // Move input nodes slightly to the right to make room for labels
+    const adjustedX = inputLayerX + 10;
     
     // Custom styling for input nodes
     const nodeOptions: NodeStylingOptions = {
@@ -32,7 +38,7 @@ export const drawInputNodes = (
     
     const position = drawNode(
       ctx, 
-      inputLayerX, 
+      adjustedX, 
       y, 
       value, 
       nodeValues.inputLabels[index], 
