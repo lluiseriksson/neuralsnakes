@@ -79,24 +79,25 @@ export const generateAppleExplosion = (snake: Snake): Apple[] => {
   
   console.log(`Generating apple explosion for snake ${snake.id} with ${snake.positions.length} segments`);
   
-  // Generate apples only for valid positions within grid bounds
-  const explosionApples = snake.positions
-    .filter(position => {
-      // Skip positions that would be off the grid
-      // The grid size is typically defined in the snake itself or is a constant (30)
-      const gridSize = snake.gridSize || 30;
-      return (
-        position.x >= 0 && 
-        position.x < gridSize && 
-        position.y >= 0 && 
-        position.y < gridSize
-      );
-    })
-    .map((position, index) => ({
+  // The grid size is typically defined in the snake or is a constant (30)
+  const gridSize = snake.gridSize || 30;
+  
+  // Generate apples for every segment position 
+  // We don't filter out positions that would be off the grid because we handle
+  // wraparound in the position generation
+  const explosionApples = snake.positions.map((position, index) => {
+    // Ensure position is within grid bounds by using modulo
+    const safePosition = {
+      x: ((position.x % gridSize) + gridSize) % gridSize,
+      y: ((position.y % gridSize) + gridSize) % gridSize
+    };
+    
+    return {
       id: Date.now() + index * 10, // Ensure unique IDs for each apple
-      position: { ...position },
+      position: safePosition,
       type: 'B' // Mark as type B apple from collision
-    }));
+    };
+  });
   
   console.log(`Generated ${explosionApples.length} new type B apples from snake ${snake.id}`);
   return explosionApples;

@@ -28,61 +28,55 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
   
   // Process snake-to-snake collisions
   const snakesBeforeCollisions = [...updatedSnakes];
-  const collidedSnakes = new Set<number>(); // Track which snakes collided for apple generation
+  const headToHeadCollisions = new Set<number>(); // Track which snakes had head-to-head collisions
   
-  // First identify all collisions before modifying the snakes
+  // Identify head-to-head collisions before processing
   for (let i = 0; i < updatedSnakes.length; i++) {
     const snake = updatedSnakes[i];
     if (!snake.alive) continue;
     
     const head = snake.positions[0];
     
-    // Check collisions with other snakes
-    for (let j = 0; j < updatedSnakes.length; j++) {
-      if (i === j || !updatedSnakes[j].alive) continue;
-      
+    for (let j = i + 1; j < updatedSnakes.length; j++) {
       const otherSnake = updatedSnakes[j];
+      if (!otherSnake.alive) continue;
+      
+      const otherHead = otherSnake.positions[0];
       
       // Check for head-to-head collision
-      if (head.x === otherSnake.positions[0].x && head.y === otherSnake.positions[0].y) {
-        collidedSnakes.add(i);
-        collidedSnakes.add(j);
-        console.log(`Head-to-head collision between Snake ${snake.id} and Snake ${otherSnake.id}`);
-      }
-      
-      // Check for head-to-body collision
-      for (let k = 1; k < otherSnake.positions.length; k++) {
-        if (head.x === otherSnake.positions[k].x && head.y === otherSnake.positions[k].y) {
-          collidedSnakes.add(i);
-          console.log(`Snake ${snake.id} collided with body of Snake ${otherSnake.id}`);
-        }
+      if (head.x === otherHead.x && head.y === otherHead.y) {
+        headToHeadCollisions.add(i);
+        headToHeadCollisions.add(j);
+        console.log(`Head-to-head collision between Snake ${snake.id} and Snake ${otherSnake.id} detected in checkCollisions`);
       }
     }
   }
   
+  // Explicitly generate apple explosions for head-to-head collisions before processing other collisions
+  Array.from(headToHeadCollisions).forEach(index => {
+    const snake = updatedSnakes[index];
+    if (snake.alive) {
+      // Generate explosion apples for each head-to-head collision snake
+      const explosionApples = generateAppleExplosion(snake);
+      newApplePositions.push(...explosionApples);
+      console.log(`Head-to-head collision: Snake ${snake.id} generated ${explosionApples.length} explosion apples`);
+    }
+  });
+  
+  // Process all collisions including head-to-head
   updatedSnakes = checkSnakeCollisions(updatedSnakes);
   
-  // Generate apple explosions for snake-vs-snake collisions
+  // Generate apple explosions for other snake-vs-snake collisions
   for (let i = 0; i < snakesBeforeCollisions.length; i++) {
     const snakeBefore = snakesBeforeCollisions[i];
     const snakeAfter = updatedSnakes[i];
     
-    // If a snake was alive before and is now dead, generate apples
-    if (snakeBefore.alive && !snakeAfter.alive) {
+    // If a snake was alive before and is now dead and it wasn't a head-to-head collision
+    if (snakeBefore.alive && !snakeAfter.alive && !headToHeadCollisions.has(i)) {
       // Generate apples equal to the snake's segments
       const explosionApples = generateAppleExplosion(snakeBefore);
       newApplePositions.push(...explosionApples);
       console.log(`Snake ${snakeBefore.id} collision generated ${explosionApples.length} apples`);
-    }
-    
-    // For head-to-head collisions, ensure both snakes generate apples
-    if (collidedSnakes.has(i) && snakeBefore.alive) {
-      // Only generate if we haven't already due to the alive check above
-      if (snakeAfter.alive) {
-        const explosionApples = generateAppleExplosion(snakeBefore);
-        newApplePositions.push(...explosionApples);
-        console.log(`Snake ${snakeBefore.id} head collision generated ${explosionApples.length} apples`);
-      }
     }
   }
   
