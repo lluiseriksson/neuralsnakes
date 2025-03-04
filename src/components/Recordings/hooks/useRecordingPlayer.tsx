@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from "../../../components/ui/use-toast";
 import { GameRecording } from "../../SnakeGame/database/gameRecordingService";
@@ -63,8 +62,9 @@ export function useRecordingPlayer() {
           } catch (error) {
             console.error("Error calling getGeneration:", error);
           }
-        } else if (snake.brain.generation !== undefined) {
-          generation = Number(snake.brain.generation);
+        } else if (snake.brain && typeof snake.brain.getGeneration === 'function') {
+          // Fix: Use getGeneration() method instead of accessing property directly
+          generation = snake.brain.getGeneration();
         }
       }
       
