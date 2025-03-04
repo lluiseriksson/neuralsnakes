@@ -1,4 +1,3 @@
-
 import { NeuralNetwork as INeuralNetwork } from "./types";
 import { NeuralNetworkCore } from "./NeuralNetwork/NeuralNetworkCore";
 import { applyLearning, cloneNetwork, mutateNetwork } from "./NeuralNetwork/NeuralNetworkLearning";
@@ -129,6 +128,11 @@ export class NeuralNetwork implements INeuralNetwork {
 
   async saveTrainingData(inputs: number[], outputs: number[], success: boolean): Promise<void> {
     await this.core.saveTrainingData(inputs, outputs, success);
+  }
+
+  // Set score
+  setScore(score: number): void {
+    this.core.setScore(score);
   }
 
   // Static methods for model management

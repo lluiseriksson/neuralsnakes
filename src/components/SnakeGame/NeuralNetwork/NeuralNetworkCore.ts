@@ -1,4 +1,3 @@
-
 import { NeuralNetwork as INeuralNetwork } from "../types";
 import { deserializeWeights, serializeWeights, generateRandomWeights } from "../NeuralNetworkMatrix";
 import { applyLearning, cloneNetwork, mutateNetwork } from "./NeuralNetworkLearning";
@@ -162,5 +161,9 @@ export class NeuralNetworkCore implements INeuralNetwork {
 
   trackLearningAttempt(success: boolean): void {
     this.stats.trackLearningAttempt(success);
+  }
+
+  setScore(score: number): void {
+    this.stats.setScore(score);
   }
 }

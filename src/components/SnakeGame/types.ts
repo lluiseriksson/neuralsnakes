@@ -1,4 +1,3 @@
-
 export type Position = {
   x: number;
   y: number;
@@ -24,6 +23,7 @@ export interface NeuralNetwork {
   saveTrainingData: (inputs: number[], outputs: number[], success: boolean) => Promise<void>;
   // Performance stats for analysis
   getPerformanceStats: () => { learningAttempts: number, successfulMoves: number, failedMoves: number };
+  setScore: (score: number) => void;
 }
 
 // Learning event for visualization and analysis

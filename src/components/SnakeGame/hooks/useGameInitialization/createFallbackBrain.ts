@@ -23,7 +23,9 @@ export const createFallbackBrain = (): NeuralNetwork => {
     mutate: () => {},
     getGamesPlayed: () => 0,
     saveTrainingData: async () => {},
-    getPerformanceStats: () => ({ learningAttempts: 0, successfulMoves: 0, failedMoves: 0 })
+    getPerformanceStats: () => ({ learningAttempts: 0, successfulMoves: 0, failedMoves: 0 }),
+    // Add the missing setScore method
+    setScore: () => {}
   };
 
   return fallbackBrain;
