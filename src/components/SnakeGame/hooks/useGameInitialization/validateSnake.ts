@@ -9,6 +9,7 @@ export const validateAndFixSnake = (snake: Snake): Snake => {
     console.error(`Snake ${snake.id} does not have valid positions, applying correction`);
     const [spawnX, spawnY] = generateSnakeSpawnConfig(snake.id);
     snake.positions = [{x: spawnX, y: spawnY}, {x: spawnX, y: spawnY+1}, {x: spawnX, y: spawnY+2}];
+    console.log(`Fixed snake ${snake.id} positions: now at (${spawnX}, ${spawnY})`);
   }
   
   // Check if the brain has all required functions
@@ -27,6 +28,11 @@ export const validateAndFixSnake = (snake: Snake): Snake => {
       direction as Direction, 
       snake.color
     );
+  }
+  
+  // Initialize movesWithoutEating if it doesn't exist
+  if (snake.movesWithoutEating === undefined) {
+    snake.movesWithoutEating = 0;
   }
   
   return snake;

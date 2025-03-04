@@ -42,6 +42,7 @@ export const handleRespawn = (snakes: Snake[]): Snake[] => {
       updatedSnakes[i].color = color;
       updatedSnakes[i].alive = true; // Critical: Set alive to true immediately
       updatedSnakes[i].score = 0; // Reset score for respawned snake
+      updatedSnakes[i].movesWithoutEating = 0; // Reset movesWithoutEating counter
       
       console.log(`Snake ${snake.id} (${color}) temporarily respawned at (${spawnX},${spawnY})`);
       
@@ -57,6 +58,7 @@ export const handleRespawn = (snakes: Snake[]): Snake[] => {
                   Object.assign(updatedSnakes[snakeIndex], newSnake);
                   updatedSnakes[snakeIndex].alive = true; // Ensure alive is set again
                   updatedSnakes[snakeIndex].score = 0; // Reset score again to be sure
+                  updatedSnakes[snakeIndex].movesWithoutEating = 0; // Reset counter again
                   console.log(`Snake ${snake.id} (${color}) fully respawned with generation ${newSnake.brain.getGeneration()}`);
                 } else {
                   console.error(`Created snake ${snake.id} has invalid brain, keeping fallback values`);
