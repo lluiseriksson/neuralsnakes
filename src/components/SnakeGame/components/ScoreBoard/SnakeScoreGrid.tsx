@@ -25,12 +25,34 @@ const SnakeScoreGrid: React.FC<SnakeScoreGridProps> = ({ snakes, snakeScores }) 
       
       // Also update from snake objects directly to catch all updates
       snakes.forEach(snake => {
-        newScores[snake.id] = Math.max(snake.score, newScores[snake.id] || 0);
+        if (snake.score !== undefined) {
+          newScores[snake.id] = Math.max(snake.score, newScores[snake.id] || 0);
+        }
       });
       
       return newScores;
     });
   }, [snakes, snakeScores]);
+
+  // Add a polling mechanism to ensure scores are always up-to-date
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setLocalScores(prevScores => {
+        const newScores = { ...prevScores };
+        
+        // Update directly from snake objects
+        snakes.forEach(snake => {
+          if (snake.score !== undefined && snake.score !== newScores[snake.id]) {
+            newScores[snake.id] = snake.score;
+          }
+        });
+        
+        return newScores;
+      });
+    }, 500); // Check every 500ms
+    
+    return () => clearInterval(intervalId);
+  }, [snakes]);
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -38,7 +60,7 @@ const SnakeScoreGrid: React.FC<SnakeScoreGridProps> = ({ snakes, snakeScores }) 
         <SnakeScoreCard 
           key={snake.id} 
           snake={snake} 
-          score={localScores[snake.id] || snake.score}
+          score={localScores[snake.id] || snake.score || 0}
         />
       ))}
     </div>

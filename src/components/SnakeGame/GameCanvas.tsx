@@ -1,8 +1,6 @@
-
 import React, { useState, useCallback } from 'react';
 import { GameState, Snake } from './types';
 import { CELL_SIZE, GRID_SIZE } from './constants';
-import GenerationTracker from './components/GenerationTracker';
 import CanvasRenderer from './canvas/CanvasRenderer';
 import LoadingOverlay from './canvas/LoadingOverlay';
 
@@ -23,14 +21,12 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
   const hasSnakes = gameState.snakes && gameState.snakes.length > 0;
   const [selectedSnakeId, setSelectedSnakeId] = useState<number | null>(null);
 
-  // Handle snake selection from canvas clicks
   const handleSelectSnake = useCallback((event: Event) => {
     const customEvent = event as CustomEvent;
     if (customEvent.detail && customEvent.detail.snakeId !== undefined) {
       const snakeId = customEvent.detail.snakeId;
       setSelectedSnakeId(snakeId);
       
-      // Find the selected snake
       const selectedSnake = gameState.snakes.find(s => s.id === snakeId);
       if (selectedSnake && onSelectSnake) {
         onSelectSnake(selectedSnake);
@@ -38,7 +34,6 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     }
   }, [gameState.snakes, onSelectSnake]);
 
-  // Add event listener for custom selectSnake events
   React.useEffect(() => {
     document.addEventListener('selectSnake', handleSelectSnake);
     return () => {
@@ -46,7 +41,6 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     };
   }, [handleSelectSnake]);
 
-  // Get the selected snake for additional info display
   const selectedSnake = selectedSnakeId !== null 
     ? gameState.snakes.find(s => s.id === selectedSnakeId) 
     : null;
@@ -61,10 +55,6 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
       />
       
       {!hasSnakes && <LoadingOverlay />}
-      
-      {hasSnakes && !isRecording && (
-        <GenerationTracker snakes={gameState.snakes} />
-      )}
       
       {selectedSnakeId !== null && selectedSnake && (
         <div className="absolute top-3 left-3 bg-black bg-opacity-90 backdrop-blur-md text-white px-4 py-3 text-sm rounded-lg border border-gray-700 shadow-lg animate-fade-in">

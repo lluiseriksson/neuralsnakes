@@ -1,9 +1,7 @@
-
 import React, { useCallback, useEffect, useState } from "react";
 import { useGameLogic } from "../components/SnakeGame/hooks/useGameLogic";
 import ScoreBoard from "../components/SnakeGame/ScoreBoard";
 import VictoryDisplay from "../components/SnakeGame/components/VictoryDisplay";
-import GenerationTracker from "../components/SnakeGame/components/GenerationTracker";
 import { useToast } from "../components/ui/use-toast";
 import { Snake } from "../components/SnakeGame/types";
 import GameVisualizer from "../components/SnakeGame/components/GameVisualizer";
@@ -116,7 +114,6 @@ const Index = () => {
     setActiveSnake(snake);
   };
   
-  // Update the dynamic content for the evolution system
   useEffect(() => {
     const currentGenElement = document.getElementById('current-gen');
     const bestScoreElement = document.getElementById('best-score');
@@ -134,10 +131,6 @@ const Index = () => {
       <h1 className="text-3xl font-bold mb-4 text-white bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">Snake AI Battle</h1>
       
       <VictoryDisplay victories={victories} />
-      
-      {gameState.snakes && gameState.snakes.length > 0 && (
-        <GenerationTracker snakes={gameState.snakes} />
-      )}
       
       <div className="flex flex-col lg:flex-row gap-6 items-start mt-2">
         <GameVisualizer 
