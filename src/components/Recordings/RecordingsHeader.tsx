@@ -2,12 +2,19 @@
 import React from "react";
 import { Button } from "../../components/ui/button";
 import { Separator } from "../../components/ui/separator";
+import { UploadCloud, RefreshCw } from "lucide-react";
 
 interface RecordingsHeaderProps {
   onRefresh: () => void;
+  showUploader: boolean;
+  onToggleUploader: () => void;
 }
 
-const RecordingsHeader: React.FC<RecordingsHeaderProps> = ({ onRefresh }) => {
+const RecordingsHeader: React.FC<RecordingsHeaderProps> = ({ 
+  onRefresh, 
+  showUploader, 
+  onToggleUploader 
+}) => {
   return (
     <>
       <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
@@ -22,13 +29,24 @@ const RecordingsHeader: React.FC<RecordingsHeaderProps> = ({ onRefresh }) => {
               Descarga las partidas para analizarlas o reproducirlas en otra aplicación
             </p>
           </div>
-          <Button
-            onClick={onRefresh}
-            variant="outline"
-            className="border-gray-700"
-          >
-            Actualizar
-          </Button>
+          <div className="flex space-x-2">
+            <Button
+              onClick={onToggleUploader}
+              variant="outline"
+              className={`border-gray-700 ${showUploader ? 'bg-purple-900/30 text-purple-300 border-purple-700' : ''}`}
+            >
+              <UploadCloud className="w-4 h-4 mr-1" />
+              {showUploader ? 'Ocultar uploader' : 'Cargar grabación'}
+            </Button>
+            <Button
+              onClick={onRefresh}
+              variant="outline"
+              className="border-gray-700"
+            >
+              <RefreshCw className="w-4 h-4 mr-1" />
+              Actualizar
+            </Button>
+          </div>
         </div>
         
         <Separator className="my-4 bg-gray-800" />
