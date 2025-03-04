@@ -37,6 +37,7 @@ export const wouldCollide = (newHead: Position, snake: Snake, gameState: GameSta
   
   // Check boundary collisions if the grid size is defined
   if (gameState.gridSize) {
+    // Make sure to validate against a proper boundary
     if (newHead.x < 0 || newHead.x >= gameState.gridSize || 
         newHead.y < 0 || newHead.y >= gameState.gridSize) {
       console.log(`Detected boundary collision for snake ${snake.id} at (${newHead.x},${newHead.y})`);

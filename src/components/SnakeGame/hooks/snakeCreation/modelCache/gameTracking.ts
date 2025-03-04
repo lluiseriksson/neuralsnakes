@@ -9,7 +9,7 @@ const GAMES_TO_FORCE_INCREMENT = 1;
 
 // Track games since last complete reset
 let gamesSinceLastReset = 0;
-const GAMES_TO_FORCE_RESET = 15; // Increased for better stability
+const GAMES_TO_FORCE_RESET = 20; // Increased for better stability
 
 export const getGamesSinceLastIncrement = (): number => {
   return gamesSinceLastIncrement;
@@ -38,13 +38,21 @@ export const trackGamePlayed = (): number => {
   // Check if we should do a complete neural network reset
   if (gamesSinceLastReset >= GAMES_TO_FORCE_RESET) {
     console.log(`🔄 Forcing complete neural network reset after ${GAMES_TO_FORCE_RESET} games 🔄`);
-    purgeAllModelCaches();
-    gamesSinceLastReset = 0;
-    // After reset, immediately return the new generation
-    return getCurrentGeneration();
+    
+    // Use the purgeAllModelCaches function but handle it safely
+    try {
+      purgeAllModelCaches();
+      gamesSinceLastReset = 0;
+      // After reset, immediately return the new generation
+      return getCurrentGeneration();
+    } catch (error) {
+      console.error("Error during model cache purge:", error);
+      // If reset fails, still increment generation to ensure progress
+      return incrementGeneration();
+    }
   }
   
-  // ALWAYS Force generation increment after every game - fixed to ensure generation advances
+  // ALWAYS Force generation increment after every game
   console.log(`⚡ Incrementing generation after game ⚡`);
   resetGamesSinceLastIncrement();
   return incrementGeneration();

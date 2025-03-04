@@ -54,6 +54,16 @@ export const processSnakesMovement = (snakes: Snake[], gameState: GameState): Sn
         if (movedSnake.score !== expectedScore) {
           console.log(`Correcting inconsistent score for snake ${movedSnake.id}: ${movedSnake.score} → ${expectedScore}`);
           movedSnake.score = expectedScore;
+          
+          // Also update the brain's score
+          if (movedSnake.brain && typeof movedSnake.brain.setScore === 'function') {
+            movedSnake.brain.setScore(expectedScore);
+          }
+          
+          // Update highest score with this accurate value
+          if (movedSnake.brain && typeof movedSnake.brain.updateBestScore === 'function') {
+            movedSnake.brain.updateBestScore(expectedScore);
+          }
         }
       }
       

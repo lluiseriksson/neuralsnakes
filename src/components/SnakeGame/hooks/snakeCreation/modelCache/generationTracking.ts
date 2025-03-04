@@ -139,7 +139,10 @@ export const purgeAllModelCaches = (): void => {
   currentGeneration = 1;
   console.log(`⚡ Generation reset to ${currentGeneration} to apply new game rules ⚡`);
   
-  // Break circular dependency using dynamic import
-  const resetModelCaches = require('./cacheManagement').resetModelCaches;
-  resetModelCaches();
+  // Fix circular dependency - use dynamic import system
+  import('./cacheManagement').then(module => {
+    module.resetModelCaches();
+  }).catch(error => {
+    console.error("Error importing resetModelCaches:", error);
+  });
 };

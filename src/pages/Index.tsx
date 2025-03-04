@@ -80,7 +80,7 @@ const Index = () => {
             onSelectSnake={handleSelectSnake}
           />
           
-          <LearningHistory activeSnake={activeSnake} />
+          {/* Removed LearningHistory component since it's not working properly */}
           
           <GenerationInfo
             generation={generationInfo.generation}

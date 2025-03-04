@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Snake } from '../../types';
+import { updateHighestScore } from '../../hooks/snakeCreation/modelCache';
 
 interface SnakeScoreCardProps {
   snake: Snake;
@@ -20,6 +21,8 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
       // Update the snake's best score if this is higher
       if (snake.brain && typeof snake.brain.updateBestScore === 'function' && score > 0) {
         snake.brain.updateBestScore(score);
+        // Also update the global highest score
+        updateHighestScore(score);
       }
     }
   }, [score, snake.brain]);
@@ -56,6 +59,8 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
         // Also update the snake's brain best score
         if (snake.brain && typeof snake.brain.updateBestScore === 'function' && displayScore > 0) {
           snake.brain.updateBestScore(displayScore);
+          // Update the global highest score as well
+          updateHighestScore(displayScore);
         }
       }
     } else if (typeof snake.score === 'number' && !isNaN(snake.score) && snake.score !== currentScore) {
@@ -65,6 +70,8 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
       // Also update the snake's brain best score
       if (snake.brain && typeof snake.brain.updateBestScore === 'function' && snake.score > 0) {
         snake.brain.updateBestScore(snake.score);
+        // Update the global highest score as well
+        updateHighestScore(snake.score);
       }
     }
   }, [snake.positions, snake.score, currentScore, snake.id, snake.brain]);
