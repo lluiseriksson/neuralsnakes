@@ -16,8 +16,8 @@ const GenerationInfo: React.FC<GenerationInfoProps> = ({
   snakeCount,
   appleCount
 }) => {
-  // Ensure progress is displayed as a percentage between 0-100
-  // Add minimum 5% progress to show some activity even at the start
+  // Calculate a more accurate display progress percentage
+  // Convert from decimal to percentage and ensure it's between 5-100%
   const displayProgress = Math.max(5, Math.min(Math.round(progress * 100), 100));
   
   // Ensure best score is a whole number for display purposes

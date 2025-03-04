@@ -41,12 +41,6 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
       // Check if the snake.score is valid and higher
       const snakeScore = typeof snake.score === 'number' && !isNaN(snake.score) ? snake.score : 0;
       
-      // Only use the length-based score if it differs significantly from the snake's score
-      // This prevents score jumps during updates
-      if (Math.abs(lengthScore - snakeScore) > 1) {
-        console.log(`Snake ${snake.id} score inconsistency detected: Score: ${snakeScore}, Length-based: ${lengthScore}`);
-      }
-      
       // Use the max of length-based score or stored score
       const displayScore = Math.max(lengthScore, snakeScore);
       
@@ -54,7 +48,7 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
         console.log(`Snake ${snake.id} score updated in UI: ${currentScore} -> ${displayScore}`);
         setCurrentScore(displayScore);
       }
-    } else if (typeof snake.score === 'number' && !isNaN(snake.score) && snake.score > currentScore) {
+    } else if (typeof snake.score === 'number' && !isNaN(snake.score) && snake.score !== currentScore) {
       console.log(`Snake ${snake.id} score updated in UI from properties: ${currentScore} -> ${snake.score}`);
       setCurrentScore(snake.score);
     }

@@ -1,3 +1,4 @@
+
 export class NetworkStats {
   private learningAttempts: number = 0;
   private successfulMoves: number = 0;
@@ -66,8 +67,12 @@ export class NetworkStats {
   }
   
   updateGeneration(generation: number): void {
-    this.generation = Math.max(5, generation);
-    this.learningRate = Math.max(0.05, 0.3 - (this.generation / 1000));
+    if (generation > this.generation) {
+      console.log(`Updating network generation: ${this.generation} -> ${generation}`);
+      this.generation = Math.max(5, generation);
+      // Adjust learning rate based on new generation
+      this.learningRate = Math.max(0.05, 0.3 - (this.generation / 1000));
+    }
   }
   
   getBestScore(): number {
@@ -90,6 +95,7 @@ export class NetworkStats {
   }
   
   getProgressPercentage(): number {
+    // More meaningful progression calculation that scales with generation and score
     const genProgress = Math.min(this.generation / 100, 0.7) * 100;
     const scoreProgress = Math.min(this.bestScore / 20, 0.3) * 100;
     
