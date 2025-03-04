@@ -10,13 +10,21 @@ export const useAnimationLoop = (
   dependencies: any[] = []
 ) => {
   const animationFrameId = useRef<number>();
+  const isRenderingRef = useRef(false);
 
   useEffect(() => {
     if (!isActive) return;
 
     // Set up animation loop
     const render = () => {
-      renderFrame();
+      if (!isRenderingRef.current) {
+        try {
+          isRenderingRef.current = true;
+          renderFrame();
+        } finally {
+          isRenderingRef.current = false;
+        }
+      }
       animationFrameId.current = requestAnimationFrame(render);
     };
     

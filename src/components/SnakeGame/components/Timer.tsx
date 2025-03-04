@@ -8,6 +8,13 @@ interface TimerProps {
 const Timer: React.FC<TimerProps> = ({ startTime }) => {
   const [timeLeft, setTimeLeft] = useState(60);
   const timerRef = useRef<number | null>(null);
+  
+  // Create a custom event for when timer reaches zero
+  const dispatchTimerEndEvent = () => {
+    const timerEndEvent = new CustomEvent('timer-end');
+    window.dispatchEvent(timerEndEvent);
+    console.log('Timer end event dispatched');
+  };
 
   useEffect(() => {
     // Clear any existing interval
@@ -26,9 +33,11 @@ const Timer: React.FC<TimerProps> = ({ startTime }) => {
       const remaining = Math.max(0, 60 - Math.floor(elapsed / 1000));
       setTimeLeft(remaining);
       
-      // Auto-cleanup when time reaches 0
+      // When time reaches 0, dispatch the event and clean up
       if (remaining <= 0 && timerRef.current) {
+        dispatchTimerEndEvent();
         clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     }, 1000);
 
@@ -41,7 +50,7 @@ const Timer: React.FC<TimerProps> = ({ startTime }) => {
   }, [startTime]);
 
   return (
-    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/50 px-4 py-2 rounded-full text-white font-bold text-2xl">
+    <div className="flex items-center justify-center bg-black/50 px-4 py-2 rounded-full text-white font-bold text-2xl">
       {timeLeft}s
     </div>
   );

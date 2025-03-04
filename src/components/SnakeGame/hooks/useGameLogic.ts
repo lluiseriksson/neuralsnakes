@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { useGameState } from './useGameState';
 import { useGameLoop } from './useGameLoop';
@@ -9,7 +8,6 @@ import { useRoundManagement } from './useRoundManagement';
 import { useAppleManagement } from './useAppleManagement';
 
 export const useGameLogic = () => {
-  // Extract game state management
   const {
     gameState,
     setGameState,
@@ -23,16 +21,13 @@ export const useGameLogic = () => {
     setIsGameRunning
   } = useGameState();
 
-  // Extract apple management logic
   const { ensureMinimumApples } = useAppleManagement();
 
-  // Initialize game loop refs
   const gamesPlayedRef = useRef(0);
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingUpdate = useRef(false);
   const frameCountRef = useRef(0);
-  
-  // Extract game initialization logic
+
   const { initializeGame } = useGameInitialization(
     setGameState,
     setStartTime,
@@ -43,7 +38,6 @@ export const useGameLogic = () => {
     gamesPlayedRef
   );
 
-  // Extract round management logic
   const { endRound } = useRoundManagement(
     gameState,
     setVictories,
@@ -53,7 +47,6 @@ export const useGameLogic = () => {
     initializeGame
   );
 
-  // Extract game update logic
   const { updateGame } = useGameUpdate(
     isGameRunning,
     startTime,
@@ -63,13 +56,11 @@ export const useGameLogic = () => {
     ensureMinimumApples
   );
 
-  // Extract game loop logic
   useGameLoop(
     isGameRunning,
     updateGame
   );
 
-  // Extract game controls
   const { restartGame } = useGameControls(
     initializeGame,
     gameLoopRef,
@@ -78,28 +69,35 @@ export const useGameLogic = () => {
     gameState
   );
 
-  // Inicialización inicial - convertida a useCallback para evitar recreaciones
+  useEffect(() => {
+    const handleTimerEnd = () => {
+      if (isGameRunning && !isProcessingUpdate.current) {
+        endRound();
+      }
+    };
+    
+    window.addEventListener('timer-end', handleTimerEnd);
+    
+    return () => {
+      window.removeEventListener('timer-end', handleTimerEnd);
+    };
+  }, [isGameRunning, endRound, isProcessingUpdate]);
+
   const startGame = useCallback(async () => {
     console.log("useGameLogic: Solicitando inicialización inicial del juego");
-    // Asegurarnos de limpiar cualquier loop previo
     if (gameLoopRef.current) {
       clearInterval(gameLoopRef.current);
       gameLoopRef.current = null;
     }
     
-    // Reiniciar el estado de procesamiento antes de inicializar
     isProcessingUpdate.current = false;
     
     try {
       await initializeGame();
       console.log("useGameLogic: Inicialización inicial completada");
-      
-      // Asegurarse explícitamente que el juego comienza a correr
       setIsGameRunning(true);
     } catch (error) {
       console.error("Error crítico en inicialización:", error);
-      
-      // Intentar recuperar el juego en caso de error
       setIsGameRunning(false);
       setTimeout(() => {
         console.log("Intento de recuperación automática después de error");
@@ -108,14 +106,10 @@ export const useGameLogic = () => {
     }
   }, [initializeGame, gameLoopRef, isProcessingUpdate, setIsGameRunning]);
 
-  // Initialize game when component mounts - only once
   useEffect(() => {
-    console.log("useGameLogic: Efecto de montaje ejecutado");
-    // Iniciar con un pequeño retraso para asegurar que los componentes están montados
     const timer = setTimeout(() => {
       startGame().catch(error => {
         console.error("Error en la inicialización inicial:", error);
-        // Intentar reiniciar en caso de error
         setTimeout(startGame, 2000);
       });
     }, 300);
@@ -126,11 +120,9 @@ export const useGameLogic = () => {
         clearInterval(gameLoopRef.current);
         gameLoopRef.current = null;
       }
-      console.log("useGameLogic: Limpieza al desmontar");
     };
   }, [startGame, gameLoopRef]);
 
-  // Devolver tanto initializeGame como restartGame
   return { 
     gameState, 
     victories, 

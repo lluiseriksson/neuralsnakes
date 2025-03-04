@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { GameState } from '../types';
 import { CELL_SIZE } from '../constants';
 import { 
@@ -41,13 +41,13 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   // Canvas setup hook
   useCanvasSetup(canvasRef, width, height);
   
-  // Animation loop hook
-  useAnimationLoop(true, drawGame, [gameState]);
-  
-  // Trigger redraw when gameState changes
-  React.useEffect(() => {
+  // Memoize the drawGame function to prevent infinite re-renders
+  const memoizedDrawGame = useCallback(() => {
     drawGame();
-  }, [gameState]);
+  }, [gameState, drawGame]);
+  
+  // Animation loop hook - only pass the memoized draw function
+  useAnimationLoop(true, memoizedDrawGame, [gameState]);
 
   return (
     <canvas

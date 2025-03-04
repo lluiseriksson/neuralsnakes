@@ -22,6 +22,17 @@ export const useGameLoop = (
       animationFrameRef.current = null;
     }
     
+    // Add timer-end event listener
+    const handleTimerEnd = () => {
+      console.log("Timer ended event received in game loop");
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    };
+    
+    window.addEventListener('timer-end', handleTimerEnd);
+    
     // Only set up the animation if the game is running
     if (isGameRunning) {
       // Animation loop function using requestAnimationFrame for smoother performance
@@ -40,8 +51,10 @@ export const useGameLoop = (
       animationFrameRef.current = requestAnimationFrame(animate);
     }
     
-    // Clean up the animation frame when the component unmounts or when dependencies change
+    // Clean up the animation frame and event listener when the component unmounts or when dependencies change
     return () => {
+      window.removeEventListener('timer-end', handleTimerEnd);
+      
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
         animationFrameRef.current = null;
