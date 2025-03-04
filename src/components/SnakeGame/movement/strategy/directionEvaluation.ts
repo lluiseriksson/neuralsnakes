@@ -1,5 +1,6 @@
 
 import { Snake, Direction } from "../../types";
+import { isOppositeDirection } from '../directionUtils';
 
 /**
  * Evaluates and scores each possible direction for the snake to move
@@ -26,9 +27,6 @@ export const evaluateDirections = (
   // Log predictions for debugging
   console.log(`Snake ${snake.id} (gen: ${snake.brain.getGeneration()}) predictions:`, 
     directions.map((dir, i) => `${dir}: ${predictions[i].toFixed(3)}`).join(', '));
-  
-  // Import the utility to check for opposite directions
-  const { isOppositeDirection } = require('../directionUtils');
   
   // Create a more sophisticated evaluation of each direction
   return directions.map((dir, index) => {
