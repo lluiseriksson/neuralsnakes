@@ -104,11 +104,13 @@ const Index = () => {
   
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 p-4">
-      <h1 className="text-3xl font-bold mb-4 text-white bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">Snake AI Battle</h1>
+      <h1 className="text-4xl font-bold mb-6 text-white bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+        Snake AI Battle
+      </h1>
       
       <VictoryDisplay victories={victories} />
       
-      <div className="flex flex-col lg:flex-row gap-6 items-start mt-2">
+      <div className="flex flex-col lg:flex-row gap-8 items-start mt-4 w-full max-w-[1400px]">
         <GameVisualizer 
           gameState={gameState}
           startTime={startTime}
@@ -116,7 +118,7 @@ const Index = () => {
           onSelectSnake={handleSelectSnake}
         />
         
-        <div className="w-full lg:w-[400px] flex flex-col gap-4">
+        <div className="w-full lg:w-[420px] flex flex-col gap-5">
           <SnakeVisualizer
             snakes={gameState.snakes || []}
             activeSnake={activeSnake}

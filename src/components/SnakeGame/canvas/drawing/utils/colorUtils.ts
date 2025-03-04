@@ -1,13 +1,14 @@
 
 /**
- * Helper function to adjust color brightness
+ * Helper function to adjust color brightness with improved accuracy
  */
 export function getAdjustedColor(hex: string, amount: number): string {
   // Handle named colors
-  if (hex === 'blue') hex = '#0000FF';
-  if (hex === 'green') hex = '#00FF00';
-  if (hex === 'yellow') hex = '#FFFF00';
-  if (hex === '#9b87f5') hex = '#9b87f5'; // Keep purple as is
+  if (hex === 'blue') hex = '#0080FF';
+  if (hex === 'green') hex = '#00D000';
+  if (hex === 'yellow') hex = '#FFDD00';
+  if (hex === 'red') hex = '#FF3030';
+  if (hex === 'purple' || hex === '#9b87f5') hex = '#9b87f5';
   
   // Parse the hex color
   let r = 0, g = 0, b = 0;
@@ -25,15 +26,34 @@ export function getAdjustedColor(hex: string, amount: number): string {
       b = parseInt(cleaned.substring(4, 6), 16);
     }
   } else {
-    // Default to a gray color if parsing fails
-    r = g = b = 128;
+    // Default to a bright color if parsing fails
+    r = 200; g = 200; b = 200;
   }
   
-  // Adjust color
-  r = Math.max(0, Math.min(255, r + amount));
-  g = Math.max(0, Math.min(255, g + amount));
-  b = Math.max(0, Math.min(255, b + amount));
+  // Adjust color with improved algorithm for better contrast
+  if (amount > 0) {
+    // Brightening: emphasize the dominant color channel
+    const max = Math.max(r, g, b);
+    if (max === r) {
+      r = Math.min(255, r + amount * 1.2);
+      g = Math.min(255, g + amount * 0.8);
+      b = Math.min(255, b + amount * 0.8);
+    } else if (max === g) {
+      r = Math.min(255, r + amount * 0.8);
+      g = Math.min(255, g + amount * 1.2);
+      b = Math.min(255, b + amount * 0.8);
+    } else {
+      r = Math.min(255, r + amount * 0.8);
+      g = Math.min(255, g + amount * 0.8);
+      b = Math.min(255, b + amount * 1.2);
+    }
+  } else {
+    // Darkening: maintain color character
+    r = Math.max(0, r + amount);
+    g = Math.max(0, g + amount);
+    b = Math.max(0, b + amount);
+  }
   
-  // Convert back to hex
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  // Convert back to hex with proper padding
+  return `#${Math.round(r).toString(16).padStart(2, '0')}${Math.round(g).toString(16).padStart(2, '0')}${Math.round(b).toString(16).padStart(2, '0')}`;
 }

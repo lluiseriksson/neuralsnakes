@@ -10,7 +10,7 @@ export const drawConnections = (
   selectedOutputIndex: number,
   nodeValues: NodeValues,
   activeSnake: Snake,
-  nodeRadius: number = 12
+  nodeRadius: number = 15
 ) => {
   const selectedOutput = outputPositions[selectedOutputIndex];
   
@@ -21,49 +21,53 @@ export const drawConnections = (
     switch (activeSnake.id) {
       case 0: // Yellow snake (best model)
         return { 
-          dashPattern: [1, 2],
-          flowSpeed: 200,
+          dashPattern: [2, 3],
+          flowSpeed: 150,
           gradient: true,
-          colorStart: 'rgba(255, 221, 0, 0.7)',
-          colorEnd: 'rgba(255, 255, 150, 0.8)' 
+          colorStart: 'rgba(255, 221, 0, 0.9)',
+          colorEnd: 'rgba(255, 255, 150, 0.9)' 
         };
       case 1: // Blue snake (combined model)
         return { 
-          dashPattern: [2, 1],
-          flowSpeed: 250,
+          dashPattern: [3, 2],
+          flowSpeed: 200,
           gradient: true,
-          colorStart: 'rgba(0, 100, 255, 0.7)',
-          colorEnd: 'rgba(100, 200, 255, 0.8)'
+          colorStart: 'rgba(20, 120, 255, 0.9)',
+          colorEnd: 'rgba(100, 200, 255, 0.9)'
         };
       default: // Other experimental snakes
         return { 
-          dashPattern: [2, 3],
-          flowSpeed: 300,
+          dashPattern: [2, 4],
+          flowSpeed: 250,
           gradient: true,
-          colorStart: 'rgba(150, 150, 255, 0.5)',
-          colorEnd: 'rgba(255, 255, 150, 0.6)'
+          colorStart: 'rgba(180, 180, 255, 0.8)',
+          colorEnd: 'rgba(255, 255, 180, 0.8)'
         };
     }
   };
   
   const snakeStyle = getSnakeConnectionStyle();
   
+  // Add glow effect for connections
+  ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+  ctx.shadowBlur = 5;
+  
   inputPositions.forEach((inputPos, inputIndex) => {
     const inputValue = nodeValues.inputs[inputIndex];
     
-    // Only draw connections for significant inputs
-    if (Math.abs(inputValue) < 0.05) return;
+    // Only draw connections for significant inputs (reduced threshold for better visibility)
+    if (Math.abs(inputValue) < 0.02) return;
     
     // Create connection style based on input value
     const connectionStyle: ConnectionStyle = {
-      opacity: Math.max(0.1, Math.abs(inputValue)),
-      width: Math.max(0.5, Math.abs(inputValue) * 3),
+      opacity: Math.max(0.2, Math.abs(inputValue)),
+      width: Math.max(1.5, Math.abs(inputValue) * 4), // Thicker lines
       dashPattern: snakeStyle.dashPattern || [2, 3],
-      flowSpeed: snakeStyle.flowSpeed || 300,
+      flowSpeed: snakeStyle.flowSpeed || 200, // Faster animation
       gradient: true,
-      // Negative values get different colors (red-ish)
-      colorStart: inputValue < 0 ? 'rgba(255, 100, 100, 0.6)' : (snakeStyle.colorStart || 'rgba(150, 150, 255, 0.6)'),
-      colorEnd: inputValue < 0 ? 'rgba(255, 150, 100, 0.7)' : (snakeStyle.colorEnd || 'rgba(255, 255, 150, 0.7)')
+      // Negative values get bright red colors
+      colorStart: inputValue < 0 ? 'rgba(255, 80, 80, 0.9)' : (snakeStyle.colorStart || 'rgba(150, 150, 255, 0.9)'),
+      colorEnd: inputValue < 0 ? 'rgba(255, 120, 80, 0.9)' : (snakeStyle.colorEnd || 'rgba(255, 255, 150, 0.9)')
     };
     
     // Draw line with opacity based on input strength and animated flow
@@ -97,4 +101,7 @@ export const drawConnections = (
     // Reset dash for other drawings
     ctx.setLineDash([]);
   });
+  
+  // Reset shadow
+  ctx.shadowBlur = 0;
 };

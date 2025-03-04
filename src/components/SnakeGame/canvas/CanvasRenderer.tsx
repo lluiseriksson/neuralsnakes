@@ -34,13 +34,13 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   const drawGame = () => {
     const canvas = canvasRef.current;
     if (!canvas) {
-      console.log("Canvas no encontrado");
+      console.log("Canvas not found");
       return;
     }
 
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) {
-      console.log("Contexto 2D no disponible");
+      console.log("2D context not available");
       return;
     }
 
@@ -57,7 +57,7 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     });
     
     // Skip redraw if nothing has changed and it's not an animation frame
-    // Reduced the skip condition to ensure more frequent redraws
+    // Always redraw for better animations
     if (currentStateHash === lastDrawnStateRef.current && frameCount % 2 !== 0) {
       return;
     }
@@ -65,7 +65,7 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     lastDrawnStateRef.current = currentStateHash;
 
     // Clear canvas with a solid background to ensure visibility
-    ctx.fillStyle = '#121212';
+    ctx.fillStyle = '#050505';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw game elements with improved contrast
@@ -73,10 +73,13 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     drawApples(ctx, gameState.apples, frameCount, CELL_SIZE);
     drawSnakes(ctx, gameState.snakes, CELL_SIZE, effectiveSelectedSnakeId);
     
-    // Draw debug info for all snakes to improve visibility
-    gameState.snakes.forEach(snake => {
-      drawDebugInfo(ctx, snake, CELL_SIZE);
-    });
+    // Draw debug info only for the selected snake to reduce visual clutter
+    if (effectiveSelectedSnakeId !== null) {
+      const selectedSnake = gameState.snakes.find(s => s.id === effectiveSelectedSnakeId);
+      if (selectedSnake) {
+        drawDebugInfo(ctx, selectedSnake, CELL_SIZE);
+      }
+    }
 
     // Update frame counter
     setFrameCount(prev => (prev + 1) % 60);
@@ -103,10 +106,10 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             // Add visual feedback for the click
             const clickEffect = document.createElement('div');
             clickEffect.className = 'absolute pointer-events-none rounded-full bg-white bg-opacity-70';
-            clickEffect.style.left = `${e.clientX - 15}px`;
-            clickEffect.style.top = `${e.clientY - 15}px`;
-            clickEffect.style.width = '30px';
-            clickEffect.style.height = '30px';
+            clickEffect.style.left = `${e.clientX - 20}px`;
+            clickEffect.style.top = `${e.clientY - 20}px`;
+            clickEffect.style.width = '40px';
+            clickEffect.style.height = '40px';
             clickEffect.style.animation = 'ping 1s cubic-bezier(0, 0, 0.2, 1)';
             document.body.appendChild(clickEffect);
             
@@ -144,11 +147,20 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Set canvas dimensions
-    canvas.width = width;
-    canvas.height = height;
+    // Set canvas dimensions with pixel ratio for sharper rendering
+    const pixelRatio = window.devicePixelRatio || 1;
+    canvas.width = width * pixelRatio;
+    canvas.height = height * pixelRatio;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
     
-    console.log(`Canvas inicializado: ${canvas.width}x${canvas.height}`);
+    // Get context and scale for retina displays
+    const ctx = canvas.getContext('2d', { alpha: false });
+    if (ctx) {
+      ctx.scale(pixelRatio, pixelRatio);
+    }
+    
+    console.log(`Canvas initialized: ${canvas.width}x${canvas.height} (${pixelRatio}x)`);
 
     // Set up animation loop
     let animationFrameId: number;
@@ -181,7 +193,7 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
         display: 'block',
         cursor: 'pointer',
       }}
-      className="border-2 border-gray-700 bg-black rounded-lg shadow-lg"
+      className="border-2 border-gray-700 bg-black rounded-lg shadow-xl"
       title="Click on a snake to select it"
     />
   );

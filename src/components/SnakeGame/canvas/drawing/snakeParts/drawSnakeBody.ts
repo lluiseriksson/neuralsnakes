@@ -4,7 +4,7 @@ import { roundedRect } from '../utils/shapeUtils';
 import { getAdjustedColor } from '../utils/colorUtils';
 
 /**
- * Draws the body segments of a snake
+ * Draws the body segments of a snake with improved visibility
  */
 export function drawSnakeBody(
   ctx: CanvasRenderingContext2D,
@@ -15,8 +15,8 @@ export function drawSnakeBody(
   
   // Get snake colors
   const baseColor = snake.color;
-  const darkColor = getAdjustedColor(baseColor, -30); // darker version for shading
-  const lightColor = getAdjustedColor(baseColor, 50); // lighter version for highlights
+  const darkColor = getAdjustedColor(baseColor, -40); // darker version for shading
+  const lightColor = getAdjustedColor(baseColor, 70); // lighter version for highlights
   
   // Draw segments from tail to head (excluding head)
   for (let i = snake.positions.length - 1; i > 0; i--) {
@@ -36,12 +36,26 @@ export function drawSnakeBody(
       y + 1,
       cellSize - 2,
       cellSize - 2,
-      cellSize / 5
+      cellSize / 4 // More rounded corners
     );
     
     // Add highlight edge on body segments for better visibility
     ctx.strokeStyle = lightColor;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2; // Thicker border
     ctx.stroke();
+    
+    // Add pattern inside the body segments
+    if (i % 4 === 0) {
+      ctx.fillStyle = lightColor;
+      ctx.beginPath();
+      ctx.arc(
+        x + cellSize / 2,
+        y + cellSize / 2,
+        cellSize / 6,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
   }
 }

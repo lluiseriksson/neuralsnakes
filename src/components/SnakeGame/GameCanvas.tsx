@@ -47,7 +47,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
     : null;
 
   return (
-    <div className="relative overflow-hidden rounded-xl border-2 border-gray-700 shadow-lg bg-black">
+    <div className="relative overflow-hidden rounded-xl border-2 border-gray-600 shadow-lg bg-black">
       <CanvasRenderer 
         gameState={gameState}
         width={canvasWidth}
@@ -58,21 +58,21 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
       {!hasSnakes && <LoadingOverlay />}
       
       {selectedSnakeId !== null && selectedSnake && (
-        <div className="absolute top-3 left-3 bg-black bg-opacity-90 backdrop-blur-md text-white px-4 py-3 text-sm rounded-lg border border-gray-700 shadow-lg animate-fade-in">
-          <div className="font-bold text-yellow-400">Snake #{selectedSnakeId}</div>
-          <div className="grid grid-cols-2 gap-x-4 mt-1 text-xs">
+        <div className="absolute top-3 left-3 bg-black/90 backdrop-blur-md text-white px-4 py-3 text-sm rounded-lg border border-gray-600 shadow-lg animate-fade-in">
+          <div className="font-bold text-lg text-yellow-400">Snake #{selectedSnakeId}</div>
+          <div className="grid grid-cols-2 gap-x-4 mt-2">
             <div className="flex items-center">
-              <div className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: selectedSnake.color }}></div>
-              <span>Score: {selectedSnake.score}</span>
+              <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: selectedSnake.color }}></div>
+              <span className="font-semibold">Score: {selectedSnake.score}</span>
             </div>
-            <div>Direction: {selectedSnake.direction}</div>
+            <div className="font-medium">Direction: {selectedSnake.direction}</div>
             <div>Apples eaten: {selectedSnake.decisionMetrics?.applesEaten || 0}</div>
             <div>Generation: {typeof selectedSnake.brain?.getGeneration === 'function' 
               ? selectedSnake.brain.getGeneration() 
               : 0}</div>
           </div>
           {selectedSnake.debugInfo?.lastDecision && (
-            <div className="text-xs mt-2 p-1 bg-gray-800 bg-opacity-60 rounded border-l-2 border-green-500">
+            <div className="mt-2 p-2 bg-gray-800 bg-opacity-80 rounded border-l-2 border-green-500">
               <div className="font-semibold text-green-400">Last Decision:</div>
               <div className="flex justify-between">
                 <div>{selectedSnake.debugInfo.lastDecision.reason}</div>

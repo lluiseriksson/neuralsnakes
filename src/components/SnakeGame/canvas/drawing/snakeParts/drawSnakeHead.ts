@@ -4,7 +4,7 @@ import { roundedRect } from '../utils/shapeUtils';
 import { getAdjustedColor } from '../utils/colorUtils';
 
 /**
- * Draws the head of a snake
+ * Draws the head of a snake with improved visibility
  */
 export function drawSnakeHead(
   ctx: CanvasRenderingContext2D,
@@ -16,25 +16,39 @@ export function drawSnakeHead(
   
   const head = snake.positions[0];
   const baseColor = snake.color;
-  const lightColor = getAdjustedColor(baseColor, 50);
+  const lightColor = getAdjustedColor(baseColor, 80);
   
   // Highlight selected snake with a stronger glow effect
   if (isSelected) {
     ctx.save();
     ctx.shadowColor = 'white';
-    ctx.shadowBlur = 15;
-    ctx.fillStyle = lightColor; // Use lighter color for selected snake head
+    ctx.shadowBlur = 20;
+    
+    // Use brighter color for selected snake head
+    const glowColor = getAdjustedColor(baseColor, 100);
+    ctx.fillStyle = glowColor;
     
     // Draw head as a rounded rectangle
     roundedRect(
       ctx,
-      head.x * cellSize,
-      head.y * cellSize,
-      cellSize,
-      cellSize,
+      head.x * cellSize - 1,
+      head.y * cellSize - 1,
+      cellSize + 2,
+      cellSize + 2,
       cellSize / 3
     );
     ctx.restore();
+    
+    // Add inner highlight
+    ctx.fillStyle = lightColor;
+    roundedRect(
+      ctx,
+      head.x * cellSize + 2,
+      head.y * cellSize + 2,
+      cellSize - 4,
+      cellSize - 4,
+      cellSize / 4
+    );
   } else {
     // Regular head with slightly rounded corners and border for better visibility
     ctx.fillStyle = baseColor;
@@ -49,18 +63,31 @@ export function drawSnakeHead(
     
     // Add highlight border
     ctx.strokeStyle = lightColor;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
   }
   
   // Add a small marker to indicate snake ID
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-  ctx.font = `bold ${cellSize / 2}px Arial`;
+  ctx.fillStyle = 'rgba(255, 255, 255, 1)'; // Fully opaque white for better visibility
+  ctx.font = `bold ${cellSize / 1.8}px Arial`; // Larger font
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  
+  // Add text shadow for better readability
+  ctx.shadowColor = 'black';
+  ctx.shadowBlur = 3;
+  ctx.shadowOffsetX = 1;
+  ctx.shadowOffsetY = 1;
+  
   ctx.fillText(
     `${snake.id}`, 
     head.x * cellSize + cellSize / 2, 
     head.y * cellSize + cellSize / 2
   );
+  
+  // Reset shadow
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
 }
