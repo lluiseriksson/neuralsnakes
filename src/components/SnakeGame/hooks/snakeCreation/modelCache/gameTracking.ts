@@ -1,6 +1,6 @@
 
 import { getCurrentGeneration, incrementGeneration, purgeAllModelCaches } from './generationTracking';
-import { updateHighestScoreAchieved } from './scoreTracking';
+import { updateHighestScoreAchieved, getCurrentHighestScore } from './scoreTracking';
 
 // Track games played since last generation increment
 let gamesSinceLastIncrement = 0;
@@ -24,8 +24,8 @@ export const updateHighestScore = (score: number): void => {
 };
 
 export const getHighestScore = (): number => {
-  // This function now delegates to the scoreTracking module
-  return updateHighestScoreAchieved(0);
+  // Return the current highest score
+  return getCurrentHighestScore();
 };
 
 export const trackGamePlayed = (): number => {

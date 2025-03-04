@@ -1,9 +1,13 @@
+
 import { Snake } from '../../types';
-import { getCurrentGeneration } from '../snakeCreation/modelCache';
+import { getCurrentGeneration, getHighestScore } from '../snakeCreation/modelCache';
 
 export const getGenerationInfo = (snakes: Snake[]) => {
   // Get current global generation
   const globalGeneration = getCurrentGeneration();
+  
+  // Get global highest score
+  const globalHighestScore = getHighestScore();
   
   // Fix: Ensure all snakes report the correct generation
   const generations = snakes.map(s => {
@@ -42,7 +46,8 @@ export const getGenerationInfo = (snakes: Snake[]) => {
   
   // Calculate highest values correctly with fallback to global
   const highestGeneration = Math.max(...generations, globalGeneration);
-  const highestScore = Math.max(...scores);
+  // Use globalHighestScore as a backup minimum
+  const highestScore = Math.max(...scores, globalHighestScore);
   const highestProgress = Math.max(...progresses);
   
   // Create a correct map of snake ID to generation
@@ -57,6 +62,7 @@ export const getGenerationInfo = (snakes: Snake[]) => {
   // Debug output to help with troubleshooting
   console.log("Generation info calculated:", {
     globalGeneration,
+    globalHighestScore,
     snakeGenerations,
     highestGeneration, 
     highestScore,

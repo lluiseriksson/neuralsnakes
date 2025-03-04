@@ -27,5 +27,6 @@ export {
 
 export {
   updateHighestScoreAchieved,
+  getCurrentHighestScore,
   resetHighestScore
 } from './scoreTracking';

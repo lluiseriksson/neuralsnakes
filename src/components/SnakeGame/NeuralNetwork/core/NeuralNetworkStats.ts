@@ -11,6 +11,7 @@ export class NetworkStats {
   private lastPredictions: number[] = [];
   private lastScoreUpdate: number = Date.now();
   private recentDecisions: {success: boolean, time: number}[] = [];
+  private lastUIUpdate: number = 0;
 
   constructor(
     score?: number, 
@@ -58,6 +59,28 @@ export class NetworkStats {
       if (score > this.bestScore) {
         this.bestScore = score;
         console.log(`New best score: ${this.bestScore} for generation ${this.generation}`);
+        
+        // Notify global score tracking when individual snake beats its personal best
+        try {
+          if (typeof window !== 'undefined' && window.updateHighestScore) {
+            window.updateHighestScore(score);
+          }
+        } catch (e) {
+          console.warn("Couldn't update global highest score:", e);
+        }
+        
+        // Also notify UI that score changed
+        if (now - this.lastUIUpdate > 500) {
+          this.lastUIUpdate = now;
+          try {
+            const scoreUpdateEvent = new CustomEvent('score-update', { 
+              detail: { score: this.score, bestScore: this.bestScore } 
+            });
+            window.dispatchEvent(scoreUpdateEvent);
+          } catch (e) {
+            console.warn("Couldn't dispatch score update event:", e);
+          }
+        }
       }
     }
   }
@@ -83,6 +106,24 @@ export class NetworkStats {
     if (score > this.bestScore) {
       this.bestScore = score;
       console.log(`Updated best score: ${this.bestScore} for generation ${this.generation}`);
+      
+      // Notify global score tracking when individual snake beats its personal best
+      try {
+        // Import from global scope if available
+        if (typeof window !== 'undefined') {
+          // Use direct import if possible
+          const { updateHighestScore } = require('../../hooks/snakeCreation/modelCache');
+          if (typeof updateHighestScore === 'function') {
+            updateHighestScore(score);
+          } 
+          // Fallback to window method
+          else if (window.updateHighestScore) {
+            window.updateHighestScore(score);
+          }
+        }
+      } catch (e) {
+        console.warn("Couldn't update global highest score:", e);
+      }
     }
   }
   
