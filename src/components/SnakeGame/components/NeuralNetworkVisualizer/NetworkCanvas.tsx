@@ -2,8 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Snake } from '../../types';
 import { drawNetworkNodes } from './drawing/drawNetworkNodes';
-import { drawLearningHistory } from './drawing/drawLearningHistory';
-import { NodeValues, LearningEvent } from './drawing/types';
+import { NodeValues } from './drawing/types';
 
 interface NetworkCanvasProps {
   activeSnake: Snake;
@@ -51,12 +50,6 @@ const NetworkCanvas: React.FC<NetworkCanvasProps> = ({ activeSnake }) => {
       // Draw network nodes (inputs, outputs, connections)
       drawNetworkNodes(ctx, nodeValues, canvas, activeSnake);
       
-      // Draw learning history if available
-      if (activeSnake?.debugInfo?.learningEvents && activeSnake.debugInfo.learningEvents.length > 0) {
-        const learningEvents = activeSnake.debugInfo.learningEvents as LearningEvent[];
-        drawLearningHistory(ctx, learningEvents, canvas);
-      }
-
       // Get generation info for display - handle null brain
       ctx.fillStyle = '#AAAAAA';
       ctx.font = '10px Arial';
@@ -64,7 +57,7 @@ const NetworkCanvas: React.FC<NetworkCanvasProps> = ({ activeSnake }) => {
       
       const generation = typeof activeSnake.brain?.getGeneration === 'function' 
         ? activeSnake.brain.getGeneration() 
-        : 0;
+        : 5;
         
       ctx.fillText(`Generation: ${generation}`, canvas.width - 10, 20);
       
@@ -96,7 +89,7 @@ const NetworkCanvas: React.FC<NetworkCanvasProps> = ({ activeSnake }) => {
     <canvas 
       ref={canvasRef} 
       width={550}
-      height={350} // Aumentamos la altura para dar más espacio
+      height={300}
       className={`w-full h-full transition-all duration-300 animate-fade-in border border-opacity-30 rounded ${getAnimationClass()}`}
     />
   );

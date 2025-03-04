@@ -9,6 +9,7 @@ import GameVisualizer from "../components/SnakeGame/components/GameVisualizer";
 import SnakeVisualizer from "../components/SnakeGame/components/SnakeVisualizer";
 import GenerationInfo from "../components/SnakeGame/components/GenerationInfo";
 import GameControls from "../components/SnakeGame/components/GameControls";
+import LearningHistory from "../components/SnakeGame/components/LearningHistory";
 
 const Index = () => {
   const [isInitializing, setIsInitializing] = useState(false);
@@ -31,22 +32,22 @@ const Index = () => {
     
     try {
       toast({
-        title: "Iniciando nueva generación",
-        description: "Generando serpientes y preparando el tablero..."
+        title: "Starting New Evolution",
+        description: "Creating neural networks and preparing the simulation..."
       });
       
       await initializeGame();
       console.log("Inicialización completada desde Index");
       
       toast({
-        title: "¡Nueva generación iniciada!",
-        description: `${gameState.snakes?.length || 0} serpientes están listas para competir (Generación ${generationInfo.generation})`
+        title: "Evolution Started!",
+        description: `${gameState.snakes?.length || 0} neural networks are learning (Generation ${generationInfo.generation})`
       });
     } catch (error) {
       console.error("Error en la inicialización desde Index:", error);
       toast({
-        title: "Error al inicializar",
-        description: "Hubo un problema al iniciar el juego. Intenta de nuevo.",
+        title: "Initialization Error",
+        description: "There was a problem starting the simulation. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -95,7 +96,7 @@ const Index = () => {
     const aliveCountElement = document.getElementById('alive-count');
     
     if (currentGenElement) currentGenElement.textContent = generationInfo.generation.toString();
-    if (bestScoreElement) bestScoreElement.textContent = generationInfo.bestScore.toString();
+    if (bestScoreElement) bestScoreElement.textContent = Math.floor(generationInfo.bestScore).toString();
     if (aliveCountElement && gameState.snakes) {
       aliveCountElement.textContent = gameState.snakes.filter(s => s.alive).length.toString();
     }
@@ -104,7 +105,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 p-4">
       <h1 className="text-4xl font-bold mb-6 text-white bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-        Snake AI Battle
+        Neural Network Evolution Simulator
       </h1>
       
       <VictoryDisplay victories={victories} />
@@ -124,11 +125,11 @@ const Index = () => {
             onSelectSnake={handleSelectSnake}
           />
           
-          <ScoreBoard snakes={gameState.snakes || []} generationInfo={generationInfo} />
+          <LearningHistory activeSnake={activeSnake} />
           
           <GenerationInfo
             generation={generationInfo.generation}
-            bestScore={generationInfo.bestScore}
+            bestScore={Math.floor(generationInfo.bestScore)}
             progress={generationInfo.progress}
             snakeCount={gameState.snakes?.filter(s => s.alive).length || 0}
             appleCount={gameState.apples?.length || 0}

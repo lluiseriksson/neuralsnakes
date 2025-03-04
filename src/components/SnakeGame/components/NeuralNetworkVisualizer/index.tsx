@@ -3,6 +3,7 @@ import React from 'react';
 import { Snake } from '../../types';
 import NetworkCanvas from './NetworkCanvas';
 import SnakeStats from './SnakeStats';
+import LearningHistoryChart from './LearningHistoryChart';
 
 interface NeuralNetworkVisualizerProps {
   activeSnake: Snake | null;

@@ -24,9 +24,11 @@ const GenerationInfo: React.FC<GenerationInfoProps> = ({
   
   return (
     <div className="p-4 bg-gray-900 rounded-xl border border-gray-700 shadow-lg text-white">
+      <h3 className="text-lg font-semibold mb-2 text-center">AI Population Stats</h3>
+      
       <div className="flex justify-between items-center mb-1">
         <p className="text-lg">Generation: <span className="font-bold text-yellow-400">{generation}</span></p>
-        <p className="text-lg">Best: <span className="font-bold text-green-400">{displayBestScore}</span></p>
+        <p className="text-lg">Best Score: <span className="font-bold text-green-400">{displayBestScore}</span></p>
       </div>
       
       <div className="w-full bg-gray-800 h-3 mt-2 rounded-full overflow-hidden">
@@ -40,6 +42,13 @@ const GenerationInfo: React.FC<GenerationInfoProps> = ({
         <span>AI Progress: {displayProgress}%</span>
         <span>{snakeCount} active snakes</span>
         <span>Apples: {appleCount}</span>
+      </div>
+      
+      <div className="mt-3 bg-gray-800 p-2 rounded-lg">
+        <h4 className="text-sm font-medium text-gray-300 mb-1">Learning History</h4>
+        <div className="text-xs text-center text-gray-400">
+          Select a snake to view its learning history
+        </div>
       </div>
     </div>
   );
