@@ -13,6 +13,11 @@ export const drawApples = (
 ): void => {
   if (!apples || apples.length === 0) return;
   
+  // Log apple count for debugging
+  if (frameCount % 100 === 0) {
+    console.log(`Drawing ${apples.length} apples on canvas`);
+  }
+  
   // Draw glow effect for apples that pulses with the frame count
   const glowSize = 1 + 0.8 * Math.sin(frameCount * 0.1); // Stronger, more visible pulse
   
@@ -24,7 +29,7 @@ export const drawApples = (
       
       // Determine if this is a regular apple or a collision apple (Type B)
       // Type B apples are from more recent collisions (later in the array)
-      const isCollisionApple = index >= apples.length - 10; // Assume newest apples are from collisions
+      const isCollisionApple = index >= apples.length - 10 || apple.type === 'B'; // Assume newest apples are from collisions
       
       // Add pulsing glow effect with increased brightness
       ctx.save();

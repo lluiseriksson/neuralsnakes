@@ -48,13 +48,17 @@ const Index = () => {
     const currentGenElement = document.getElementById('current-gen');
     const bestScoreElement = document.getElementById('best-score');
     const aliveCountElement = document.getElementById('alive-count');
+    const appleCountElement = document.getElementById('apple-count');
     
     if (currentGenElement) currentGenElement.textContent = generationInfo.generation.toString();
     if (bestScoreElement) bestScoreElement.textContent = Math.floor(generationInfo.bestScore).toString();
     if (aliveCountElement && gameState.snakes) {
       aliveCountElement.textContent = gameState.snakes.filter(s => s.alive).length.toString();
     }
-  }, [generationInfo, gameState.snakes]);
+    if (appleCountElement && gameState.apples) {
+      appleCountElement.textContent = gameState.apples.length.toString();
+    }
+  }, [generationInfo, gameState.snakes, gameState.apples]);
   
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 p-4">

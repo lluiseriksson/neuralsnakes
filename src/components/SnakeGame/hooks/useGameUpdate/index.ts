@@ -12,7 +12,7 @@ export const useGameUpdate = (
   isProcessingUpdate: React.MutableRefObject<boolean>,
   setGameState: React.Dispatch<React.SetStateAction<GameState>>,
   endRound: () => void,
-  ensureMinimumApples: (apples: GameState['apples']) => GameState['apples']
+  ensureMinimumApples: (apples: GameState['apples'], snakes?: GameState['snakes']) => GameState['apples']
 ) => {
   const updateGame = useCallback(() => {
     if (!isGameRunning || isProcessingUpdate.current) {
@@ -81,8 +81,11 @@ export const useGameUpdate = (
           // Check collisions after moving all snakes
           const collisionResult = checkCollisions(newSnakes, prevState.apples);
           
-          // Ensure we have minimum number of apples
-          let finalApples = ensureMinimumApples(collisionResult.newApples);
+          // Ensure we have minimum number of apples - pass snakes to avoid collisions
+          let finalApples = ensureMinimumApples(collisionResult.newApples, collisionResult.newSnakes);
+          
+          // Log apple count for debugging
+          console.log(`Game update - Final apple count: ${finalApples.length}`);
           
           // Log lengths and scores for debugging
           collisionResult.newSnakes.forEach(snake => {

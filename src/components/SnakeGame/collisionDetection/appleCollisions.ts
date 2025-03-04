@@ -8,6 +8,7 @@ export const checkAppleCollisions = (snakes: Snake[], apples: Apple[]): { snakes
   const updatedSnakes = [...snakes];
   let updatedApples = [...apples];
   const newApplePositions: Apple[] = [];
+  let applesEaten = 0;
   
   for (let i = 0; i < updatedSnakes.length; i++) {
     const snake = updatedSnakes[i];
@@ -21,6 +22,8 @@ export const checkAppleCollisions = (snakes: Snake[], apples: Apple[]): { snakes
     );
     
     if (appleIndex !== -1) {
+      applesEaten++;
+      
       // Store original values for debugging
       const originalScore = snake.score;
       const originalLength = snake.positions.length;
@@ -63,6 +66,10 @@ export const checkAppleCollisions = (snakes: Snake[], apples: Apple[]): { snakes
       // Remove the eaten apple
       updatedApples.splice(appleIndex, 1);
     }
+  }
+  
+  if (applesEaten > 0) {
+    console.log(`Total apples eaten this cycle: ${applesEaten}. Remaining apples: ${updatedApples.length}`);
   }
   
   return { snakes: updatedSnakes, apples: updatedApples, newApplePositions };

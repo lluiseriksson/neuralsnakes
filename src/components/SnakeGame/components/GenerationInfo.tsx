@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface GenerationInfoProps {
   generation: number;
@@ -14,54 +14,51 @@ const GenerationInfo: React.FC<GenerationInfoProps> = ({
   bestScore,
   progress,
   snakeCount,
-  appleCount
+  appleCount,
 }) => {
-  // Calculate a more accurate display progress percentage
-  // Convert from decimal to percentage and ensure it's between 5-100%
-  const displayProgress = Math.max(5, Math.min(Math.round(progress * 100), 100));
+  const [localAppleCount, setLocalAppleCount] = useState(appleCount);
   
-  // Ensure best score is a whole number for display purposes
-  const displayBestScore = Math.max(0, Math.floor(bestScore));
-  
-  // Calculate more accurate mutation and learning rates based on generation
-  const mutationRate = Math.max(5, Math.round(35 - generation/10));
-  const learningRate = Math.max(5, Math.round(30 - generation/30));
+  // Update apple count when props change
+  useEffect(() => {
+    setLocalAppleCount(appleCount);
+  }, [appleCount]);
   
   return (
-    <div className="p-4 bg-gray-900 rounded-xl border border-gray-700 shadow-lg text-white">
-      <h3 className="text-xl font-semibold mb-3 text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">AI Population Stats</h3>
+    <div className="w-full bg-gray-900 p-4 rounded-lg shadow-md">
+      <h3 className="text-xl font-semibold text-white mb-3">AI Population Stats</h3>
       
-      <div className="flex justify-between items-center mb-2">
-        <p className="text-lg">Generation: <span className="font-bold text-yellow-400">{generation}</span></p>
-        <p className="text-lg">High Score: <span className="font-bold text-green-400">{displayBestScore}</span></p>
-      </div>
-      
-      <div className="w-full bg-gray-800 h-4 mt-2 rounded-full overflow-hidden">
-        <div 
-          className="bg-gradient-to-r from-blue-500 to-purple-500 h-4 rounded-full transition-all duration-300" 
-          style={{ width: `${displayProgress}%` }}
-        ></div>
-      </div>
-      
-      <div className="mt-2 text-sm text-gray-300 flex justify-between">
-        <span>Active: {snakeCount}</span>
-        <span>Apples: {appleCount}</span>
-      </div>
-      
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <div className="bg-gray-800 p-2 rounded-lg col-span-2">
-          <p className="text-sm font-medium text-gray-300">Evolution Strategy</p>
-          <p className="text-xs text-gray-400">Generation advances after each game (+3 for victory)</p>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-gray-800 rounded-lg p-3">
+          <p className="text-gray-400 text-sm">Generation</p>
+          <p className="text-white text-xl font-bold" id="current-gen">{generation}</p>
         </div>
         
-        <div className="bg-gray-800 p-2 rounded-lg">
-          <p className="text-sm font-medium text-gray-300">Mutation Rate</p>
-          <p className="text-xs text-gray-400">Adaptive ({mutationRate}%)</p>
+        <div className="bg-gray-800 rounded-lg p-3">
+          <p className="text-gray-400 text-sm">Best Score</p>
+          <p className="text-white text-xl font-bold" id="best-score">{bestScore}</p>
         </div>
         
-        <div className="bg-gray-800 p-2 rounded-lg">
-          <p className="text-sm font-medium text-gray-300">Learning Rate</p>
-          <p className="text-xs text-gray-400">Adaptive ({learningRate}%)</p>
+        <div className="bg-gray-800 rounded-lg p-3">
+          <p className="text-gray-400 text-sm">Snakes Alive</p>
+          <p className="text-white text-xl font-bold" id="alive-count">{snakeCount}</p>
+        </div>
+        
+        <div className="bg-gray-800 rounded-lg p-3">
+          <p className="text-gray-400 text-sm">Apples Available</p>
+          <p className="text-white text-xl font-bold" id="apple-count">{localAppleCount}</p>
+        </div>
+      </div>
+      
+      <div className="mt-4">
+        <div className="flex justify-between text-xs text-gray-400 mb-1">
+          <span>Training Progress</span>
+          <span>{Math.round(progress * 100)}%</span>
+        </div>
+        <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-gradient-to-r from-blue-500 to-purple-600"
+            style={{ width: `${progress * 100}%` }}
+          ></div>
         </div>
       </div>
     </div>
