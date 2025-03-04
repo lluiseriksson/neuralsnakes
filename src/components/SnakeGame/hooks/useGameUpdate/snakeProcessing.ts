@@ -47,6 +47,16 @@ export const processSnakesMovement = (snakes: Snake[], gameState: GameState): Sn
       // Apply movement with prediction
       const movedSnake = moveSnake(snake, gameState, prediction);
       
+      // Ensure score matches the actual length of the snake
+      // This prevents score inconsistencies after movements
+      if (movedSnake.positions && movedSnake.positions.length > 3) {
+        const expectedScore = movedSnake.positions.length - 3;
+        if (movedSnake.score !== expectedScore) {
+          console.log(`Correcting inconsistent score for snake ${movedSnake.id}: ${movedSnake.score} → ${expectedScore}`);
+          movedSnake.score = expectedScore;
+        }
+      }
+      
       // Add decision record for logging and visualization
       if (!movedSnake.debugInfo.decisions) {
         movedSnake.debugInfo.decisions = [];

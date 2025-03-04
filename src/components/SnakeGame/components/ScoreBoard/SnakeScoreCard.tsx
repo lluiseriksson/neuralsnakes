@@ -34,12 +34,20 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
     }
   }, [snake]);
 
-  // Also update score based on snake length
+  // Also update score based on snake length - this is the key fix
   useEffect(() => {
     if (snake.positions && snake.positions.length > 3) {
       const lengthScore = snake.positions.length - 3;
       // Check if the snake.score is valid and higher
       const snakeScore = typeof snake.score === 'number' && !isNaN(snake.score) ? snake.score : 0;
+      
+      // Only use the length-based score if it differs significantly from the snake's score
+      // This prevents score jumps during updates
+      if (Math.abs(lengthScore - snakeScore) > 1) {
+        console.log(`Snake ${snake.id} score inconsistency detected: Score: ${snakeScore}, Length-based: ${lengthScore}`);
+      }
+      
+      // Use the max of length-based score or stored score
       const displayScore = Math.max(lengthScore, snakeScore);
       
       if (displayScore !== currentScore) {

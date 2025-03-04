@@ -44,10 +44,15 @@ export const validateAndFixSnake = (snake: Snake): Snake => {
   }
   
   // Make sure score matches the actual length of the snake (fixes inconsistencies)
-  const expectedScore = Math.max(0, (updatedSnake.positions.length - 3));
-  if (updatedSnake.score === undefined || updatedSnake.score !== expectedScore) {
-    console.log(`Fixed inconsistent score for snake ${updatedSnake.id}: ${updatedSnake.score} → ${expectedScore}`);
-    updatedSnake.score = expectedScore;
+  if (updatedSnake.positions.length > 3) {
+    const expectedScore = Math.max(0, (updatedSnake.positions.length - 3));
+    if (updatedSnake.score === undefined || Math.abs(updatedSnake.score - expectedScore) > 1) {
+      console.log(`Fixed inconsistent score for snake ${updatedSnake.id}: ${updatedSnake.score} → ${expectedScore} (length: ${updatedSnake.positions.length})`);
+      updatedSnake.score = expectedScore;
+    }
+  } else if (updatedSnake.score === undefined) {
+    // Default score for new snakes
+    updatedSnake.score = 0;
   }
   
   // Ensure generation and age are defined

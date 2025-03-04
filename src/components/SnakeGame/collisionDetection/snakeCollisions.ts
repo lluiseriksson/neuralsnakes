@@ -79,17 +79,26 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
         if (head.x === segment.x && head.y === segment.y) {
           console.log(`Snake ${snake.id} collided with snake ${otherSnake.id} at (${head.x}, ${head.y})`);
           
+          // Store the original score and length before collision for debugging
+          const originalScore = snake.score;
+          const originalLength = snake.positions.length;
+          
           // Apply learning to the colliding snake
           applyNegativeLearning(snake, 2.0);
           
           // The colliding snake dies
           snake.alive = false;
-          console.log(`Snake ${snake.id} died from colliding with snake ${otherSnake.id}. Final score: ${snake.score}`);
+          console.log(`Snake ${snake.id} died from colliding with snake ${otherSnake.id}. Final score: ${snake.score} (from ${originalLength} segments)`);
           
           // The other snake gets the points
           const scoreToAdd = Math.max(1, Math.floor(snake.positions.length / 2));
+          
+          // Store the original values before updating
+          const otherOriginalScore = otherSnake.score;
+          const otherOriginalLength = otherSnake.positions.length;
+          
           otherSnake.score += scoreToAdd;
-          console.log(`Snake ${otherSnake.id} gained ${scoreToAdd} points. New score: ${otherSnake.score}`);
+          console.log(`Snake ${otherSnake.id} gained ${scoreToAdd} points. New score: ${otherSnake.score} (from ${otherOriginalScore})`);
           
           // Update the brain's score record
           if (otherSnake.brain && typeof otherSnake.brain.setScore === 'function') {
@@ -98,7 +107,7 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
           
           // The total segments to add is equal to the length of the killed snake
           const segmentsToAdd = Math.max(1, Math.floor(snake.positions.length / 2));
-          console.log(`Snake ${otherSnake.id} will grow by ${segmentsToAdd} segments`);
+          console.log(`Snake ${otherSnake.id} will grow by ${segmentsToAdd} segments (from ${otherOriginalLength} to ${otherSnake.positions.length + segmentsToAdd})`);
           
           // Track kill for the surviving snake
           if (otherSnake.decisionMetrics) {
@@ -112,8 +121,9 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
           }
           console.log(`Snake ${otherSnake.id} grew to ${otherSnake.positions.length} segments`);
           
-          // Update score based on new length
+          // Update score based on new length - ensure it's consistent with length
           otherSnake.score = otherSnake.positions.length - 3;
+          console.log(`Snake ${otherSnake.id} final score adjusted to ${otherSnake.score} based on ${otherSnake.positions.length} segments`);
           
           break;
         }
@@ -128,6 +138,10 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
   Array.from(headToHeadCollisions).forEach(index => {
     const snake = updatedSnakes[index];
     
+    // Store original values for debugging
+    const originalScore = snake.score;
+    const originalLength = snake.positions.length;
+    
     // Apply learning to all snakes in head-to-head collisions
     applyNegativeLearning(snake, 2.0);
     
@@ -135,7 +149,7 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
     snake.alive = false;
     
     // Log final scores
-    console.log(`Snake ${snake.id} died in head-to-head collision. Final score: ${snake.score}`);
+    console.log(`Snake ${snake.id} died in head-to-head collision. Final score: ${snake.score} (from ${originalLength} segments)`);
     
     // Count as suicide
     if (snake.decisionMetrics) {

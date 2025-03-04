@@ -21,11 +21,15 @@ export const checkAppleCollisions = (snakes: Snake[], apples: Apple[]): { snakes
     );
     
     if (appleIndex !== -1) {
+      // Store original values for debugging
+      const originalScore = snake.score;
+      const originalLength = snake.positions.length;
+      
       console.log(`Snake ${snake.id} ate an apple at (${head.x}, ${head.y})`);
       
       // Increment score - this helps ensure score updates are tracked
       snake.score += 1;
-      console.log(`Snake ${snake.id} new score: ${snake.score}`);
+      console.log(`Snake ${snake.id} new score: ${snake.score} (from ${originalScore})`);
       
       // Update the brain's score record
       if (snake.brain && typeof snake.brain.setScore === 'function') {
@@ -50,11 +54,11 @@ export const checkAppleCollisions = (snakes: Snake[], apples: Apple[]): { snakes
       // Add a new segment to the snake
       const lastSegment = snake.positions[snake.positions.length - 1];
       snake.positions.push({ ...lastSegment });
-      console.log(`Snake ${snake.id} grew to ${snake.positions.length} segments`);
+      console.log(`Snake ${snake.id} grew to ${snake.positions.length} segments (from ${originalLength})`);
       
-      // Update score based on snake length
+      // Update score based on snake length - ensure consistency
       snake.score = snake.positions.length - 3; // Base score is segments minus initial length (3)
-      console.log(`Snake ${snake.id} updated length-based score: ${snake.score}`);
+      console.log(`Snake ${snake.id} updated length-based score: ${snake.score} for ${snake.positions.length} segments`);
       
       // Remove the eaten apple
       updatedApples.splice(appleIndex, 1);
@@ -78,9 +82,10 @@ export const generateAppleExplosion = (snake: Snake): Apple[] => {
   // Generate an apple for each segment of the snake
   const explosionApples = snake.positions.map((position, index) => ({
     id: Date.now() + index * 10, // Ensure unique IDs for each apple
-    position: { ...position }
+    position: { ...position },
+    type: 'B' // Mark as type B apple from collision
   }));
   
-  console.log(`Generated ${explosionApples.length} new apples from snake ${snake.id}`);
+  console.log(`Generated ${explosionApples.length} new type B apples from snake ${snake.id}`);
   return explosionApples;
 };

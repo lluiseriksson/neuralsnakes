@@ -33,13 +33,35 @@ export const useGameUpdate = (
         
         // Dispatch timer-end event programmatically if we reach this point
         // This is a fallback in case the Timer component's event didn't work
-        const timerEndEvent = new CustomEvent('timer-end', { detail: { timeEnded: true, source: 'gameUpdate' } });
+        const timerEndEvent = new CustomEvent('timer-end', { 
+          detail: { 
+            timeEnded: true, 
+            source: 'gameUpdate',
+            timestamp: currentTime
+          } 
+        });
         window.dispatchEvent(timerEndEvent);
         return;
       }
 
       setGameState(prevState => {
         try {
+          // Verify all snake scores match their position lengths
+          const inconsistencies = prevState.snakes.filter(snake => 
+            snake.alive && snake.positions.length > 3 && 
+            Math.abs(snake.score - (snake.positions.length - 3)) > 1
+          );
+          
+          if (inconsistencies.length > 0) {
+            console.log(`Detected ${inconsistencies.length} snakes with score inconsistencies`);
+            // Fix scores in place
+            inconsistencies.forEach(snake => {
+              const correctScore = snake.positions.length - 3;
+              console.log(`Auto-correcting snake ${snake.id} score: ${snake.score} → ${correctScore} (length: ${snake.positions.length})`);
+              snake.score = correctScore;
+            });
+          }
+          
           // Check if there are living snakes
           if (!hasLivingSnakes(prevState.snakes) && prevState.snakes.length > 0) {
             console.log("No living snakes, ending round");
@@ -61,6 +83,14 @@ export const useGameUpdate = (
           
           // Ensure we have minimum number of apples
           let finalApples = ensureMinimumApples(collisionResult.newApples);
+          
+          // Log lengths and scores for debugging
+          collisionResult.newSnakes.forEach(snake => {
+            if (snake.alive && snake.positions.length > 3 && 
+                Math.abs(snake.score - (snake.positions.length - 3)) > 1) {
+              console.log(`Snake ${snake.id} has score ${snake.score} but length ${snake.positions.length} after collision processing`);
+            }
+          });
           
           return {
             ...prevState,
