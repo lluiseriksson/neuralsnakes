@@ -60,13 +60,14 @@ export class NetworkStats {
         this.bestScore = score;
         console.log(`New best score: ${this.bestScore} for generation ${this.generation}`);
         
-        // Notify global score tracking when individual snake beats its personal best
+        // Notify global score tracking through CustomEvent
         try {
-          if (typeof window !== 'undefined' && window.updateHighestScore) {
-            window.updateHighestScore(score);
-          }
+          const scoreUpdateEvent = new CustomEvent('update-highest-score', { 
+            detail: { score: score } 
+          });
+          window.dispatchEvent(scoreUpdateEvent);
         } catch (e) {
-          console.warn("Couldn't update global highest score:", e);
+          console.warn("Couldn't update global highest score through event:", e);
         }
         
         // Also notify UI that score changed
@@ -107,22 +108,14 @@ export class NetworkStats {
       this.bestScore = score;
       console.log(`Updated best score: ${this.bestScore} for generation ${this.generation}`);
       
-      // Notify global score tracking when individual snake beats its personal best
+      // Notify global score tracking through a custom event
       try {
-        // Import from global scope if available
-        if (typeof window !== 'undefined') {
-          // Use direct import if possible
-          const { updateHighestScore } = require('../../hooks/snakeCreation/modelCache');
-          if (typeof updateHighestScore === 'function') {
-            updateHighestScore(score);
-          } 
-          // Fallback to window method
-          else if (window.updateHighestScore) {
-            window.updateHighestScore(score);
-          }
-        }
+        const scoreUpdateEvent = new CustomEvent('update-highest-score', { 
+          detail: { score: score } 
+        });
+        window.dispatchEvent(scoreUpdateEvent);
       } catch (e) {
-        console.warn("Couldn't update global highest score:", e);
+        console.warn("Couldn't update global highest score through event:", e);
       }
     }
   }

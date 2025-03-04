@@ -2,6 +2,15 @@
 // Track the highest score achieved across all games
 let highestScoreAchieved = 0;
 
+// Set up event listener for score updates when in browser environment
+if (typeof window !== 'undefined') {
+  window.addEventListener('update-highest-score', ((event: CustomEvent) => {
+    if (event.detail && typeof event.detail.score === 'number') {
+      updateHighestScoreAchieved(event.detail.score);
+    }
+  }) as EventListener);
+}
+
 /**
  * Updates and returns the highest score achieved
  * @param score New score to compare with current highest

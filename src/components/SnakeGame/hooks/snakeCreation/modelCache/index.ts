@@ -1,4 +1,12 @@
 
+// Add window augmentation for TypeScript to recognize our custom events
+declare global {
+  interface WindowEventMap {
+    'update-highest-score': CustomEvent<{ score: number }>;
+    'new-high-score': CustomEvent<{ score: number }>;
+  }
+}
+
 // Re-export all model cache functionality from the modular files
 export { 
   getModelCache,
