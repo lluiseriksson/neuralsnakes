@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { GameState, Snake } from './types';
 import { CELL_SIZE, GRID_SIZE } from './constants';

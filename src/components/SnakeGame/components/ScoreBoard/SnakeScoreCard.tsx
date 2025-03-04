@@ -10,11 +10,21 @@ interface SnakeScoreCardProps {
 const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
   // Use local state to track score and ensure it updates visually
   const [currentScore, setCurrentScore] = useState(score);
+  const [currentGeneration, setCurrentGeneration] = useState<number>(
+    typeof snake.brain.getGeneration === 'function' ? snake.brain.getGeneration() : 0
+  );
   
   // Update the local score whenever the props change
   useEffect(() => {
     setCurrentScore(score);
   }, [score]);
+
+  // Update generation whenever snake prop changes
+  useEffect(() => {
+    if (typeof snake.brain.getGeneration === 'function') {
+      setCurrentGeneration(snake.brain.getGeneration());
+    }
+  }, [snake.brain]);
 
   // Also update when snake.score changes (double tracking for reliability)
   useEffect(() => {
@@ -22,18 +32,6 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
       setCurrentScore(snake.score);
     }
   }, [snake.score, currentScore]);
-
-  // Add polling for score updates to ensure we catch all changes
-  useEffect(() => {
-    // Create a polling interval to check for score updates
-    const intervalId = setInterval(() => {
-      if (snake.score !== undefined && snake.score !== currentScore) {
-        setCurrentScore(snake.score);
-      }
-    }, 500); // Check every 500ms
-    
-    return () => clearInterval(intervalId);
-  }, [snake, currentScore]);
 
   return (
     <div className="bg-gray-900 p-3 rounded-lg flex items-center gap-3">
@@ -46,7 +44,7 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
           Score: {currentScore} 
         </span>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400">Gen: {snake.brain.getGeneration()}</span>
+          <span className="text-xs text-gray-400">Gen: {currentGeneration}</span>
           {!snake.alive && <span className="text-xs text-red-400">(Dead)</span>}
         </div>
       </div>

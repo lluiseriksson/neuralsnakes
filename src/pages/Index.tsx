@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useState } from "react";
 import { useGameLogic } from "../components/SnakeGame/hooks/useGameLogic";
 import ScoreBoard from "../components/SnakeGame/ScoreBoard";
@@ -9,7 +10,6 @@ import SnakeVisualizer from "../components/SnakeGame/components/SnakeVisualizer"
 import GenerationInfo from "../components/SnakeGame/components/GenerationInfo";
 import RecordingControls from "../components/SnakeGame/components/RecordingControls";
 import GameControls from "../components/SnakeGame/components/GameControls";
-import EvolutionSystem from "../components/SnakeGame/components/EvolutionSystem";
 
 const Index = () => {
   const [isInitializing, setIsInitializing] = useState(false);
@@ -172,8 +172,6 @@ const Index = () => {
         isInitializing={isInitializing}
         isGameRunning={isGameRunning}
       />
-      
-      <EvolutionSystem />
     </div>
   );
 };

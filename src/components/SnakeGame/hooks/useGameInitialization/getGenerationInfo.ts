@@ -23,7 +23,7 @@ export const getGenerationInfo = (snakes: Snake[]) => {
   // Fix: Properly calculate progress percentage
   const progresses = snakes.map(s => {
     const progress = s.brain?.getProgressPercentage?.();
-    return typeof progress === 'number' ? progress : (s.score / 50) * 100;
+    return typeof progress === 'number' ? progress / 100 : (s.score / 50);
   });
   
   // Calculate highest values correctly with fallback to global
