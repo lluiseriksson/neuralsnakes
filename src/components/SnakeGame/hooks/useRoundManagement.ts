@@ -58,7 +58,7 @@ export const useRoundManagement = (
     
     console.log(`🔴 Round metrics: score=${totalScore}, apples=${totalApplesEaten}, kills=${totalKills}, deaths=${totalDeaths}, suicides=${totalSuicides}`);
     
-    // Always track that a game has been played
+    // Explicitly track game played to force generation increment
     trackGamePlayed();
     
     // Get current generation before updates
@@ -124,10 +124,12 @@ export const useRoundManagement = (
       }
     }
     
-    // If there was no winner, still increment the generation by 1
+    // Increment generation anyway to ensure it always advances
+    // This is a safety measure to guarantee generation advancement
     if (!hasWinner) {
+      // Force increment generation by 1 for non-winning games
       incrementGeneration();
-      console.log(`⚡ Advanced generation after game without winner to ${getCurrentGeneration()}`);
+      console.log(`⚡ Forced generation increment after game without winner to ${getCurrentGeneration()}`);
     }
 
     // Save ALL snakes regardless of score

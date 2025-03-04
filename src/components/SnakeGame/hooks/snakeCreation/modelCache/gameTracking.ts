@@ -44,12 +44,8 @@ export const trackGamePlayed = (): number => {
     return getCurrentGeneration();
   }
   
-  // Force generation increment after every game
-  if (gamesSinceLastIncrement >= GAMES_TO_FORCE_INCREMENT) {
-    console.log(`⚡ Incrementing generation after ${GAMES_TO_FORCE_INCREMENT} game ⚡`);
-    resetGamesSinceLastIncrement();
-    return incrementGeneration();
-  }
-  
-  return getCurrentGeneration();
+  // ALWAYS Force generation increment after every game - fixed to ensure generation advances
+  console.log(`⚡ Incrementing generation after game ⚡`);
+  resetGamesSinceLastIncrement();
+  return incrementGeneration();
 };
