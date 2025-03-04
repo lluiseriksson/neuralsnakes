@@ -48,7 +48,8 @@ export function useRecordingPlayer() {
       // Get brain data from the snake object if available
       const generation = typeof snake.brain === 'object' && snake.brain !== null ? 
                          (snake.brain.getGeneration ? snake.brain.getGeneration() : 
-                          snake.brain.generation || 0) : 0;
+                          // Fix here: Use proper method call or access mechanism
+                          (typeof snake.brain.getGeneration === 'function' ? snake.brain.getGeneration() : 0)) : 0;
       const score = snake.score || 0;
       
       // Create a proper NeuralNetwork implementation
