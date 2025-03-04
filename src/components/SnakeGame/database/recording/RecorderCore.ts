@@ -13,10 +13,25 @@ export class RecorderCore {
     this.frames = [];
     this.isRecording = true;
     this.startTime = Date.now();
-    this.initialGeneration = Math.max(
-      ...initialGameState.snakes.map(snake => snake.brain.getGeneration()),
-      1
-    );
+    
+    // Safely get max generation with fallbacks
+    try {
+      this.initialGeneration = Math.max(
+        ...initialGameState.snakes
+          .map(snake => {
+            // Add null/undefined checks for snake.brain
+            if (!snake.brain || typeof snake.brain.getGeneration !== 'function') {
+              console.warn(`Snake ${snake.id} has invalid brain, using generation 1`);
+              return 1;
+            }
+            return snake.brain.getGeneration() || 1;
+          }),
+        1 // Fallback minimum value
+      );
+    } catch (error) {
+      console.error("Error getting initial generation:", error);
+      this.initialGeneration = 1; // Default fallback
+    }
     
     // Crear copia profunda del estado inicial
     this.addFrame(this.deepCloneGameState(initialGameState));
@@ -35,13 +50,30 @@ export class RecorderCore {
 
     // Obtener últimos datos
     const lastFrame = this.frames[this.frames.length - 1];
-    const finalScores = lastFrame.snakes.map(snake => ({
-      id: snake.id,
-      score: snake.score,
-      color: snake.color,
-      survived: snake.alive,
-      generation: snake.brain.getGeneration()
-    }));
+    
+    // Safely extract final scores with error handling
+    const finalScores = lastFrame.snakes.map(snake => {
+      try {
+        return {
+          id: snake.id,
+          score: snake.score,
+          color: snake.color,
+          survived: snake.alive,
+          generation: snake.brain && typeof snake.brain.getGeneration === 'function' 
+            ? snake.brain.getGeneration() 
+            : 1
+        };
+      } catch (error) {
+        console.error(`Error getting data for snake ${snake.id}:`, error);
+        return {
+          id: snake.id,
+          score: snake.score || 0,
+          color: snake.color || '#CCCCCC',
+          survived: !!snake.alive,
+          generation: 1
+        };
+      }
+    });
 
     const recording: GameRecordingData = {
       frames: this.frames,
@@ -66,32 +98,63 @@ export class RecorderCore {
 
   // Crear copia profunda del estado para evitar referencias
   private deepCloneGameState(gameState: GameState): GameState {
-    // Simplificar datos para grabación (eliminar referencias circulares y funciones)
-    const snakes = gameState.snakes.map(snake => ({
-      id: snake.id,
-      positions: [...snake.positions.map(pos => ({ ...pos }))],
-      direction: snake.direction,
-      color: snake.color,
-      score: snake.score,
-      alive: snake.alive,
-      gridSize: snake.gridSize,
-      // Omitir brain completo, guardar solo datos mínimos
-      brain: {
-        generation: snake.brain.getGeneration(),
-        score: snake.score,
-        bestScore: snake.brain.getBestScore()
-      },
-      decisionMetrics: snake.decisionMetrics ? { ...snake.decisionMetrics } : undefined
-    }));
+    try {
+      // Simplificar datos para grabación (eliminar referencias circulares y funciones)
+      const snakes = gameState.snakes.map(snake => {
+        try {
+          return {
+            id: snake.id,
+            positions: [...snake.positions.map(pos => ({ ...pos }))],
+            direction: snake.direction,
+            color: snake.color,
+            score: snake.score,
+            alive: snake.alive,
+            gridSize: snake.gridSize,
+            // Omitir brain completo, guardar solo datos mínimos con protección
+            brain: {
+              generation: (snake.brain && typeof snake.brain.getGeneration === 'function') 
+                ? snake.brain.getGeneration() 
+                : 1,
+              score: snake.score,
+              bestScore: (snake.brain && typeof snake.brain.getBestScore === 'function')
+                ? snake.brain.getBestScore()
+                : snake.score
+            },
+            decisionMetrics: snake.decisionMetrics ? { ...snake.decisionMetrics } : undefined
+          };
+        } catch (error) {
+          console.error(`Error cloning snake ${snake.id}:`, error);
+          // Return minimal valid snake object on error
+          return {
+            id: snake.id,
+            positions: snake.positions ? [...snake.positions.map(pos => ({ ...pos }))] : [{ x: 0, y: 0 }],
+            direction: snake.direction || 'RIGHT',
+            color: snake.color || '#CCCCCC',
+            score: snake.score || 0,
+            alive: !!snake.alive,
+            gridSize: snake.gridSize || 30,
+            brain: { generation: 1, score: 0, bestScore: 0 }
+          };
+        }
+      });
 
-    const apples = gameState.apples.map(apple => ({
-      position: { ...apple.position }
-    }));
+      const apples = gameState.apples.map(apple => ({
+        position: { ...apple.position }
+      }));
 
-    return {
-      snakes: snakes as any,
-      apples,
-      gridSize: gameState.gridSize
-    };
+      return {
+        snakes: snakes as any,
+        apples,
+        gridSize: gameState.gridSize
+      };
+    } catch (error) {
+      console.error("Error in deepCloneGameState:", error);
+      // Return minimal valid gameState on error
+      return {
+        snakes: [],
+        apples: [],
+        gridSize: gameState.gridSize || 30
+      };
+    }
   }
 }

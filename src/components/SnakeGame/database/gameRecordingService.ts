@@ -1,4 +1,4 @@
 
-// This file is now just a re-export to maintain backward compatibility
-export { GameRecorder } from './recording';
-export type { GameRecording, GameRecordingData } from './recording';
+// Re-export from new module structure with proper type exports
+export { GameRecorder } from './recording/GameRecorder';
+export type { GameRecordingData, GameRecording } from './recording/types';
