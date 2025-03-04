@@ -20,36 +20,32 @@ export const startPlaybackTimer = (
   if (!frames || frames.length <= 1) return null;
   
   return window.setInterval(() => {
-    setCurrentFrame(prev => {
-      const nextFrame = prev + 1;
+    const nextFrame = currentFrame + 1;
+    
+    if (nextFrame >= frames.length) {
+      setIsPlaying(false);
+      cleanup();
+      return; // End playback
+    }
+    
+    try {
+      // Process the next frame
+      const processedState = frames[nextFrame];
+      setCurrentGameState(processedState);
+      setCurrentFrame(nextFrame);
       
-      if (nextFrame >= frames.length) {
-        setIsPlaying(false);
-        cleanup();
-        return prev; // Keep at the last frame
-      }
-      
-      try {
-        // Process the next frame
-        const processedState = frames[nextFrame];
-        setCurrentGameState(processedState);
-        
-        // If we have an active snake, find the corresponding one in the new frame
-        if (activeSnake && processedState.snakes) {
-          const updatedActiveSnake = processedState.snakes.find(s => s.id === activeSnake.id);
-          if (updatedActiveSnake) {
-            setActiveSnake(updatedActiveSnake);
-          }
+      // If we have an active snake, find the corresponding one in the new frame
+      if (activeSnake && processedState.snakes) {
+        const updatedActiveSnake = processedState.snakes.find(s => s.id === activeSnake.id);
+        if (updatedActiveSnake) {
+          setActiveSnake(updatedActiveSnake);
         }
-      } catch (error) {
-        console.error("Error processing frame:", error);
-        setIsPlaying(false);
-        cleanup();
-        return prev;
       }
-      
-      return nextFrame;
-    });
+    } catch (error) {
+      console.error("Error processing frame:", error);
+      setIsPlaying(false);
+      cleanup();
+    }
   }, speed);
 };
 
