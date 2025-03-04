@@ -2,7 +2,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from './components/ui/toaster';
 import Index from './pages/Index';
-import Recordings from './pages/Recordings';
 import NotFound from './pages/NotFound';
 import './App.css';
 
@@ -12,7 +11,6 @@ function App() {
       <div>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/recordings" element={<Recordings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />
