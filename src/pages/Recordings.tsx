@@ -8,9 +8,11 @@ import RecordingInstructions from "../components/Recordings/RecordingInstruction
 import RecordingsHeader from "../components/Recordings/RecordingsHeader";
 import RecordingUploader from "../components/Recordings/RecordingUploader";
 import RecordingVisualizer from "../components/Recordings/Player/RecordingVisualizer";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const RecordingsPage = () => {
-  // Get recordings data and operations
+  // Obtener datos de grabaciones y operaciones
   const { 
     recordings,
     loading,
@@ -20,7 +22,7 @@ const RecordingsPage = () => {
     refresh
   } = useRecordingsData();
 
-  // Recording player functionality
+  // Funcionalidad del reproductor de grabaciones
   const {
     isPlaying,
     currentFrame,
@@ -32,10 +34,12 @@ const RecordingsPage = () => {
     handleSelectSnake,
     totalFrames,
     playbackSpeed,
-    changePlaybackSpeed
+    changePlaybackSpeed,
+    seekToFrame,
+    processingError
   } = useRecordingPlayer();
 
-  // Upload handling
+  // Manejo de carga
   const {
     showUploader,
     toggleUploader,
@@ -56,14 +60,21 @@ const RecordingsPage = () => {
           onToggleUploader={toggleUploader}
         />
         
+        {processingError && (
+          <Alert variant="destructive" className="mb-4 bg-red-900 border-red-700">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{processingError}</AlertDescription>
+          </Alert>
+        )}
+        
         {showUploader && (
           <div className="mb-6 p-4 bg-gray-900 rounded-lg border border-gray-800">
-            <h3 className="text-lg font-semibold mb-3">Upload a recording</h3>
+            <h3 className="text-lg font-semibold mb-3">Subir una grabación</h3>
             <RecordingUploader onFileLoaded={handleFileLoaded} />
           </div>
         )}
         
-        {/* Game Visualizer Section */}
+        {/* Sección de visualización del juego */}
         {currentGameState && (
           <RecordingVisualizer
             currentGameState={currentGameState}
@@ -76,6 +87,7 @@ const RecordingsPage = () => {
             onTogglePlay={togglePlay}
             onSelectSnake={handleSelectSnake}
             onChangeSpeed={changePlaybackSpeed}
+            onSeekFrame={seekToFrame}
           />
         )}
         

@@ -1,9 +1,10 @@
 
 import { useState, useEffect, useRef } from 'react';
+import { useToast } from "../../../components/ui/use-toast";
 import { GameRecording } from "../../SnakeGame/database/gameRecordingService";
 import { GameState, Snake, NeuralNetwork } from "../../SnakeGame/types";
 
-// Helper class to create a minimal brain implementation for visualization
+// Clase para crear una implementación mínima de cerebro para visualización
 class MinimalBrain implements NeuralNetwork {
   private generationValue: number = 0;
   private scoreValue: number = 0;
@@ -13,7 +14,7 @@ class MinimalBrain implements NeuralNetwork {
     this.scoreValue = score;
   }
   
-  // Implement required methods
+  // Implementar métodos requeridos
   predict(inputs: number[]): number[] { return [0, 0, 0, 0]; }
   learn(success: boolean, inputs?: number[], outputs?: number[], reward?: number): void {}
   clone(mutationRate?: number): NeuralNetwork { return new MinimalBrain(this.generationValue, this.scoreValue); }
@@ -40,19 +41,34 @@ export function useRecordingPlayer() {
   const [activeSnake, setActiveSnake] = useState<Snake | null>(null);
   const [startTime, setStartTime] = useState(Date.now());
   const [currentRecording, setCurrentRecording] = useState<GameRecording | null>(null);
-  const [playbackSpeed, setPlaybackSpeed] = useState(200); // ms per frame
+  const [playbackSpeed, setPlaybackSpeed] = useState(200); // ms por frame
+  const [totalFrames, setTotalFrames] = useState(0);
+  const [processingError, setProcessingError] = useState<string | null>(null);
   const frameTimerRef = useRef<number | null>(null);
+  const framesRef = useRef<GameState[]>([]);
+  const { toast } = useToast();
 
-  // Process a snake to ensure it has valid brain properties for visualization
+  // Procesar un snake para asegurar que tiene propiedades válidas de cerebro para visualización
   const processSnake = (snake: Snake): Snake => {
     if (!snake.brain || typeof snake.brain.getGeneration !== 'function') {
-      // Get brain data from the snake object if available
-      const generation = typeof snake.brain === 'object' && snake.brain !== null ? 
-                         (snake.brain.getGeneration ? snake.brain.getGeneration() : 
-                          (typeof snake.brain.getGeneration === 'function' ? snake.brain.getGeneration() : 0)) : 0;
-      const score = snake.score || 0;
+      // Obtener datos del cerebro del objeto snake si están disponibles
+      let generation = 0;
+      let score = snake.score || 0;
       
-      // Create a proper NeuralNetwork implementation
+      // Intentar extraer la generación de diferentes fuentes
+      if (typeof snake.brain === 'object' && snake.brain !== null) {
+        if (typeof snake.brain.getGeneration === 'function') {
+          try {
+            generation = snake.brain.getGeneration();
+          } catch (error) {
+            console.error("Error calling getGeneration:", error);
+          }
+        } else if (snake.brain.generation !== undefined) {
+          generation = Number(snake.brain.generation);
+        }
+      }
+      
+      // Crear una implementación adecuada de NeuralNetwork
       return {
         ...snake,
         brain: new MinimalBrain(generation, score)
@@ -61,10 +77,10 @@ export function useRecordingPlayer() {
     return snake;
   };
 
-  // Process all snakes in a game state
+  // Procesar todos los snakes en un estado de juego
   const processGameState = (state: GameState): GameState => {
-    if (!state.snakes) {
-      console.error("Invalid game state - missing snakes array");
+    if (!state || !state.snakes) {
+      console.error("Estado de juego inválido - falta el array de snakes");
       return state;
     }
     
@@ -74,122 +90,160 @@ export function useRecordingPlayer() {
     };
   };
 
-  // Handle playing a recording
+  // Manejar la reproducción de una grabación
   const handlePlayRecording = (recording: GameRecording) => {
+    // Reiniciar el estado
+    cleanup();
+    setProcessingError(null);
+    
     if (!recording.game_data || !recording.game_data.frames || recording.game_data.frames.length === 0) {
-      console.error("Invalid recording data");
+      setProcessingError("Datos de grabación inválidos o vacíos");
+      toast({
+        title: "Error",
+        description: "Este archivo de grabación no contiene datos válidos.",
+        variant: "destructive"
+      });
       return;
     }
 
-    // Reset timer if already running
-    if (frameTimerRef.current) {
-      clearInterval(frameTimerRef.current);
-      frameTimerRef.current = null;
-    }
-
+    console.log(`Iniciando reproducción con ${recording.game_data.frames.length} frames`);
     setCurrentRecording(recording);
     
     try {
-      // Process first frame with valid brain objects
-      const firstProcessedState = processGameState(recording.game_data.frames[0]);
+      // Preprocesar todos los frames para un acceso más rápido
+      const processedFrames = recording.game_data.frames.map(processGameState);
+      framesRef.current = processedFrames;
+      setTotalFrames(processedFrames.length);
       
-      setCurrentGameState(firstProcessedState);
-      setStartTime(Date.now());
-      setCurrentFrame(0);
-      setIsPlaying(true);
-      
-      // Set an active snake by default (first one)
-      if (firstProcessedState.snakes.length > 0) {
-        setActiveSnake(firstProcessedState.snakes[0]);
+      // Configurar el primer frame
+      if (processedFrames.length > 0) {
+        const firstProcessedState = processedFrames[0];
+        setCurrentGameState(firstProcessedState);
+        setStartTime(Date.now());
+        setCurrentFrame(0);
+        
+        // Establecer una serpiente activa por defecto (la primera)
+        if (firstProcessedState.snakes && firstProcessedState.snakes.length > 0) {
+          setActiveSnake(firstProcessedState.snakes[0]);
+        }
       }
       
-      console.log("Started playing recording with", recording.game_data.frames.length, "frames");
+      setIsPlaying(true);
+      
+      console.log("Comenzó a reproducir la grabación con", recording.game_data.frames.length, "frames");
     } catch (error) {
-      console.error("Error processing recording:", error);
+      console.error("Error al procesar la grabación:", error);
+      setProcessingError(`Error al procesar la grabación: ${error}`);
+      toast({
+        title: "Error",
+        description: "No se pudo procesar la grabación.",
+        variant: "destructive"
+      });
     }
   };
 
-  // Toggle play/pause
+  // Alternar reproducción/pausa
   const togglePlay = () => setIsPlaying(prevState => !prevState);
 
-  // Select a snake
+  // Seleccionar una serpiente
   const handleSelectSnake = (snake: Snake) => {
-    console.log("Selected snake:", snake.id);
+    console.log("Serpiente seleccionada:", snake.id);
     setActiveSnake(snake);
   };
 
-  // Clean up interval on unmount or when dependencies change
-  useEffect(() => {
-    return () => {
-      if (frameTimerRef.current) {
-        clearInterval(frameTimerRef.current);
-        frameTimerRef.current = null;
+  // Buscar un frame específico
+  const seekToFrame = (frameIndex: number) => {
+    if (frameIndex < 0 || !framesRef.current || frameIndex >= framesRef.current.length) {
+      return;
+    }
+    
+    setCurrentFrame(frameIndex);
+    const targetFrame = framesRef.current[frameIndex];
+    setCurrentGameState(targetFrame);
+    
+    // Si tenemos una serpiente activa, encontrar la correspondiente en el nuevo frame
+    if (activeSnake && targetFrame.snakes) {
+      const updatedActiveSnake = targetFrame.snakes.find(s => s.id === activeSnake.id);
+      if (updatedActiveSnake) {
+        setActiveSnake(updatedActiveSnake);
       }
-    };
-  }, []);
+    }
+  };
 
-  // Advance frames when playing
-  useEffect(() => {
+  // Cambiar la velocidad de reproducción
+  const changePlaybackSpeed = (newSpeed: number) => {
+    setPlaybackSpeed(newSpeed);
+    
+    // Reiniciar el temporizador con la nueva velocidad
+    if (isPlaying) {
+      cleanup();
+      startPlaybackTimer(newSpeed);
+    }
+  };
+
+  // Iniciar el temporizador de reproducción
+  const startPlaybackTimer = (speed: number = playbackSpeed) => {
+    cleanup();
+    
+    if (!framesRef.current || framesRef.current.length <= 1) return;
+    
+    frameTimerRef.current = window.setInterval(() => {
+      setCurrentFrame(prev => {
+        const nextFrame = prev + 1;
+        
+        if (nextFrame >= framesRef.current.length) {
+          setIsPlaying(false);
+          cleanup();
+          return prev; // Mantener en el último frame
+        }
+        
+        try {
+          // Procesar el siguiente frame
+          const processedState = framesRef.current[nextFrame];
+          setCurrentGameState(processedState);
+          
+          // Si tenemos una serpiente activa, encontrar la correspondiente en el nuevo frame
+          if (activeSnake && processedState.snakes) {
+            const updatedActiveSnake = processedState.snakes.find(s => s.id === activeSnake.id);
+            if (updatedActiveSnake) {
+              setActiveSnake(updatedActiveSnake);
+            }
+          }
+        } catch (error) {
+          console.error("Error al procesar el frame:", error);
+          setIsPlaying(false);
+          cleanup();
+          return prev;
+        }
+        
+        return nextFrame;
+      });
+    }, speed);
+  };
+
+  // Limpiar temporizadores
+  const cleanup = () => {
     if (frameTimerRef.current) {
       clearInterval(frameTimerRef.current);
       frameTimerRef.current = null;
     }
-    
-    if (isPlaying && currentRecording?.game_data?.frames) {
-      const frames = currentRecording.game_data.frames;
-      
-      frameTimerRef.current = window.setInterval(() => {
-        setCurrentFrame(prev => {
-          const nextFrame = prev + 1;
-          
-          if (nextFrame >= frames.length) {
-            setIsPlaying(false);
-            if (frameTimerRef.current) {
-              clearInterval(frameTimerRef.current);
-              frameTimerRef.current = null;
-            }
-            return prev; // Stay on last frame
-          }
-          
-          try {
-            // Process the next frame
-            const processedState = processGameState(frames[nextFrame]);
-            setCurrentGameState(processedState);
-            
-            // If we have an active snake, find the corresponding snake in the new frame
-            if (activeSnake) {
-              const updatedActiveSnake = processedState.snakes.find(s => s.id === activeSnake.id);
-              if (updatedActiveSnake) {
-                setActiveSnake(updatedActiveSnake);
-              }
-            }
-          } catch (error) {
-            console.error("Error processing frame:", error);
-            setIsPlaying(false);
-            if (frameTimerRef.current) {
-              clearInterval(frameTimerRef.current);
-              frameTimerRef.current = null;
-            }
-            return prev;
-          }
-          
-          return nextFrame;
-        });
-      }, playbackSpeed);
+  };
+
+  // Limpiar al desmontar
+  useEffect(() => {
+    return cleanup;
+  }, []);
+
+  // Avanzar frames cuando se está reproduciendo
+  useEffect(() => {
+    if (isPlaying) {
+      startPlaybackTimer();
+    } else {
+      cleanup();
     }
     
-    return () => {
-      if (frameTimerRef.current) {
-        clearInterval(frameTimerRef.current);
-        frameTimerRef.current = null;
-      }
-    };
-  }, [isPlaying, currentRecording, activeSnake, playbackSpeed]);
-
-  // Change playback speed
-  const changePlaybackSpeed = (newSpeed: number) => {
-    setPlaybackSpeed(newSpeed);
-  };
+    return cleanup;
+  }, [isPlaying, activeSnake]);
 
   return {
     isPlaying,
@@ -199,10 +253,12 @@ export function useRecordingPlayer() {
     startTime,
     currentRecording,
     playbackSpeed,
+    totalFrames,
+    processingError,
     togglePlay,
     handlePlayRecording,
     handleSelectSnake,
     changePlaybackSpeed,
-    totalFrames: currentRecording?.game_data?.frames?.length || 0
+    seekToFrame
   };
 }

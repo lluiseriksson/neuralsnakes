@@ -16,6 +16,7 @@ interface RecordingVisualizerProps {
   onTogglePlay: () => void;
   onSelectSnake: (snake: Snake) => void;
   onChangeSpeed: (speed: number) => void;
+  onSeekFrame?: (frameIndex: number) => void;
 }
 
 const RecordingVisualizer: React.FC<RecordingVisualizerProps> = ({
@@ -28,10 +29,18 @@ const RecordingVisualizer: React.FC<RecordingVisualizerProps> = ({
   playbackSpeed,
   onTogglePlay,
   onSelectSnake,
-  onChangeSpeed
+  onChangeSpeed,
+  onSeekFrame
 }) => {
   if (!currentGameState) {
-    return <div className="p-4 text-white bg-gray-900 rounded-lg">Loading recording data...</div>;
+    return (
+      <div className="p-4 text-white bg-gray-900 rounded-lg">
+        <div className="flex items-center justify-center p-6">
+          <div className="inline-block w-8 h-8 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin mr-3"></div>
+          <span>Cargando datos de la grabación...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -43,6 +52,7 @@ const RecordingVisualizer: React.FC<RecordingVisualizerProps> = ({
         totalFrames={totalFrames}
         playbackSpeed={playbackSpeed}
         onChangeSpeed={onChangeSpeed}
+        onSeekFrame={onSeekFrame}
       />
       
       <div className="grid md:grid-cols-3 gap-6">
