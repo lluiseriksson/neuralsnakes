@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Snake } from './types';
 
 interface ScoreBoardProps {
@@ -12,6 +12,20 @@ interface ScoreBoardProps {
 }
 
 const ScoreBoard: React.FC<ScoreBoardProps> = ({ snakes, generationInfo }) => {
+  // Add local state for snake scores to ensure they update properly
+  const [snakeScores, setSnakeScores] = useState<{[key: number]: number}>({});
+  
+  // Update the local scores whenever snakes array changes
+  useEffect(() => {
+    if (snakes && snakes.length > 0) {
+      const newScores: {[key: number]: number} = {};
+      snakes.forEach(snake => {
+        newScores[snake.id] = snake.score;
+      });
+      setSnakeScores(newScores);
+    }
+  }, [snakes]);
+
   return (
     <div className="mt-4 space-y-4">
       {generationInfo && (
@@ -42,7 +56,7 @@ const ScoreBoard: React.FC<ScoreBoardProps> = ({ snakes, generationInfo }) => {
             <div className={`w-4 h-4 rounded-full flex-shrink-0`} style={{ backgroundColor: snake.color }} />
             <div className="flex-1">
               <span className="font-medium text-white">
-                Score: {snake.score} 
+                Score: {snakeScores[snake.id] || snake.score} 
               </span>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-400">Gen: {snake.brain.getGeneration()}</span>

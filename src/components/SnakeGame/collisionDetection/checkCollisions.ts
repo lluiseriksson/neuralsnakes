@@ -21,6 +21,7 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
       
       // Mark snake as dead
       snake.alive = false;
+      console.log(`Snake ${snake.id} died from self-collision. Final score: ${snake.score}`);
     }
   }
   
@@ -38,6 +39,13 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
   
   // Handle respawning
   updatedSnakes = handleRespawn(updatedSnakes);
+  
+  // Ensure all snakes have their scores properly reflected in brain stats
+  updatedSnakes.forEach(snake => {
+    if (snake.brain && typeof snake.brain.setScore === 'function') {
+      snake.brain.setScore(snake.score);
+    }
+  });
   
   return { newSnakes: updatedSnakes, newApples: updatedApples };
 };

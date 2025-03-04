@@ -9,6 +9,7 @@ export class NetworkStats {
   private generation: number = 1;
   private learningRate: number = 0.3;
   private lastPredictions: number[] = [];
+  private lastScoreUpdate: number = Date.now();
 
   constructor(
     score?: number, 
@@ -49,7 +50,18 @@ export class NetworkStats {
   }
   
   setScore(score: number): void {
-    this.score = score;
+    // Only update if it's been at least 100ms since the last update to prevent too frequent updates
+    const now = Date.now();
+    if (now - this.lastScoreUpdate >= 100) {
+      this.score = score;
+      this.lastScoreUpdate = now;
+      
+      // Also update best score if needed
+      if (score > this.bestScore) {
+        this.bestScore = score;
+        console.log(`New best score: ${this.bestScore} for generation ${this.generation}`);
+      }
+    }
   }
   
   getGeneration(): number {
@@ -68,6 +80,7 @@ export class NetworkStats {
   updateBestScore(score: number): void {
     if (score > this.bestScore) {
       this.bestScore = score;
+      console.log(`Updated best score: ${this.bestScore} for generation ${this.generation}`);
     }
   }
   

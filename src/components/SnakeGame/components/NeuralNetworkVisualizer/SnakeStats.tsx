@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Snake } from '../../types';
 
 interface SnakeStatsProps {
@@ -7,6 +7,18 @@ interface SnakeStatsProps {
 }
 
 const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
+  // Add local state for score to ensure it updates properly
+  const [score, setScore] = useState(activeSnake?.score || 0);
+  const [applesEaten, setApplesEaten] = useState(activeSnake?.decisionMetrics?.applesEaten || 0);
+  
+  // Update the local score whenever activeSnake changes
+  useEffect(() => {
+    if (activeSnake) {
+      setScore(activeSnake.score);
+      setApplesEaten(activeSnake.decisionMetrics?.applesEaten || 0);
+    }
+  }, [activeSnake]);
+  
   // Calculate success rate with safety check
   const totalAttempts = activeSnake.brain.getPerformanceStats().learningAttempts || 1;
   const successRate = (activeSnake.brain.getPerformanceStats().successfulMoves / totalAttempts * 100).toFixed(1);
@@ -32,7 +44,7 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
   return (
     <div className="mt-2 text-xs px-2">
       <p className={`font-semibold ${getSnakeTypeStyle()}`}>
-        {getSnakeTypeLabel()} - Puntuación: {activeSnake.score}
+        {getSnakeTypeLabel()} - Puntuación: {score}
       </p>
       <div className="flex justify-between text-xs mt-1">
         <span>Tasa de éxito: {successRate}%</span>
@@ -45,7 +57,7 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
             style={{ width: `${Math.min(parseInt(successRate), 100)}%` }}
           ></div>
         </div>
-        <span className="text-xs ml-2">Manzanas: {activeSnake.decisionMetrics?.applesEaten || 0}</span>
+        <span className="text-xs ml-2">Manzanas: {applesEaten}</span>
       </div>
     </div>
   );

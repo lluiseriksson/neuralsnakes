@@ -23,6 +23,15 @@ export const checkAppleCollisions = (snakes: Snake[], apples: Apple[]): { snakes
     if (appleIndex !== -1) {
       console.log(`Snake ${snake.id} ate an apple at (${head.x}, ${head.y})`);
       
+      // Increment score - this helps ensure score updates are tracked
+      snake.score += 1;
+      console.log(`Snake ${snake.id} new score: ${snake.score}`);
+      
+      // Update the brain's score record
+      if (snake.brain && typeof snake.brain.setScore === 'function') {
+        snake.brain.setScore(snake.score);
+      }
+      
       // Reward for eating an apple
       if (snake.lastInputs && snake.lastOutputs) {
         const reward = 3.0; // High reward
@@ -34,7 +43,8 @@ export const checkAppleCollisions = (snakes: Snake[], apples: Apple[]): { snakes
       
       // Update metrics
       if (snake.decisionMetrics) {
-        snake.decisionMetrics.applesEaten++;
+        snake.decisionMetrics.applesEaten = (snake.decisionMetrics.applesEaten || 0) + 1;
+        console.log(`Snake ${snake.id} apples eaten: ${snake.decisionMetrics.applesEaten}`);
       }
       
       // Remove the eaten apple

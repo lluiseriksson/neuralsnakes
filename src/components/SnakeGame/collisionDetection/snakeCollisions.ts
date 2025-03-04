@@ -61,6 +61,10 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
             snake.alive = false;
             otherSnake.alive = false;
             
+            // Log final scores
+            console.log(`Snake ${snake.id} died in head-to-head collision. Final score: ${snake.score}`);
+            console.log(`Snake ${otherSnake.id} died in head-to-head collision. Final score: ${otherSnake.score}`);
+            
             // Count as death for both
             if (snake.decisionMetrics) {
               snake.decisionMetrics.suicides = (snake.decisionMetrics.suicides || 0) + 1;
@@ -75,10 +79,20 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
             
             // The colliding snake dies
             snake.alive = false;
+            console.log(`Snake ${snake.id} died from colliding with snake ${otherSnake.id}. Final score: ${snake.score}`);
             
             // The other snake gets the points
-            const totalSegmentsToAdd = snake.positions.length;
-            otherSnake.score += totalSegmentsToAdd;
+            const scoreToAdd = Math.max(1, Math.floor(snake.positions.length / 2));
+            otherSnake.score += scoreToAdd;
+            console.log(`Snake ${otherSnake.id} gained ${scoreToAdd} points. New score: ${otherSnake.score}`);
+            
+            // Update the brain's score record
+            if (otherSnake.brain && typeof otherSnake.brain.setScore === 'function') {
+              otherSnake.brain.setScore(otherSnake.score);
+            }
+            
+            // The total segments to add is proportional to the score
+            const totalSegmentsToAdd = Math.min(3, snake.positions.length);
             
             // Track kill for the surviving snake
             if (otherSnake.decisionMetrics) {

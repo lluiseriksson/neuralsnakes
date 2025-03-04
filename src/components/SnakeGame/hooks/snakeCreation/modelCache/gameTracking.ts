@@ -10,12 +10,26 @@ const GAMES_TO_FORCE_INCREMENT = 3; // Force increment after 3 games
 let gamesSinceLastReset = 0;
 const GAMES_TO_FORCE_RESET = 10; // Changed back to 10 for more stability
 
+// Track the highest score achieved
+let highestScoreAchieved = 0;
+
 export const getGamesSinceLastIncrement = (): number => {
   return gamesSinceLastIncrement;
 };
 
 export const resetGamesSinceLastIncrement = (): void => {
   gamesSinceLastIncrement = 0;
+};
+
+export const updateHighestScore = (score: number): void => {
+  if (score > highestScoreAchieved) {
+    highestScoreAchieved = score;
+    console.log(`🏆 New highest score achieved: ${highestScoreAchieved}`);
+  }
+};
+
+export const getHighestScore = (): number => {
+  return highestScoreAchieved;
 };
 
 export const trackGamePlayed = (): number => {
