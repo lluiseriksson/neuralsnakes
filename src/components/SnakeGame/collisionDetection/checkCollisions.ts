@@ -7,7 +7,7 @@ import { handleRespawn } from './respawnLogic';
 export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
   let updatedSnakes = [...snakes];
   let updatedApples = [...currentApples];
-  const newApplePositions: Array<{position: {x: number, y: number}}> = [];
+  const newApplePositions: Apple[] = [];
   
   // Process self-collisions first
   for (let i = 0; i < updatedSnakes.length; i++) {

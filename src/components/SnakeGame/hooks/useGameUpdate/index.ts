@@ -78,9 +78,17 @@ export const useGameUpdate = (
               console.log(`Snake ${snake.id} ate an apple at (${head.x}, ${head.y})`);
               snake.score += 1;
               
+              // Initialize actions array if needed
+              if (!snake.debugInfo.actions) {
+                snake.debugInfo.actions = [];
+              }
+              
               // Record this action for visualization
-              if (!snake.debugInfo.actions) snake.debugInfo.actions = [];
-              snake.debugInfo.actions.push({type: 'eat_apple', position: {...head}, time: Date.now()});
+              snake.debugInfo.actions.push({
+                type: 'eat_apple',
+                position: {...head},
+                time: Date.now()
+              });
               
               // Apply positive reinforcement for eating an apple
               applyPositiveAppleLearning(snake, prevState);
@@ -97,8 +105,12 @@ export const useGameUpdate = (
               // Calculate current distance to closest apple
               const currentMinDistance = calculateDistanceToClosestApple(head, finalApples);
               
+              // Initialize evaluations array if needed
+              if (!snake.debugInfo.evaluations) {
+                snake.debugInfo.evaluations = [];
+              }
+              
               // Record this evaluation for visualization
-              if (!snake.debugInfo.evaluations) snake.debugInfo.evaluations = [];
               snake.debugInfo.evaluations.push({
                 prevDistance: previousDistances[index],
                 currentDistance: currentMinDistance,

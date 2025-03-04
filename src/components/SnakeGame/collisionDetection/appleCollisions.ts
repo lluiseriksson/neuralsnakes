@@ -4,10 +4,10 @@ import { Snake, Apple } from '../types';
 /**
  * Checks if snakes have eaten apples and processes the rewards
  */
-export const checkAppleCollisions = (snakes: Snake[], apples: Apple[]): { snakes: Snake[], apples: Apple[], newApplePositions: Array<{position: {x: number, y: number}}> } => {
+export const checkAppleCollisions = (snakes: Snake[], apples: Apple[]): { snakes: Snake[], apples: Apple[], newApplePositions: Apple[] } => {
   const updatedSnakes = [...snakes];
   let updatedApples = [...apples];
-  const newApplePositions: Array<{position: {x: number, y: number}}> = [];
+  const newApplePositions: Apple[] = [];
   
   for (let i = 0; i < updatedSnakes.length; i++) {
     const snake = updatedSnakes[i];
@@ -58,8 +58,9 @@ export const checkAppleCollisions = (snakes: Snake[], apples: Apple[]): { snakes
 /**
  * Generate apple explosions when snakes die
  */
-export const generateAppleExplosion = (snake: Snake): Array<{position: {x: number, y: number}}> => {
-  return snake.positions.map(position => ({
+export const generateAppleExplosion = (snake: Snake): Apple[] => {
+  return snake.positions.map((position, index) => ({
+    id: Date.now() + index * 10, // Ensure unique IDs for each apple
     position: { ...position }
   }));
 };

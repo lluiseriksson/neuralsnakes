@@ -67,9 +67,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
             </div>
             <div className="font-medium">Direction: {selectedSnake.direction}</div>
             <div>Apples eaten: {selectedSnake.decisionMetrics?.applesEaten || 0}</div>
-            <div>Generation: {typeof selectedSnake.brain?.getGeneration === 'function' 
-              ? selectedSnake.brain.getGeneration() 
-              : 0}</div>
+            <div>Generation: {selectedSnake.brain.getGeneration() || 0}</div>
           </div>
           {selectedSnake.debugInfo?.lastDecision && (
             <div className="mt-2 p-2 bg-gray-800 bg-opacity-80 rounded border-l-2 border-green-500">

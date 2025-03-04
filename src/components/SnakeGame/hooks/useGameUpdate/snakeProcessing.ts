@@ -31,8 +31,11 @@ export const processSnakesMovement = (snakes: Snake[], gameState: GameState): Sn
     // Get prediction from neural network
     const prediction = snake.brain.predict(inputs);
     
-    // Store outputs for visualization
-    snake.debugInfo.lastOutputs = [...prediction];
+    // Store outputs for visualization and learning
+    snake.lastOutputs = [...prediction];
+    if (snake.debugInfo) {
+      snake.debugInfo.lastOutputs = [...prediction];
+    }
     
     // Apply movement with prediction
     const movedSnake = moveSnake(snake, gameState, prediction);
@@ -48,9 +51,10 @@ export const processSnakesMovement = (snakes: Snake[], gameState: GameState): Sn
     }
     
     movedSnake.debugInfo.decisions.push({
-      inputs,
-      outputs: prediction,
+      direction: movedSnake.direction,
       headPosition: {...movedSnake.positions[0]},
+      inputs: inputs,
+      outputs: prediction,
       time: Date.now()
     });
     
