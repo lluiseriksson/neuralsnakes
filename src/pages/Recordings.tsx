@@ -14,7 +14,7 @@ const RecordingsPage = () => {
   const { 
     recordings,
     loading,
-    downloading, // This should be an object of format { [key: string]: boolean }
+    downloading,
     handleDownload,
     addUploadedRecording,
     refresh
@@ -30,7 +30,9 @@ const RecordingsPage = () => {
     togglePlay,
     handlePlayRecording,
     handleSelectSnake,
-    totalFrames
+    totalFrames,
+    playbackSpeed,
+    changePlaybackSpeed
   } = useRecordingPlayer();
 
   // Upload handling
@@ -70,8 +72,10 @@ const RecordingsPage = () => {
             currentFrame={currentFrame}
             totalFrames={totalFrames}
             activeSnake={activeSnake}
+            playbackSpeed={playbackSpeed}
             onTogglePlay={togglePlay}
             onSelectSnake={handleSelectSnake}
+            onChangeSpeed={changePlaybackSpeed}
           />
         )}
         
@@ -79,7 +83,7 @@ const RecordingsPage = () => {
           <RecordingTable 
             recordings={recordings}
             loading={loading}
-            downloading={downloading} // Pass the downloading object as is
+            downloading={downloading}
             onDownload={handleDownload}
             onPlay={handlePlayRecording}
           />
