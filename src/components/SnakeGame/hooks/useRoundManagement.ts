@@ -113,7 +113,7 @@ export const useRoundManagement = (
       setVictories(prevVictories => {
         const newVictories = { ...prevVictories };
         winningSnakes.forEach(winner => {
-          console.log(`Snake ${winner.id} (${winner.color}) won with ${winner.score} points! (Generation ${winner.brain.getGeneration()})`);
+          console.log(`Snake ${winner.id} (${winner.color}) won with ${winner.score} points! (Generation ${winner.brain?.getGeneration?.() || 0})`);
           newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
         });
         return newVictories;
@@ -126,18 +126,18 @@ export const useRoundManagement = (
       for (const winner of winningSnakes) {
         try {
           // Update the winner's best score first
-          winner.brain.updateBestScore(winner.score);
+          winner.brain?.updateBestScore?.(winner.score);
           
           // Give winning models an extra generation boost
           const winnerNewGen = newGeneration + 25; // Increased from 15 to 25
-          winner.brain.updateGeneration(winnerNewGen);
+          winner.brain?.updateGeneration?.(winnerNewGen);
           
           // Save the model to DB
-          const savedId = await winner.brain.save(winner.score);
-          console.log(`Saved winning model for snake ${winner.id} (${winner.color}) with score ${winner.score} (gen: ${winner.brain.getGeneration()}) - ID: ${savedId}`);
+          const savedId = await winner.brain?.save?.(winner.score);
+          console.log(`Saved winning model for snake ${winner.id} (${winner.color}) with score ${winner.score} (gen: ${winner.brain?.getGeneration?.() || 0}) - ID: ${savedId}`);
           
           // Make sure generation tracking is updated
-          forceGenerationUpdate(winner.brain.getGeneration());
+          forceGenerationUpdate(winner.brain?.getGeneration?.() || 0);
         } catch (saveError) {
           console.error(`Error saving winning model for snake ${winner.id}:`, saveError);
         }
@@ -147,7 +147,7 @@ export const useRoundManagement = (
     // Save ALL snakes regardless of score with incrementing generations
     for (const snake of gameState.snakes) {
       try {
-        snake.brain.updateBestScore(Math.max(snake.score, 0));
+        snake.brain?.updateBestScore?.(Math.max(snake.score, 0));
         
         // Assign varied generation increments based on performance
         const baseIncrement = newGeneration;
@@ -155,13 +155,13 @@ export const useRoundManagement = (
         const finalIncrement = Math.max(10, Math.floor(performanceBonus));
         
         const snakeNewGen = baseIncrement + finalIncrement;
-        snake.brain.updateGeneration(snakeNewGen);
+        snake.brain?.updateGeneration?.(snakeNewGen);
         
-        await snake.brain.save(snake.score);
-        console.log(`Saved model for snake ${snake.id} (${snake.color}) with score ${snake.score} (gen: ${snake.brain.getGeneration()})`);
+        await snake.brain?.save?.(snake.score);
+        console.log(`Saved model for snake ${snake.id} (${snake.color}) with score ${snake.score} (gen: ${snake.brain?.getGeneration?.() || 0})`);
         
         // Make sure generation tracking is updated
-        forceGenerationUpdate(snake.brain.getGeneration());
+        forceGenerationUpdate(snake.brain?.getGeneration?.() || 0);
       } catch (saveError) {
         console.error(`Error saving model for snake ${snake.id}:`, saveError);
       }

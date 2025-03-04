@@ -128,7 +128,12 @@ export const useGameUpdate = (
           
           // Si estamos grabando, añadir frame
           if (isRecordingRef?.current && recorderRef?.current) {
-            recorderRef.current.addFrame(updatedState);
+            try {
+              recorderRef.current.addFrame(updatedState);
+            } catch (error) {
+              console.error("Error adding frame to recording:", error);
+              // Don't stop the game if recording fails
+            }
           }
           
           return updatedState;

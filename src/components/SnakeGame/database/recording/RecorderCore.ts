@@ -14,7 +14,7 @@ export class RecorderCore {
     this.isRecording = true;
     this.startTime = Date.now();
     this.initialGeneration = Math.max(
-      ...initialGameState.snakes.map(snake => snake.brain.getGeneration()),
+      ...initialGameState.snakes.map(snake => snake.brain?.getGeneration?.() || 1),
       1
     );
     
@@ -40,7 +40,7 @@ export class RecorderCore {
       score: snake.score,
       color: snake.color,
       survived: snake.alive,
-      generation: snake.brain.getGeneration()
+      generation: snake.brain?.getGeneration?.() || 1
     }));
 
     const recording: GameRecordingData = {
@@ -77,9 +77,9 @@ export class RecorderCore {
       gridSize: snake.gridSize,
       // Omitir brain completo, guardar solo datos mínimos
       brain: {
-        generation: snake.brain.getGeneration(),
+        generation: snake.brain?.getGeneration?.() || 1,
         score: snake.score,
-        bestScore: snake.brain.getBestScore()
+        bestScore: snake.brain?.getBestScore?.() || 0
       },
       decisionMetrics: snake.decisionMetrics ? { ...snake.decisionMetrics } : undefined
     }));

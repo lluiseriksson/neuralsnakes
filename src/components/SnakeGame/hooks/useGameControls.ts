@@ -61,17 +61,26 @@ export const useGameControls = (
       return;
     }
     
-    // Iniciar grabación
-    recorderRef.current.startRecording(gameState);
-    isRecordingRef.current = true;
-    
-    toast({
-      title: "Grabación iniciada",
-      description: "Se está grabando la partida actual.",
-      variant: "default"
-    });
-    
-    console.log("Grabación iniciada");
+    try {
+      // Iniciar grabación
+      recorderRef.current.startRecording(gameState);
+      isRecordingRef.current = true;
+      
+      toast({
+        title: "Grabación iniciada",
+        description: "Se está grabando la partida actual.",
+        variant: "default"
+      });
+      
+      console.log("Grabación iniciada");
+    } catch (error) {
+      console.error("Error al iniciar la grabación:", error);
+      toast({
+        title: "Error al iniciar grabación",
+        description: "No se pudo iniciar la grabación. Intenta de nuevo.",
+        variant: "destructive"
+      });
+    }
   }, [recorderRef, isRecordingRef, gameState, toast]);
 
   // Función interna para detener la grabación
@@ -86,31 +95,36 @@ export const useGameControls = (
       return null;
     }
     
-    // Detener grabación
-    const recording = recorderRef.current.stopRecording();
-    isRecordingRef.current = false;
-    
-    if (!recording) {
-      console.error("Error al detener la grabación: no hay datos");
-      return null;
-    }
-    
-    console.log("Grabación detenida");
-    
-    // Guardar grabación
     try {
-      const recordingId = await recorderRef.current.saveRecording(recording);
+      // Detener grabación
+      const recording = recorderRef.current.stopRecording();
+      isRecordingRef.current = false;
       
-      if (recordingId) {
-        console.log(`Grabación guardada con ID: ${recordingId}`);
-        return { id: recordingId, recording };
-      } else {
-        console.error("Error al guardar la grabación");
+      if (!recording) {
+        console.error("Error al detener la grabación: no hay datos");
+        return null;
+      }
+      
+      console.log("Grabación detenida");
+      
+      // Guardar grabación
+      try {
+        const recordingId = await recorderRef.current.saveRecording(recording);
+        
+        if (recordingId) {
+          console.log(`Grabación guardada con ID: ${recordingId}`);
+          return { id: recordingId, recording };
+        } else {
+          console.error("Error al guardar la grabación");
+          return { recording };
+        }
+      } catch (error) {
+        console.error("Error al guardar la grabación:", error);
         return { recording };
       }
     } catch (error) {
-      console.error("Error al guardar la grabación:", error);
-      return { recording };
+      console.error("Error al detener la grabación:", error);
+      return null;
     }
   }, [recorderRef, isRecordingRef]);
 
