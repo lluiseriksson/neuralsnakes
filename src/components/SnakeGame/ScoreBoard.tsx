@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Snake } from './types';
 import GenerationInfoCard from './components/ScoreBoard/GenerationInfoCard';
 import SnakeScoreGrid from './components/ScoreBoard/SnakeScoreGrid';
-import { getHighestScore } from './hooks/snakeCreation/modelCache';
+import { getHighestScore, resetHighestScore } from './hooks/snakeCreation/modelCache';
 
 interface ScoreBoardProps {
   snakes: Snake[];
@@ -19,6 +19,13 @@ const ScoreBoard: React.FC<ScoreBoardProps> = ({ snakes, generationInfo }) => {
   const [snakeScores, setSnakeScores] = useState<{[key: number]: number}>({});
   // Add local state for best score to ensure it updates properly
   const [bestScore, setBestScore] = useState(0);
+  
+  // Reset score on mount
+  useEffect(() => {
+    // Reset the high score when component mounts
+    resetHighestScore();
+    console.log("High score reset on scoreboard mount");
+  }, []);
   
   // Update the local scores whenever snakes array changes
   useEffect(() => {

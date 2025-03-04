@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { resetHighestScore } from '../../hooks/snakeCreation/modelCache';
 
 interface GenerationInfoCardProps {
   generation: number;
@@ -12,6 +13,12 @@ const GenerationInfoCard: React.FC<GenerationInfoCardProps> = ({
   bestScore, 
   progress 
 }) => {
+  // Reset high score when the component is first mounted
+  useEffect(() => {
+    resetHighestScore();
+    console.log("High score reset on GenerationInfoCard mount");
+  }, []);
+
   // Ensure best score is always displayed as an integer and is at least 0
   const displayScore = Math.max(0, Math.floor(bestScore));
   
