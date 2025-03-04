@@ -42,8 +42,8 @@ const RecordingUploader: React.FC<RecordingUploaderProps> = ({ onFileLoaded }) =
   const handleFile = (file: File) => {
     if (!file.name.endsWith('.json')) {
       toast({
-        title: "Formato no válido",
-        description: "Por favor, selecciona un archivo JSON de grabación",
+        title: "Invalid format",
+        description: "Please select a JSON recording file",
         variant: "destructive"
       });
       return;
@@ -59,20 +59,20 @@ const RecordingUploader: React.FC<RecordingUploaderProps> = ({ onFileLoaded }) =
         
         // Basic validation
         if (!recordingData.game_data || !recordingData.game_data.frames) {
-          throw new Error("Archivo no válido: Formato de grabación incorrecto");
+          throw new Error("Invalid file: Incorrect recording format");
         }
         
         onFileLoaded(recordingData);
         
         toast({
-          title: "Archivo cargado correctamente",
+          title: "File loaded successfully",
           description: `${file.name} (${(file.size / 1024).toFixed(1)} KB)`,
         });
       } catch (error) {
         console.error("Error parsing recording file:", error);
         toast({
-          title: "Error al cargar el archivo",
-          description: error instanceof Error ? error.message : "Formato de archivo inválido",
+          title: "Error loading file",
+          description: error instanceof Error ? error.message : "Invalid file format",
           variant: "destructive"
         });
       }
@@ -102,11 +102,11 @@ const RecordingUploader: React.FC<RecordingUploaderProps> = ({ onFileLoaded }) =
         >
           <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
           <p className="text-gray-300">
-            Arrastra y suelta un archivo de grabación o{" "}
-            <span className="text-purple-400 underline">selecciona un archivo</span>
+            Drag and drop a recording file or{" "}
+            <span className="text-purple-400 underline">select a file</span>
           </p>
           <p className="text-xs text-gray-500 mt-2">
-            Formato soportado: .json (grabaciones de partidas)
+            Supported format: .json (game recordings)
           </p>
           <input
             type="file"

@@ -18,15 +18,15 @@ const RecordingsHeader: React.FC<RecordingsHeaderProps> = ({
   return (
     <>
       <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-        Partidas Grabadas
+        Recorded Games
       </h1>
       
       <div className="mb-6 p-4 bg-gray-900 rounded-lg border border-gray-800">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-xl font-semibold">Partidas disponibles</h2>
+            <h2 className="text-xl font-semibold">Available Recordings</h2>
             <p className="text-gray-400 text-sm mt-1">
-              Descarga las partidas para analizarlas o reproducirlas en otra aplicación
+              Download recordings to analyze or replay them in another application
             </p>
           </div>
           <div className="flex space-x-2">
@@ -36,7 +36,7 @@ const RecordingsHeader: React.FC<RecordingsHeaderProps> = ({
               className={`border-gray-700 ${showUploader ? 'bg-purple-900/30 text-purple-300 border-purple-700' : ''}`}
             >
               <UploadCloud className="w-4 h-4 mr-1" />
-              {showUploader ? 'Ocultar uploader' : 'Cargar grabación'}
+              {showUploader ? 'Hide uploader' : 'Upload recording'}
             </Button>
             <Button
               onClick={onRefresh}
@@ -44,7 +44,7 @@ const RecordingsHeader: React.FC<RecordingsHeaderProps> = ({
               className="border-gray-700"
             >
               <RefreshCw className="w-4 h-4 mr-1" />
-              Actualizar
+              Refresh
             </Button>
           </div>
         </div>
