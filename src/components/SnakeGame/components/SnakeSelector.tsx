@@ -9,7 +9,7 @@ interface SnakeSelectorProps {
 }
 
 const SnakeSelector: React.FC<SnakeSelectorProps> = ({ snakes, onSelectSnake, activeSnakeId }) => {
-  // Asegurarnos de que siempre hay un array válido de serpientes
+  // Ensure we always have a valid array of snakes
   const validSnakes = Array.isArray(snakes) ? snakes : [];
   
   // Get snake name based on ID
@@ -23,14 +23,13 @@ const SnakeSelector: React.FC<SnakeSelectorProps> = ({ snakes, onSelectSnake, ac
     }
   };
   
-  // Mostrar todas las serpientes, no solo las vivas para diagnóstico
   return (
-    <div className="flex flex-wrap gap-2 mb-2">
+    <div className="flex flex-wrap gap-2 mb-4">
       {validSnakes.map(snake => (
         <button
           key={snake.id}
           onClick={() => onSelectSnake(snake)}
-          className={`px-3 py-1 text-xs rounded-full transition-colors ${
+          className={`px-3 py-1.5 text-xs rounded-full transition-colors flex-grow md:flex-grow-0 ${
             activeSnakeId === snake.id
               ? 'bg-blue-600 text-white'
               : snake.alive 

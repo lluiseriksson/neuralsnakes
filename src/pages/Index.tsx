@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useState } from "react";
 import { useGameLogic } from "../components/SnakeGame/hooks/useGameLogic";
 import ScoreBoard from "../components/SnakeGame/ScoreBoard";
@@ -66,14 +67,16 @@ const Index = () => {
       </div>
       
       <div className="flex flex-col lg:flex-row gap-8 items-start mt-4 w-full max-w-[1400px]">
-        <GameVisualizer 
-          gameState={gameState}
-          startTime={startTime}
-          isRecording={false}
-          onSelectSnake={handleSelectSnake}
-        />
+        <div className="w-full lg:w-[60%]">
+          <GameVisualizer 
+            gameState={gameState}
+            startTime={startTime}
+            isRecording={false}
+            onSelectSnake={handleSelectSnake}
+          />
+        </div>
         
-        <div className="w-full lg:w-[420px] flex flex-col gap-5">
+        <div className="w-full lg:w-[40%] flex flex-col gap-5">
           <SnakeVisualizer
             snakes={gameState.snakes || []}
             activeSnake={activeSnake}
