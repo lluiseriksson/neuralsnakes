@@ -6,12 +6,21 @@ export const getGenerationInfo = (snakes: Snake[]) => {
   // Get current global generation
   const globalGeneration = getCurrentGeneration();
   
-  // Fix: Properly capture snake generations with fallback
+  // Fix: Ensure all snakes report the correct generation
   const generations = snakes.map(s => {
     // Ensure we're getting proper generation from the brain
-    const brainGen = s.brain?.getGeneration?.();
-    // Return the actual brain generation or use global as fallback
-    return typeof brainGen === 'number' ? brainGen : globalGeneration;
+    let brainGen = s.brain?.getGeneration?.();
+    
+    // If we can't get a proper generation, use the global generation
+    if (typeof brainGen !== 'number' || brainGen < 1) {
+      brainGen = globalGeneration;
+      // Try to update the snake's brain with the global generation if possible
+      if (s.brain?.updateGeneration) {
+        s.brain.updateGeneration(globalGeneration);
+      }
+    }
+    
+    return brainGen;
   });
   
   // Fix: Properly capture scores with fallback
@@ -35,7 +44,9 @@ export const getGenerationInfo = (snakes: Snake[]) => {
   const snakeGenerations = {};
   snakes.forEach(snake => {
     const brainGen = snake.brain?.getGeneration?.();
-    snakeGenerations[snake.id] = typeof brainGen === 'number' ? brainGen : globalGeneration;
+    // If snake has a valid generation, use it, otherwise use global generation
+    snakeGenerations[snake.id] = (typeof brainGen === 'number' && brainGen > 0) ? 
+      brainGen : globalGeneration;
   });
   
   // Debug output to help with troubleshooting

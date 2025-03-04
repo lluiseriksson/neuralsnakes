@@ -4,8 +4,9 @@
 import { resetGamesSinceLastIncrement } from './gameTracking';
 import { getModelCache } from './cacheManagement';
 
-// Start with previous generation if available, otherwise reset to 1
-let currentGeneration = 1; 
+// Start with a high baseline generation to avoid having low generation numbers at startup
+// This prevents the issue where some snakes show low generation numbers at game start
+let currentGeneration = 7000; 
 
 export const getCurrentGeneration = (): number => {
   return currentGeneration;

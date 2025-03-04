@@ -21,51 +21,43 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
         return createRandomBrain(id);
       });
       
-      // Force yellow snake to use at least the current global generation plus 1
-      const yellowGeneration = Math.max(brain.getGeneration(), currentGlobalGeneration + 1);
+      // Force yellow snake to have the highest generation
+      // Instead of incremented by +1, use a larger value to ensure it's higher
+      const yellowGeneration = Math.max(brain.getGeneration(), currentGlobalGeneration + 5);
       brain.updateGeneration(yellowGeneration);
       console.log(`🟡 YELLOW SNAKE GENERATION SET TO: ${brain.getGeneration()} 🟡`);
       
       // Force global generation update from yellow snake
       forceGenerationUpdate(yellowGeneration);
-    } else if (id === 1) {
-      // Blue snake - combined model brain
-      console.log(`🔵 Creating BLUE SNAKE ${id} with color ${color} 🔵`);
-      brain = await createCombinedModelBrain().catch(error => {
-        console.error(`Error creating combined model brain: ${error.message}`);
-        return createRandomBrain(id);
-      });
-      
-      // Force blue snake to use at least the current global generation
-      const blueGeneration = Math.max(brain.getGeneration(), currentGlobalGeneration);
-      brain.updateGeneration(blueGeneration);
-      console.log(`🔵 BLUE SNAKE GENERATION SET TO: ${brain.getGeneration()} 🔵`);
     } else {
-      // Other snakes - random brains with various learning strategies
-      console.log(`🟢 Creating RANDOM SNAKE ${id} with color ${color} 🟢`);
-      brain = createRandomBrain(id);
-      
-      // Ensure random snakes get at least current generation
-      const randomGeneration = Math.max(brain.getGeneration(), currentGlobalGeneration);
-      brain.updateGeneration(randomGeneration);
-      console.log(`🟢 RANDOM SNAKE ${id} GENERATION SET TO: ${brain.getGeneration()} 🟢`);
-      
-      // Apply different mutation strategies based on snake ID for diversity
-      if (brain) {
-        // Even IDs get more mutations, odd IDs get less
-        const specializedRate = id % 2 === 0 ? 0.4 : 0.3;
-        brain.mutate(specializedRate);
-        console.log(`Applied specialized mutation rate ${specializedRate} to snake ${id}`);
+      // All other snakes - use current global generation
+      // This ensures all snakes have the same generation as the global generation
+      if (id === 1) {
+        // Blue snake - combined model brain
+        console.log(`🔵 Creating BLUE SNAKE ${id} with color ${color} 🔵`);
+        brain = await createCombinedModelBrain().catch(error => {
+          console.error(`Error creating combined model brain: ${error.message}`);
+          return createRandomBrain(id);
+        });
+      } else {
+        // Other snakes - random brains
+        console.log(`🟢 Creating RANDOM SNAKE ${id} with color ${color} 🟢`);
+        brain = createRandomBrain(id);
       }
+      
+      // Enforce same generation for all non-yellow snakes
+      const globalGen = getCurrentGeneration();
+      brain.updateGeneration(globalGen);
+      console.log(`Snake ${id} generation synchronized to global: ${globalGen}`);
     }
 
     if (!brain) {
       console.error(`Failed to create brain for snake ${id}, creating fallback random brain`);
       brain = createRandomBrain(id);
       
-      // Ensure fallback brain gets at least current generation
-      const fallbackGeneration = Math.max(brain.getGeneration(), currentGlobalGeneration);
-      brain.updateGeneration(fallbackGeneration);
+      // Ensure fallback brain gets current generation
+      const globalGen = getCurrentGeneration();
+      brain.updateGeneration(globalGen);
       console.log(`⚠️ FALLBACK SNAKE ${id} GENERATION SET TO: ${brain.getGeneration()} ⚠️`);
     }
 
@@ -135,9 +127,9 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
     // Create fallback brain
     const fallbackBrain = createRandomBrain(id);
     
-    // Ensure fallback brain has a valid generation - use current global generation
-    const currentGlobalGeneration = getCurrentGeneration();
-    fallbackBrain.updateGeneration(currentGlobalGeneration);
+    // Ensure fallback brain has the current global generation
+    const globalGen = getCurrentGeneration();
+    fallbackBrain.updateGeneration(globalGen);
     console.log(`⚠️ FALLBACK SNAKE ${id} GENERATION SET TO: ${fallbackBrain.getGeneration()} ⚠️`);
     
     return {

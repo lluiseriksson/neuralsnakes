@@ -22,7 +22,11 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
   // Update generation whenever snake prop changes
   useEffect(() => {
     if (typeof snake.brain.getGeneration === 'function') {
-      setCurrentGeneration(snake.brain.getGeneration());
+      const generation = snake.brain.getGeneration();
+      // Only update if we get a valid generation number
+      if (typeof generation === 'number' && generation > 0) {
+        setCurrentGeneration(generation);
+      }
     }
   }, [snake.brain]);
 
