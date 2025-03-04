@@ -6,7 +6,7 @@ interface TimerProps {
 }
 
 const Timer: React.FC<TimerProps> = ({ startTime }) => {
-  const [timeLeft, setTimeLeft] = useState(120);
+  const [timeLeft, setTimeLeft] = useState(180);
   const timerRef = useRef<number | null>(null);
   const hasDispatchedEndEvent = useRef(false);
   
@@ -31,13 +31,13 @@ const Timer: React.FC<TimerProps> = ({ startTime }) => {
     
     // Set initial time left
     const initialElapsed = Date.now() - startTime;
-    const initialRemaining = Math.max(0, 120 - Math.floor(initialElapsed / 1000));
+    const initialRemaining = Math.max(0, 180 - Math.floor(initialElapsed / 1000));
     setTimeLeft(initialRemaining);
     
     // Start new interval
     timerRef.current = window.setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, 120 - Math.floor(elapsed / 1000));
+      const remaining = Math.max(0, 180 - Math.floor(elapsed / 1000));
       setTimeLeft(remaining);
       
       // When time reaches 0, dispatch the event and clean up

@@ -26,8 +26,8 @@ export const useGameUpdate = (
       const currentTime = Date.now();
       const timeElapsed = currentTime - startTime;
       
-      // Check if time has expired (120 seconds)
-      if (timeElapsed >= 120000) {
+      // Check if time has expired (180 seconds)
+      if (timeElapsed >= 180000) {
         console.log("Time limit reached in updateGame - should end round");
         isProcessingUpdate.current = false;
         

@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState } from "react";
 import { useGameLogic } from "../components/SnakeGame/hooks/useGameLogic";
 import ScoreBoard from "../components/SnakeGame/ScoreBoard";
@@ -8,7 +7,6 @@ import { Snake } from "../components/SnakeGame/types";
 import GameVisualizer from "../components/SnakeGame/components/GameVisualizer";
 import SnakeVisualizer from "../components/SnakeGame/components/SnakeVisualizer";
 import GenerationInfo from "../components/SnakeGame/components/GenerationInfo";
-import HighScoreDisplay from "../components/SnakeGame/components/HighScoreDisplay";
 
 const Index = () => {
   const [activeSnake, setActiveSnake] = useState<Snake | null>(null);
@@ -63,9 +61,8 @@ const Index = () => {
         Neural Snakes
       </h1>
       
-      <div className="flex items-center justify-between w-full max-w-[1400px] mb-4">
+      <div className="flex items-center justify-center w-full max-w-[1400px] mb-4">
         <VictoryDisplay victories={victories} />
-        <HighScoreDisplay />
       </div>
       
       <div className="flex flex-col lg:flex-row gap-8 items-start mt-4 w-full max-w-[1400px]">

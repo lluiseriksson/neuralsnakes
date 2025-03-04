@@ -9,12 +9,6 @@ if (typeof window !== 'undefined') {
       updateHighestScoreAchieved(event.detail.score);
     }
   }) as EventListener);
-  
-  // Reset the highest score when the page loads
-  window.addEventListener('load', () => {
-    console.log("🔄 Resetting highest score on page load");
-    resetHighestScore();
-  });
 }
 
 /**
