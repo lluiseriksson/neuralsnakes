@@ -1,5 +1,5 @@
 
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useMemo } from 'react';
 import { GameState } from '../types';
 import { CELL_SIZE } from '../constants';
 import { 
@@ -41,13 +41,29 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   // Canvas setup hook
   useCanvasSetup(canvasRef, width, height);
   
+  // Memoize the gameState to prevent excessive re-renders
+  const memoizedGameState = useMemo(() => ({
+    snakes: gameState.snakes.map(snake => ({
+      id: snake.id,
+      positions: [...snake.positions],
+      alive: snake.alive,
+      direction: snake.direction,
+      color: snake.color
+    })),
+    apples: gameState.apples.map(apple => ({
+      id: apple.id,
+      position: { ...apple.position }
+    })),
+    gridSize: gameState.gridSize
+  }), [gameState]);
+  
   // Memoize the drawGame function to prevent infinite re-renders
   const memoizedDrawGame = useCallback(() => {
     drawGame();
-  }, [gameState, drawGame]);
+  }, [drawGame, memoizedGameState, effectiveSelectedSnakeId]);
   
   // Animation loop hook - only pass the memoized draw function
-  const frameCount = useAnimationLoop(true, memoizedDrawGame, [gameState]);
+  const frameCount = useAnimationLoop(true, memoizedDrawGame, [memoizedGameState, effectiveSelectedSnakeId]);
 
   return (
     <canvas

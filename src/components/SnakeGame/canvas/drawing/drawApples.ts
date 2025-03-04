@@ -3,7 +3,7 @@ import { Apple } from '../../types';
 
 /**
  * Draw apples with enhanced visual effects for better visibility
- * Type B apples (from collisions) will have a distinct appearance
+ * Type B apples (from collisions) will have a distinct appearance but same color
  */
 export const drawApples = (
   ctx: CanvasRenderingContext2D, 
@@ -30,24 +30,19 @@ export const drawApples = (
       ctx.save();
       ctx.globalAlpha = 0.9; // Increased visibility
       
-      let glowColor1, glowColor2, appleColor1, appleColor2, stemColor, highlightColor;
+      // Both apple types are red now, but collision apples have slightly different appearance
+      let glowColor1 = 'rgba(255, 50, 50, 0.9)';
+      let glowColor2 = 'rgba(255, 0, 0, 0)';
+      let appleColor1 = '#ff9999'; // Lighter red
+      let appleColor2 = '#ea384c'; // Bright red (using suggested color)
+      let stemColor = '#996644';
+      let highlightColor = 'rgba(255, 255, 255, 0.9)';
       
+      // Type B apples have a slightly different brightness/pulsing
       if (isCollisionApple) {
-        // Type B apples (from collisions) are golden/yellow
-        glowColor1 = 'rgba(255, 215, 0, 0.9)'; // Gold
-        glowColor2 = 'rgba(255, 215, 0, 0)';
-        appleColor1 = '#FFD700'; // Gold
-        appleColor2 = '#FFA500'; // Orange
-        stemColor = '#8B4513'; // Darker brown
-        highlightColor = 'rgba(255, 255, 200, 0.9)';
-      } else {
-        // Regular apples are red
-        glowColor1 = 'rgba(255, 50, 50, 0.9)';
-        glowColor2 = 'rgba(255, 0, 0, 0)';
-        appleColor1 = '#ff9999'; // Lighter red
-        appleColor2 = '#ff0000'; // Bright red
-        stemColor = '#996644';
-        highlightColor = 'rgba(255, 255, 255, 0.9)';
+        appleColor1 = '#ff7777'; // Slightly different lighter red
+        appleColor2 = '#ea384c'; // Same bright red
+        stemColor = '#8B4513'; // Darker brown stem
       }
       
       const gradient = ctx.createRadialGradient(
@@ -95,7 +90,7 @@ export const drawApples = (
       ctx.restore();
       
       // Add a white border for better visibility against dark backgrounds
-      ctx.strokeStyle = isCollisionApple ? 'rgba(255, 215, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
       ctx.lineWidth = 2; // Thicker border
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius + 1, 0, Math.PI * 2);

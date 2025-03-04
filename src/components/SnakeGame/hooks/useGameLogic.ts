@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 import { useGameState } from './useGameState';
 import { useGameLoop } from './useGameLoop';
@@ -27,6 +28,7 @@ export const useGameLogic = () => {
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingUpdate = useRef(false);
   const frameCountRef = useRef(0);
+  const timerEndHandled = useRef(false);
 
   const { initializeGame } = useGameInitialization(
     setGameState,
@@ -69,10 +71,19 @@ export const useGameLogic = () => {
     gameState
   );
 
+  // Handle timer end event
   useEffect(() => {
     const handleTimerEnd = () => {
-      if (isGameRunning && !isProcessingUpdate.current) {
-        endRound();
+      console.log("Timer end event received in useGameLogic");
+      
+      if (isGameRunning && !isProcessingUpdate.current && !timerEndHandled.current) {
+        console.log("Processing timer end event - ending round");
+        timerEndHandled.current = true;
+        
+        // Add small delay to ensure all game state updates have completed
+        setTimeout(() => {
+          endRound();
+        }, 100);
       }
     };
     
@@ -83,6 +94,13 @@ export const useGameLogic = () => {
     };
   }, [isGameRunning, endRound, isProcessingUpdate]);
 
+  // Reset the timerEndHandled ref when the game state changes
+  useEffect(() => {
+    if (!isGameRunning) {
+      timerEndHandled.current = false;
+    }
+  }, [isGameRunning]);
+
   const startGame = useCallback(async () => {
     console.log("useGameLogic: Solicitando inicialización inicial del juego");
     if (gameLoopRef.current) {
@@ -91,6 +109,7 @@ export const useGameLogic = () => {
     }
     
     isProcessingUpdate.current = false;
+    timerEndHandled.current = false;
     
     try {
       await initializeGame();

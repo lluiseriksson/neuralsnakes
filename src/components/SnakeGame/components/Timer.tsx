@@ -8,9 +8,13 @@ interface TimerProps {
 const Timer: React.FC<TimerProps> = ({ startTime }) => {
   const [timeLeft, setTimeLeft] = useState(60);
   const timerRef = useRef<number | null>(null);
+  const hasDispatchedEndEvent = useRef(false);
   
   // Create a custom event for when timer reaches zero
   const dispatchTimerEndEvent = () => {
+    if (hasDispatchedEndEvent.current) return; // Prevent multiple dispatches
+    
+    hasDispatchedEndEvent.current = true;
     const timerEndEvent = new CustomEvent('timer-end');
     window.dispatchEvent(timerEndEvent);
     console.log('Timer end event dispatched');
@@ -21,6 +25,9 @@ const Timer: React.FC<TimerProps> = ({ startTime }) => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
+    
+    // Reset the dispatch flag when startTime changes
+    hasDispatchedEndEvent.current = false;
     
     // Set initial time left
     const initialElapsed = Date.now() - startTime;
@@ -34,10 +41,12 @@ const Timer: React.FC<TimerProps> = ({ startTime }) => {
       setTimeLeft(remaining);
       
       // When time reaches 0, dispatch the event and clean up
-      if (remaining <= 0 && timerRef.current) {
+      if (remaining <= 0) {
         dispatchTimerEndEvent();
-        clearInterval(timerRef.current);
-        timerRef.current = null;
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
       }
     }, 1000);
 

@@ -26,9 +26,11 @@ export const useGameUpdate = (
       const currentTime = Date.now();
       const timeElapsed = currentTime - startTime;
       
+      // Check if time has expired, but don't directly end the round here
+      // This allows the timer component to handle it via the timer-end event
       if (timeElapsed >= 60000) {
-        console.log("Round time exceeded, ending");
-        endRound();
+        console.log("Round time limit reached in updateGame");
+        isProcessingUpdate.current = false;
         return;
       }
 
