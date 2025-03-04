@@ -14,7 +14,9 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
   
   // Update the local score whenever the props change
   useEffect(() => {
-    setCurrentScore(score);
+    if (typeof score === 'number' && !isNaN(score)) {
+      setCurrentScore(score);
+    }
   }, [score]);
 
   // Update generation whenever snake prop changes
@@ -36,13 +38,15 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
   useEffect(() => {
     if (snake.positions && snake.positions.length > 3) {
       const lengthScore = snake.positions.length - 3;
-      const displayScore = Math.max(lengthScore, snake.score || 0);
+      // Check if the snake.score is valid and higher
+      const snakeScore = typeof snake.score === 'number' && !isNaN(snake.score) ? snake.score : 0;
+      const displayScore = Math.max(lengthScore, snakeScore);
       
       if (displayScore !== currentScore) {
         console.log(`Snake ${snake.id} score updated in UI: ${currentScore} -> ${displayScore}`);
         setCurrentScore(displayScore);
       }
-    } else if (snake.score !== undefined && snake.score > currentScore) {
+    } else if (typeof snake.score === 'number' && !isNaN(snake.score) && snake.score > currentScore) {
       console.log(`Snake ${snake.id} score updated in UI from properties: ${currentScore} -> ${snake.score}`);
       setCurrentScore(snake.score);
     }

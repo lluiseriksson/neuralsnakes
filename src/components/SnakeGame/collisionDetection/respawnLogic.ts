@@ -1,4 +1,3 @@
-
 import { Snake } from '../types';
 import { createSnake, generateSnakeSpawnConfig } from '../hooks/snakeCreation';
 import { incrementGeneration } from '../hooks/snakeCreation/modelCache';
@@ -9,8 +8,16 @@ import { incrementGeneration } from '../hooks/snakeCreation/modelCache';
 export const handleRespawn = (snakes: Snake[]): Snake[] => {
   const updatedSnakes = [...snakes];
   
-  // Check if all snakes are dead - if so, increment generation
+  // Only respawn if dead snakes exist and some snakes are still alive
+  const deadSnakes = updatedSnakes.filter(snake => !snake.alive);
   const allDead = updatedSnakes.every(snake => !snake.alive);
+  
+  // If no dead snakes or all snakes are alive, nothing to do
+  if (deadSnakes.length === 0) {
+    return updatedSnakes;
+  }
+  
+  // Check if all snakes are dead - if so, increment generation
   if (allDead) {
     console.log("All snakes are dead - forcing generation increment");
     incrementGeneration();
@@ -22,6 +29,7 @@ export const handleRespawn = (snakes: Snake[]): Snake[] => {
   for (let i = 0; i < updatedSnakes.length; i++) {
     const snake = updatedSnakes[i];
     
+    // Only process dead snakes
     if (!snake.alive) {
       deadCount++;
       console.log(`Respawning dead snake ${snake.id} (${snake.color})`);
@@ -37,12 +45,15 @@ export const handleRespawn = (snakes: Snake[]): Snake[] => {
       ];
       
       // Update the snake with basic fallback values for immediate display
-      updatedSnakes[i].positions = fallbackPositions;
-      updatedSnakes[i].direction = direction;
-      updatedSnakes[i].color = color;
-      updatedSnakes[i].alive = true; // Critical: Set alive to true immediately
-      updatedSnakes[i].score = 0; // Reset score for respawned snake
-      updatedSnakes[i].movesWithoutEating = 0; // Reset movesWithoutEating counter
+      updatedSnakes[i] = {
+        ...snake,
+        positions: fallbackPositions,
+        direction: direction,
+        color: color,
+        alive: true, // Critical: Set alive to true immediately
+        score: 0, // Reset score for respawned snake
+        movesWithoutEating: 0 // Reset movesWithoutEating counter
+      };
       
       console.log(`Snake ${snake.id} (${color}) temporarily respawned at (${spawnX},${spawnY})`);
       
@@ -54,12 +65,21 @@ export const handleRespawn = (snakes: Snake[]): Snake[] => {
             createSnake(snake.id, spawnX, spawnY, direction, color)
               .then(newSnake => {
                 if (newSnake && newSnake.brain) {
-                  // Update the snake with new properties while keeping the reference
-                  Object.assign(updatedSnakes[snakeIndex], newSnake);
-                  updatedSnakes[snakeIndex].alive = true; // Ensure alive is set again
-                  updatedSnakes[snakeIndex].score = 0; // Reset score again to be sure
-                  updatedSnakes[snakeIndex].movesWithoutEating = 0; // Reset counter again
-                  console.log(`Snake ${snake.id} (${color}) fully respawned with generation ${newSnake.brain.getGeneration()}`);
+                  // Make a copy of the current snake's object to avoid reference issues
+                  const currentSnake = {...updatedSnakes[snakeIndex]};
+                  
+                  // Only update the snake if it's still dead or just respawned
+                  // This prevents overwriting a snake that might be alive and playing
+                  if (!currentSnake.alive || currentSnake.score === 0) {
+                    // Update the snake with new properties but keep the object reference
+                    Object.assign(updatedSnakes[snakeIndex], newSnake);
+                    updatedSnakes[snakeIndex].alive = true;
+                    updatedSnakes[snakeIndex].score = 0;
+                    updatedSnakes[snakeIndex].movesWithoutEating = 0;
+                    console.log(`Snake ${snake.id} (${color}) fully respawned with generation ${newSnake.brain.getGeneration()}`);
+                  } else {
+                    console.log(`Snake ${snake.id} is already alive with score ${currentSnake.score}, skipping full respawn`);
+                  }
                 } else {
                   console.error(`Created snake ${snake.id} has invalid brain, keeping fallback values`);
                 }
