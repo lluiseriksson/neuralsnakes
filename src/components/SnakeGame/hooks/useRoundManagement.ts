@@ -109,26 +109,23 @@ export const useRoundManagement = (
           return newVictories;
         });
         
-        // VICTORY - Increment generation by a bigger amount
+        // VICTORY - Increment generation by a smaller amount for more stability
         incrementGenerationAfterVictory();
         console.log(`🏆 Advanced generation after victory to ${getCurrentGeneration()}`);
         
-        // Save the winning models with significant generation boost
+        // Save the winning models with a moderate generation boost
         for (const winner of winningSnakes) {
           try {
             // Update the winner's best score first
             winner.brain.updateBestScore(winner.score);
             
-            // Give winning models an extra generation boost
-            const winnerNewGen = getCurrentGeneration() + 5;
-            winner.brain.updateGeneration(winnerNewGen);
+            // FIXED: Give winning models an appropriate generation boost without inflation
+            const currentGlobalGen = getCurrentGeneration();
+            winner.brain.updateGeneration(currentGlobalGen);
             
             // Save the model to DB
             const savedId = await winner.brain.save(winner.score);
             console.log(`🔴 Saved winning model for ${getSnakeColorName(winner.id)} Snake (${winner.color}) with score ${winner.score} (gen: ${winner.brain.getGeneration()}) - ID: ${savedId}`);
-            
-            // Make sure generation tracking is updated
-            forceGenerationUpdate(winner.brain.getGeneration());
           } catch (saveError) {
             console.error(`Error saving winning model for ${getSnakeColorName(winner.id)} Snake ${winner.id}:`, saveError);
           }

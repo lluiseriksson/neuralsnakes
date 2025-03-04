@@ -1,32 +1,27 @@
-
 import { Snake } from '../../types';
 import { getCurrentGeneration, getHighestScore } from '../snakeCreation/modelCache';
 
 export const getGenerationInfo = (snakes: Snake[]) => {
   // Get current global generation
   const globalGeneration = getCurrentGeneration();
+  console.log(`GLOBAL GENERATION in getGenerationInfo: ${globalGeneration}`);
   
   // Get global highest score
   const globalHighestScore = getHighestScore();
   
-  // Get individual snake generations, using brain when possible
+  // FIXED: Ensure all snakes use the global generation directly
+  // This ensures consistent display across all components
   const generations = snakes.map(s => {
-    // Ensure we're getting proper generation from the brain
-    let brainGen = s.brain?.getGeneration?.();
-    
-    // IMPORTANT: If we can't get a proper generation, use the global generation
-    if (typeof brainGen !== 'number' || brainGen < 1) {
-      brainGen = globalGeneration;
-      // Try to update the snake's brain with the global generation if possible
-      if (s.brain?.updateGeneration) {
-        s.brain.updateGeneration(globalGeneration);
-      }
+    // IMPORTANT: Force update all snakes to use the global generation
+    // This is the critical fix that ensures all snakes show the same generation
+    if (s.brain?.updateGeneration) {
+      s.brain.updateGeneration(globalGeneration);
     }
     
     // IMPORTANT: Also update the snake's own generation property for consistency
-    s.generation = brainGen;
+    s.generation = globalGeneration;
     
-    return brainGen;
+    return globalGeneration;
   });
   
   // Get scores with fallback
@@ -47,8 +42,7 @@ export const getGenerationInfo = (snakes: Snake[]) => {
     return typeof progress === 'number' ? progress / 100 : (s.score / 50);
   });
   
-  // Calculate highest values correctly with fallback to global
-  const highestGeneration = Math.max(...generations, globalGeneration);
+  // FIXED: Use global generation directly instead of calculating max
   // Use globalHighestScore as a backup minimum
   const highestScore = Math.max(...scores, globalHighestScore);
   const highestProgress = Math.max(...progresses);
@@ -56,13 +50,11 @@ export const getGenerationInfo = (snakes: Snake[]) => {
   // IMPORTANT: Create a correct map of snake ID to generation for consistent display
   const snakeGenerations = {};
   snakes.forEach(snake => {
-    const brainGen = snake.brain?.getGeneration?.();
-    // IMPORTANT: If snake has a valid generation, use it, otherwise use global generation
-    snakeGenerations[snake.id] = (typeof brainGen === 'number' && brainGen > 0) ? 
-      brainGen : globalGeneration;
+    // FIXED: Always use the global generation for all snakes
+    snakeGenerations[snake.id] = globalGeneration;
       
     // IMPORTANT: Also update the snake's own generation property for display consistency
-    snake.generation = snakeGenerations[snake.id];
+    snake.generation = globalGeneration;
   });
   
   // Debug output to help with troubleshooting
@@ -70,13 +62,12 @@ export const getGenerationInfo = (snakes: Snake[]) => {
     globalGeneration,
     globalHighestScore,
     snakeGenerations,
-    highestGeneration, 
     highestScore,
     highestProgress
   });
   
   return {
-    generation: highestGeneration,
+    generation: globalGeneration,
     bestScore: highestScore,
     progress: highestProgress,
     snakeGenerations

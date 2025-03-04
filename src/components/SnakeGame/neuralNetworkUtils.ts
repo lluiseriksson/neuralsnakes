@@ -41,9 +41,10 @@ export const combineWeights = (
     }
   }
   
-  // Calculate the new generation - take maximum and add a moderate boost
-  const maxGen = Math.max(...models.map(model => model.generation || 1));
-  const newGeneration = maxGen + 5; // Reduced from 40 to 5
+  // FIXED: Calculate a more reasonable new generation
+  // Simply use the average generation of models + 1 instead of max + boost
+  const avgGen = models.reduce((sum, model) => sum + (model.generation || 1), 0) / models.length;
+  const newGeneration = Math.floor(avgGen) + 1;
   
   return { combinedWeights, newGeneration };
 };

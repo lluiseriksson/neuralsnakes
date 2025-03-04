@@ -11,6 +11,7 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
   const [score, setScore] = useState(activeSnake?.score || 0);
   const [applesEaten, setApplesEaten] = useState(activeSnake?.decisionMetrics?.applesEaten || 0);
   const [successRate, setSuccessRate] = useState("0.0");
+  // FIXED: Get the generation directly from the snake object for consistency
   const [generation, setGeneration] = useState(activeSnake?.generation || 1);
   
   // Update the local stats whenever activeSnake changes
@@ -45,31 +46,12 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
         setSuccessRate(calculatedRate.toFixed(1));
       }
       
-      // IMPORTANT: Get the correct generation value without any limit
-      if (typeof activeSnake.brain?.getGeneration === 'function') {
-        try {
-          const brainGen = activeSnake.brain.getGeneration();
-          // Important: Log actual generation for debugging
-          console.log(`Snake ${activeSnake.id} (${getSnakeTypeLabel()}) actual generation: ${brainGen}`);
-          
-          if (typeof brainGen === 'number') {
-            // IMPORTANT: Use the brain's generation value directly with no limit
-            setGeneration(brainGen);
-          } else if (activeSnake.generation && typeof activeSnake.generation === 'number') {
-            // Fallback to snake's own generation property
-            setGeneration(activeSnake.generation);
-          }
-        } catch (error) {
-          console.error(`Error getting generation for snake ${activeSnake.id}:`, error);
-          // Use snake's generation property as fallback
-          if (activeSnake.generation && typeof activeSnake.generation === 'number') {
-            setGeneration(activeSnake.generation);
-          }
-        }
-      } else if (activeSnake.generation && typeof activeSnake.generation === 'number') {
-        // Direct fallback if brain.getGeneration() is not available
-        console.log(`Snake ${activeSnake.id} using direct generation property: ${activeSnake.generation}`);
-        setGeneration(activeSnake.generation);
+      // FIXED: Get generation directly from snake object for consistency
+      // This avoids any mismatches between different sources of generation info
+      const gen = activeSnake.generation;
+      if (typeof gen === 'number' && gen > 0) {
+        setGeneration(gen);
+        console.log(`Snake ${activeSnake.id} (${getSnakeTypeLabel()}) using snake.generation: ${gen}`);
       }
     }
   }, [activeSnake]);

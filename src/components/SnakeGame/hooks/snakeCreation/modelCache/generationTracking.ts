@@ -1,3 +1,4 @@
+
 // We need to fix the circular dependencies
 // Import from modelCache directory structure 
 import { resetGamesSinceLastIncrement } from './gameTracking';
@@ -26,8 +27,8 @@ export const incrementGeneration = (): number => {
 
 // Add a special function to increment generation by a larger amount upon victory
 export const incrementGenerationAfterVictory = (): number => {
-  // Larger generation boost for victories
-  currentGeneration += 3;
+  // More modest generation boost for victories to avoid inflation
+  currentGeneration += 1;
   // No more capping to MAX_GENERATION
   resetGamesSinceLastIncrement();
   console.log(`🏆 Generation boosted to ${currentGeneration} after victory 🏆`);
@@ -39,10 +40,14 @@ export const incrementGenerationAfterVictory = (): number => {
 };
 
 export const updateCurrentGeneration = (generation: number): number => {
-  // Take the highest generation value without capping
-  if (generation > currentGeneration) {
-    console.log(`⚡ Generation updated from ${currentGeneration} to ${generation} ⚡`);
-    currentGeneration = generation;
+  // FIXED: Set a reasonableness check to avoid inflated generation values
+  // Only accept reasonable generation increases (max +5) to prevent massive jumps
+  const reasonableMax = currentGeneration + 5;
+  const newGeneration = Math.min(generation, reasonableMax);
+  
+  if (newGeneration > currentGeneration) {
+    console.log(`⚡ Generation updated from ${currentGeneration} to ${newGeneration} ⚡`);
+    currentGeneration = newGeneration;
     resetGamesSinceLastIncrement();
     
     // Also update model caches with the new generation
@@ -62,8 +67,8 @@ export const advanceGenerationBasedOnMetrics = (
   // Calculate a performance index based on all metrics
   const performanceIndex = calculatePerformanceIndex(score, applesEaten, kills, deaths, suicides);
   
-  // More predictable generation boost - always increment by 1 for each apple eaten plus bonus
-  const generationBoost = Math.min(3, 1 + applesEaten);
+  // More predictable generation boost - always increment by 1 for stability
+  const generationBoost = 1;
   
   // Update to new generation without cap
   const newGeneration = currentGeneration + generationBoost;
@@ -107,10 +112,10 @@ const calculatePerformanceIndex = (
 };
 
 export const forceGenerationUpdate = (generation: number): number => {
-  // No more capping to MAX_GENERATION
-  
-  // More predictable boost when forcing updates - increment by 1
-  const newGeneration = Math.max(generation, currentGeneration + 1);
+  // FIXED: Add a reasonableness check here too
+  // Only accept reasonable generation increases (max +3) to prevent massive jumps
+  const reasonableMax = currentGeneration + 3;
+  const newGeneration = Math.min(generation, reasonableMax);
   
   console.log(`⚡ Generation forcefully set from ${currentGeneration} to ${newGeneration} ⚡`);
   currentGeneration = newGeneration;

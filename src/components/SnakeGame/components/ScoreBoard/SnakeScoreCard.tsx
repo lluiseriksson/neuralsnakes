@@ -11,7 +11,8 @@ interface SnakeScoreCardProps {
 const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
   // Use local state to track score and ensure it updates visually
   const [currentScore, setCurrentScore] = useState(score);
-  const [currentGeneration, setCurrentGeneration] = useState<number>(0);
+  // FIXED: Get generation directly from snake object for consistency
+  const [currentGeneration, setCurrentGeneration] = useState<number>(snake.generation || 0);
   
   // Update the local score whenever the props change
   useEffect(() => {
@@ -29,17 +30,10 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
 
   // Update generation whenever snake prop changes
   useEffect(() => {
-    if (snake.brain && typeof snake.brain.getGeneration === 'function') {
-      try {
-        const generation = snake.brain.getGeneration();
-        // IMPORTANT: Only update if we get a valid generation number
-        if (typeof generation === 'number' && generation >= 0) {
-          // IMPORTANT: No cap on generation to allow unlimited values
-          setCurrentGeneration(generation);
-        }
-      } catch (error) {
-        console.error("Error getting generation from snake brain:", error);
-      }
+    // FIXED: Get generation directly from snake object for consistency
+    if (typeof snake.generation === 'number' && snake.generation > 0) {
+      setCurrentGeneration(snake.generation);
+      console.log(`ScoreCard: Snake ${snake.id} using snake.generation: ${snake.generation}`);
     }
   }, [snake]);
 

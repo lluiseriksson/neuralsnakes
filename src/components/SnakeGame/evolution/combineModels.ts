@@ -36,16 +36,12 @@ export const combineModels = (models: INeuralNetwork[]): INeuralNetwork | null =
     // Use weighted combination based on scores
     const { combinedWeights, newGeneration } = combineWeights(modelData, weightsLength);
     
-    // Calculate explicit new generation number - FORCE HIGHER PROGRESSION
-    // Always increment by at least 3 to ensure faster evolution
-    const explicitNewGeneration = Math.max(
-      newGeneration,
-      currentGeneration + 3,
-      Math.max(...sortedModels.map(m => m.getGeneration())) + 3
-    );
+    // FIXED: Calculate more reasonable new generation number
+    // Only increment by 1 to avoid generation inflation
+    const explicitNewGeneration = currentGeneration + 1;
     
     // Log the new generation calculation
-    console.log(`New combined model generation calculated: ${explicitNewGeneration} (based on max ${Math.max(...sortedModels.map(m => m.getGeneration()))} and current ${currentGeneration})`);
+    console.log(`New combined model generation calculated: ${explicitNewGeneration} (based on current ${currentGeneration})`);
     
     // Create a new model with the combined weights and explicitly set generation
     const combinedModel = new NeuralNetwork(
@@ -66,8 +62,8 @@ export const combineModels = (models: INeuralNetwork[]): INeuralNetwork | null =
     const mutatedWeights = mutateWeights(combinedModel.getWeights(), 0.35, 0.4);
     combinedModel.setWeights(mutatedWeights);
     
-    // Make sure to update the global generation tracker
-    updateCurrentGeneration(explicitNewGeneration);
+    // FIXED: Don't update global generation from combined model (potential source of inflation)
+    // Leave current global generation as is
     
     console.log(`Created combined model with generation ${combinedModel.getGeneration()}`);
     return combinedModel;
