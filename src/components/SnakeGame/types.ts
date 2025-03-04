@@ -55,7 +55,7 @@ export interface SnakeDebugInfo {
     reason: string;
     confidence?: number;
     headPosition: Position;
-    time?: number; // Added time property
+    time?: number;
   };
   collisionInfo?: {
     closestAppleDistance: number | null;
@@ -64,19 +64,19 @@ export interface SnakeDebugInfo {
   decisions?: {
     direction: Direction;
     headPosition: Position;
-    inputs?: number[]; // Added inputs property
-    outputs?: number[]; // Added outputs property
-    time?: number; // Added time property
+    inputs?: number[];
+    outputs?: number[];
+    time?: number;
   }[];
   learningEvents?: {
     reward: number;
-    type?: string; // Added type property
+    type?: string;
   }[];
   lastInputs?: number[];
-  lastOutputs?: number[]; // Added lastOutputs property
-  validationError?: boolean; // Added validationError property
-  actions?: any[]; // Added actions property
-  evaluations?: any[]; // Added evaluations property
+  lastOutputs?: number[];
+  validationError?: boolean;
+  actions?: any[];
+  evaluations?: any[];
 }
 
 export interface SnakeDecisionMetrics {
@@ -99,16 +99,16 @@ export interface Snake {
   alive: boolean;
   score: number;
   brain: NeuralNetwork;
-  generation: number;
+  generation: number; // Added required field
   lasers?: Position[];
   lastInputs?: number[];
-  lastOutputs?: number[]; // Added lastOutputs
-  age: number;
+  lastOutputs?: number[];
+  age: number; // Added required field
   debugInfo?: SnakeDebugInfo;
-  gridSize?: number; // Added gridSize
-  movesWithoutEating?: number; // Added movesWithoutEating
-  decisionMetrics?: SnakeDecisionMetrics; // Added decisionMetrics
-  animation?: { // Added animation
+  gridSize?: number;
+  movesWithoutEating?: number;
+  decisionMetrics?: SnakeDecisionMetrics;
+  animation?: {
     isEating?: boolean;
     eatStartTime?: number;
     confidence?: number;
@@ -118,13 +118,15 @@ export interface Snake {
   };
 }
 
-// Add this interface for database operations
+// Update this interface for database operations
 export interface NeuralNetworkModel {
   id: string;
   weights: number[];
   score: number;
   generation: number;
   created_at: string;
+  updated_at?: string;
   best_score: number;
   games_played: number;
+  metadata?: any; // Add metadata field
 }

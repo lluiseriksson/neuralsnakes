@@ -28,14 +28,31 @@ export const fetchBestModelFromDb = async (): Promise<NeuralNetworkModel | null>
       return loadBestModelFromLocalStorage();
     }
     
+    // Convert to NeuralNetworkModel format
+    const rawModel = data[0];
+    const best_score = rawModel.metadata?.best_score || rawModel.score || 0;
+    const games_played = rawModel.metadata?.games_played || 0;
+    
+    const model: NeuralNetworkModel = {
+      id: rawModel.id,
+      weights: rawModel.weights as unknown as number[],
+      score: rawModel.score,
+      generation: rawModel.generation,
+      created_at: rawModel.created_at,
+      updated_at: rawModel.updated_at,
+      best_score: best_score,
+      games_played: games_played,
+      metadata: rawModel.metadata
+    };
+    
     // Update localStorage cache
     try {
-      localStorage.setItem(LOCAL_STORAGE_KEY_BEST_MODEL, JSON.stringify(data[0]));
+      localStorage.setItem(LOCAL_STORAGE_KEY_BEST_MODEL, JSON.stringify(model));
     } catch (storageErr) {
       console.warn('Failed to cache best model to localStorage:', storageErr);
     }
     
-    return data[0] as NeuralNetworkModel;
+    return model;
   } catch (err) {
     console.error('Exception loading best neural network from DB:', err);
     // Fall back to localStorage
@@ -66,14 +83,32 @@ export const fetchAllModelsFromDb = async (): Promise<NeuralNetworkModel[]> => {
       return loadAllModelsFromLocalStorage();
     }
     
+    // Convert to NeuralNetworkModel format
+    const models: NeuralNetworkModel[] = data.map(rawModel => {
+      const best_score = rawModel.metadata?.best_score || rawModel.score || 0;
+      const games_played = rawModel.metadata?.games_played || 0;
+      
+      return {
+        id: rawModel.id,
+        weights: rawModel.weights as unknown as number[],
+        score: rawModel.score,
+        generation: rawModel.generation,
+        created_at: rawModel.created_at,
+        updated_at: rawModel.updated_at,
+        best_score: best_score,
+        games_played: games_played,
+        metadata: rawModel.metadata
+      };
+    });
+    
     // Cache in localStorage
     try {
-      localStorage.setItem(LOCAL_STORAGE_KEY_ALL_MODELS, JSON.stringify(data));
+      localStorage.setItem(LOCAL_STORAGE_KEY_ALL_MODELS, JSON.stringify(models));
     } catch (storageErr) {
       console.warn('Failed to cache all models to localStorage:', storageErr);
     }
     
-    return data as NeuralNetworkModel[];
+    return models;
   } catch (err) {
     console.error('Exception loading all neural networks from DB:', err);
     // Fall back to localStorage

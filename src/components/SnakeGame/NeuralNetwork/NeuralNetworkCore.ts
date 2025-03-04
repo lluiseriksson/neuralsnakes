@@ -1,3 +1,4 @@
+
 import { NeuralNetwork as INeuralNetwork } from "../types";
 import { deserializeWeights, serializeWeights, generateRandomWeights } from "../NeuralNetworkMatrix";
 import { applyLearning, cloneNetwork, mutateNetwork } from "./NeuralNetworkLearning";
@@ -14,6 +15,13 @@ export class NeuralNetworkCore implements INeuralNetwork {
   private persistence: NetworkPersistence;
   private stats: NetworkStats;
   private experiences: ExperienceManager;
+  
+  // Required interface properties
+  inputNodes: number;
+  hiddenNodes: number;
+  outputNodes: number;
+  weights: number[][][];
+  bias: number[][];
 
   constructor(
     inputSize: number, 
@@ -30,6 +38,13 @@ export class NeuralNetworkCore implements INeuralNetwork {
     this.hiddenSize = hiddenSize;
     this.outputSize = outputSize;
     
+    // Initialize interface required properties
+    this.inputNodes = inputSize;
+    this.hiddenNodes = hiddenSize;
+    this.outputNodes = outputSize;
+    this.weights = []; // Will be populated after predictor is created
+    this.bias = []; // Placeholder for bias (managed internally by predictor)
+    
     const initialWeights = generateRandomWeights(inputSize, hiddenSize, outputSize);
     this.predictor = new Predictor(
       inputSize, 
@@ -39,9 +54,24 @@ export class NeuralNetworkCore implements INeuralNetwork {
       initialWeights.weightsHiddenOutput
     );
     
+    // Update the weights array with actual weights
+    this.weights = [
+      this.predictor.getWeightsInputHidden(),
+      this.predictor.getWeightsHiddenOutput()
+    ];
+    
+    // Initialize bias with empty arrays (as they're managed internally by predictor)
+    this.bias = [Array(hiddenSize).fill(0), Array(outputSize).fill(0)];
+    
     if (weights && weights.length === (inputSize * hiddenSize + hiddenSize * outputSize)) {
       const deserialized = deserializeWeights(weights, inputSize, hiddenSize, outputSize);
       this.predictor.setWeights(deserialized.weightsInputHidden, deserialized.weightsHiddenOutput);
+      
+      // Update the interface properties
+      this.weights = [
+        deserialized.weightsInputHidden,
+        deserialized.weightsHiddenOutput
+      ];
     }
     
     this.persistence = new NetworkPersistence(id);
@@ -128,6 +158,12 @@ export class NeuralNetworkCore implements INeuralNetwork {
   deserializeWeights(flat: number[]): void {
     const deserialized = deserializeWeights(flat, this.inputSize, this.hiddenSize, this.outputSize);
     this.predictor.setWeights(deserialized.weightsInputHidden, deserialized.weightsHiddenOutput);
+    
+    // Update the interface properties
+    this.weights = [
+      deserialized.weightsInputHidden,
+      deserialized.weightsHiddenOutput
+    ];
   }
 
   learn(success: boolean, inputs: number[] = [], outputs: number[] = [], reward: number = 1): void {
@@ -165,5 +201,14 @@ export class NeuralNetworkCore implements INeuralNetwork {
 
   setScore(score: number): void {
     this.stats.setScore(score);
+  }
+  
+  // Additional methods for core functionality
+  getWeightsInputHidden(): number[][] {
+    return this.predictor.getWeightsInputHidden();
+  }
+  
+  getWeightsHiddenOutput(): number[][] {
+    return this.predictor.getWeightsHiddenOutput();
   }
 }

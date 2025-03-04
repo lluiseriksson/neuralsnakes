@@ -1,4 +1,3 @@
-
 import { Snake, GameState } from "../types";
 import { findSafeDirection } from "./strategy/safeMoveStrategy";
 import { findAdjacentApples, getAppleEatingDirection } from "./strategy/appleStrategy";
@@ -41,7 +40,8 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
   let newDirection = snake.direction;
   let predictionValue;
   let decisionReason = ""; // Track decision reason for debugging
-  
+  let debugReason = ""; // Track debug reason for debugging
+
   // Use the snake's gridSize or fall back to GRID_SIZE constant
   const gridSize = snake.gridSize || gameState.gridSize;
 
@@ -55,6 +55,7 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
     // Adjacent apple available and safe - highest priority
     newDirection = appleDirection;
     decisionReason = "eat_apple";
+    debugReason = "eat_apple";
     console.log(`Snake ${snake.id} chose to eat adjacent apple in direction ${newDirection}`);
     
     // Apply reinforcement learning for good decision
@@ -76,6 +77,7 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
     if (adjacentApples.length > 0) {
       snake.decisionMetrics.applesIgnored++;
       decisionReason = "blocked_apple";
+      debugReason = "blocked_apple";
       console.log(`Snake ${snake.id} ignored blocked apple`);
       
       // Apply reinforcement learning for missing an apple
@@ -90,6 +92,7 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
         newDirection = nnDirection;
         predictionValue = predictions[['UP', 'RIGHT', 'DOWN', 'LEFT'].indexOf(newDirection)];
         decisionReason = "neural_network";
+        debugReason = "neural_network";
         
         // Add animation flag for high confidence decision
         if (!snake.animation) snake.animation = {};
@@ -103,17 +106,20 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
         // Fall back to finding a safe direction
         newDirection = findSafeDirection(snake, gameState, predictions);
         decisionReason = "safe_fallback";
+        debugReason = "safe_fallback";
       }
     } else {
       // No predictions available, use safe direction algorithm
       newDirection = findSafeDirection(snake, gameState, [0, 0, 0, 0]);
       decisionReason = "safe_direction";
+      debugReason = "safe_direction";
     }
     
     // If still heading into danger, log it
     if (adjacentObstacles.some(obs => obs.dir === newDirection)) {
       console.log(`Snake ${snake.id} chose dangerous direction: ${newDirection}`);
       decisionReason = "risky_direction";
+      debugReason = "risky_direction";
       
       // Add animation flag for danger
       if (!snake.animation) snake.animation = {};
@@ -145,13 +151,16 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
   // Update decision metrics
   const updatedSnake = updateSnakeMetrics(snake, newDirection, !!appleDirection, predictionValue);
 
-  // Add debug info
-  if (!updatedSnake.debugInfo) updatedSnake.debugInfo = {};
-  updatedSnake.debugInfo.lastDecision = {
-    direction: newDirection,
-    reason: decisionReason,
-    confidence: predictionValue,
-    time: Date.now()
+  // Set debug info about decision
+  snake.debugInfo = {
+    ...snake.debugInfo,
+    lastDecision: {
+      direction: newDirection,
+      reason: debugReason,
+      confidence: predictionValue,
+      headPosition: { ...newHead },
+      time: Date.now()
+    }
   };
 
   // Return updated snake

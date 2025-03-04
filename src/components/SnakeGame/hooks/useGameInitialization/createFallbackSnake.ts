@@ -21,6 +21,8 @@ export const createFallbackSnake = (id: number, spawnX: number, spawnY: number, 
       applesIgnored: 0,
       badDirections: 0,
       goodDirections: 0
-    }
+    },
+    generation: 1, // Add generation
+    age: 0 // Add age
   };
 };

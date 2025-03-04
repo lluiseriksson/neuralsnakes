@@ -63,12 +63,20 @@ export const saveModelToDb = async (
     
     // Always save to localStorage as backup
     try {
-      // Only use properties defined in NeuralNetworkModel type
+      // Extract best_score and games_played from metadata
+      const best_score = metadata.best_score || score;
+      const games_played = metadata.games_played || 0;
+      
+      // Create a properly formatted NeuralNetworkModel
       const model: NeuralNetworkModel = {
         id: modelId,
         weights: weights,
         score: score,
         generation: generation,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        best_score: best_score,
+        games_played: games_played,
         metadata: metadata
       };
       

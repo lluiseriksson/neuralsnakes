@@ -1,3 +1,4 @@
+
 import { NeuralNetwork as INeuralNetwork } from "./types";
 import { NeuralNetworkCore } from "./NeuralNetwork/NeuralNetworkCore";
 import { applyLearning, cloneNetwork, mutateNetwork } from "./NeuralNetwork/NeuralNetworkLearning";
@@ -5,6 +6,13 @@ import { loadBestModel, loadAllModels, getCombinedModel } from "./NeuralNetwork/
 
 export class NeuralNetwork implements INeuralNetwork {
   private core: NeuralNetworkCore;
+  
+  // Required properties from interface
+  inputNodes: number;
+  hiddenNodes: number;
+  outputNodes: number;
+  weights: number[][][];
+  bias: number[][];
   
   constructor(
     inputSize: number, 
@@ -28,6 +36,32 @@ export class NeuralNetwork implements INeuralNetwork {
       bestScore,
       gamesPlayed
     );
+    
+    // Initialize required interface properties
+    this.inputNodes = inputSize;
+    this.hiddenNodes = hiddenSize;
+    this.outputNodes = outputSize;
+    
+    // Initialize weights and bias with empty arrays (they're managed by core)
+    this.weights = [];
+    this.bias = [];
+    
+    // Populate weights from core if available
+    if (this.core.getWeightsInputHidden && this.core.getWeightsHiddenOutput) {
+      this.syncWeightsFromCore();
+    }
+  }
+  
+  // Sync weights from core to interface properties
+  private syncWeightsFromCore() {
+    if (this.core.getWeightsInputHidden && this.core.getWeightsHiddenOutput) {
+      this.weights = [
+        this.core.getWeightsInputHidden(),
+        this.core.getWeightsHiddenOutput()
+      ];
+      // Initialize bias with empty arrays (as they're managed internally by core)
+      this.bias = [Array(this.hiddenNodes).fill(0), Array(this.outputNodes).fill(0)];
+    }
   }
 
   // Forward prediction
@@ -45,9 +79,9 @@ export class NeuralNetwork implements INeuralNetwork {
     const clonedCore = cloneNetwork(this.core, mutationRate);
     
     return new NeuralNetwork(
-      8, // Standard input size 
-      12, // Standard hidden size
-      4, // Standard output size
+      this.inputNodes, // Use stored input size
+      this.hiddenNodes, // Use stored hidden size
+      this.outputNodes, // Use stored output size
       clonedCore.getWeights(),
       clonedCore.getId(),
       0, // Reset score
@@ -60,6 +94,7 @@ export class NeuralNetwork implements INeuralNetwork {
   // Apply mutations
   mutate(mutationRate: number = 0.1): void {
     mutateNetwork(this.core, mutationRate);
+    this.syncWeightsFromCore(); // Keep interface properties in sync
   }
 
   // Weight management
@@ -69,6 +104,7 @@ export class NeuralNetwork implements INeuralNetwork {
 
   setWeights(weights: number[]): void {
     this.core.setWeights(weights);
+    this.syncWeightsFromCore(); // Keep interface properties in sync
   }
   
   // Core getters
@@ -80,7 +116,6 @@ export class NeuralNetwork implements INeuralNetwork {
     return this.core.getGeneration();
   }
   
-  // Fixed implementation of updateGeneration method
   updateGeneration(generation: number): void {
     if (typeof generation !== 'number' || generation < 1) {
       console.error(`Invalid generation value: ${generation}, using 1 instead`);

@@ -1,3 +1,4 @@
+
 import { Direction, Snake } from '../../types';
 import { generateInitialSnake } from '../../movement/initialSnake';
 import { createBestModelBrain, createCombinedModelBrain, createRandomBrain } from './createSnakeBrain';
@@ -112,7 +113,9 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       alive: true,
       gridSize: 30,
       movesWithoutEating: 0,
-      decisionMetrics
+      decisionMetrics,
+      generation: brain.getGeneration(), // Add generation
+      age: 0 // Add age starting at 0
     };
   } catch (error) {
     console.error(`Error creating snake ${id}:`, error);
@@ -152,7 +155,9 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
         effectiveDecisions: 0,
         ineffectiveDecisions: 0,
         survivalTime: 0
-      }
+      },
+      generation: globalGen, // Add generation
+      age: 0 // Add age starting at 0
     };
   }
 };
