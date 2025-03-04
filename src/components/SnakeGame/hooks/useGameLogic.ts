@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { useGameState } from './useGameState';
 import { useGameLoop } from './useGameLoop';
