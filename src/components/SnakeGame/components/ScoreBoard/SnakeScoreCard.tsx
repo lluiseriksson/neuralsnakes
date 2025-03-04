@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Snake } from '../../types';
 import { updateHighestScore } from '../../hooks/snakeCreation/modelCache';
@@ -42,7 +41,7 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
     }
   }, [snake]);
 
-  // Also update score based on snake length - this is the key fix
+  // Also update score based on snake length
   useEffect(() => {
     if (snake.positions && snake.positions.length > 3) {
       const lengthScore = snake.positions.length - 3;
@@ -93,9 +92,14 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
         style={{ backgroundColor: snake.color }} 
       />
       <div className="flex-1">
-        <span className="font-medium text-white">
-          Score: {currentScore} 
-        </span>
+        <div className="flex justify-between items-center">
+          <span className="font-medium text-white">
+            Score: 
+          </span>
+          <span className="font-medium text-white ml-1 min-w-[3ch] text-right">
+            {currentScore}
+          </span>
+        </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400">Gen: {currentGeneration}</span>
           {snakeStatus && (

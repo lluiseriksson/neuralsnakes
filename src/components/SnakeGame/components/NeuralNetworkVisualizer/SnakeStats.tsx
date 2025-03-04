@@ -83,9 +83,12 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
 
   return (
     <div className="mt-2 text-xs px-2">
-      <p className={`font-semibold ${getSnakeTypeStyle()}`}>
-        {getSnakeTypeLabel()} - Score: {score}
-      </p>
+      <div className="flex justify-between items-center">
+        <p className={`font-semibold ${getSnakeTypeStyle()}`}>
+          {getSnakeTypeLabel()}
+        </p>
+        <span className="font-medium">Score: {score}</span>
+      </div>
       <div className="flex justify-between text-xs mt-1">
         <span>Success Rate: {successRate}%</span>
         <span>Generation: {generation}</span>

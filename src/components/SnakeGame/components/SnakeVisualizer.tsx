@@ -17,13 +17,15 @@ const SnakeVisualizer: React.FC<SnakeVisualizerProps> = ({
 }) => {
   return (
     <div className="p-4 bg-gray-900 rounded-xl border border-gray-700 shadow-lg text-white">
-      <h3 className="text-lg font-semibold mb-2 border-b border-gray-700 pb-2">Decision Visualization</h3>
-      <SnakeSelector 
-        snakes={snakes} 
-        onSelectSnake={onSelectSnake} 
-        activeSnakeId={activeSnake?.id || null} 
-      />
-      <NeuralNetworkVisualizer activeSnake={activeSnake} />
+      <h3 className="text-lg font-semibold mb-3 border-b border-gray-700 pb-2">Decision Visualization</h3>
+      <div className="min-h-[280px]"> {/* Add minimum height container */}
+        <SnakeSelector 
+          snakes={snakes} 
+          onSelectSnake={onSelectSnake} 
+          activeSnakeId={activeSnake?.id || null} 
+        />
+        <NeuralNetworkVisualizer activeSnake={activeSnake} />
+      </div>
     </div>
   );
 };
