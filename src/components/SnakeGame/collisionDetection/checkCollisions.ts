@@ -27,11 +27,7 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
   }
   
   // Process snake-to-snake collisions
-  const snakesBeforeCollisions = [...updatedSnakes.map(s => ({
-    id: s.id,
-    alive: s.alive,
-    positions: [...s.positions]
-  }))];
+  const snakesBeforeCollisions = [...updatedSnakes];
   
   updatedSnakes = checkSnakeCollisions(updatedSnakes);
   
@@ -70,4 +66,3 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
   
   return { newSnakes: updatedSnakes, newApples: updatedApples };
 };
-
