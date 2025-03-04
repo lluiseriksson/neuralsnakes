@@ -1,11 +1,10 @@
 
 import { Snake } from '../../types';
-import { drawSnakeBody } from './snakeParts/drawSnakeBody';
-import { drawSnakeHead } from './snakeParts/drawSnakeHead';
-import { drawSnakeEyes } from './snakeParts/drawSnakeEyes';
+import { SnakeRenderer } from './SnakeRenderer';
 
 /**
  * Draws all snakes on the canvas with improved visual effects
+ * using the SnakeRenderer class for better organization
  */
 export const drawSnakes = (
   ctx: CanvasRenderingContext2D,
@@ -15,18 +14,9 @@ export const drawSnakes = (
 ): void => {
   if (!snakes || snakes.length === 0) return;
 
-  snakes.forEach(snake => {
-    if (!snake.alive || !snake.positions || snake.positions.length === 0) return;
-
-    const isSelected = selectedSnakeId !== null && snake.id === selectedSnakeId;
-    
-    // Draw snake body
-    drawSnakeBody(ctx, snake, cellSize);
-    
-    // Draw snake head
-    drawSnakeHead(ctx, snake, cellSize, isSelected);
-    
-    // Draw snake eyes
-    drawSnakeEyes(ctx, snake, cellSize);
-  });
+  // Create a snake renderer instance
+  const snakeRenderer = new SnakeRenderer(ctx, cellSize);
+  
+  // Render all snakes
+  snakeRenderer.renderSnakes(snakes, selectedSnakeId);
 };

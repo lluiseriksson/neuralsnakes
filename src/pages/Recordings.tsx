@@ -11,7 +11,7 @@ import { Button } from "../components/ui/button";
 import { GameState, Snake } from "../components/SnakeGame/types";
 import GameVisualizer from "../components/SnakeGame/components/GameVisualizer";
 import SnakeVisualizer from "../components/SnakeGame/components/SnakeVisualizer";
-import { Play } from "lucide-react";
+import { Play, Pause } from "lucide-react";
 
 const RecordingsPage = () => {
   const [recordings, setRecordings] = useState<GameRecording[]>([]);
@@ -34,10 +34,10 @@ const RecordingsPage = () => {
       const data = await GameRecorder.getRecordings(50);
       setRecordings(data);
     } catch (error) {
-      console.error("Error al cargar grabaciones:", error);
+      console.error("Error loading recordings:", error);
       toast({
         title: "Error",
-        description: "No se pudieron cargar las grabaciones.",
+        description: "Could not load recordings.",
         variant: "destructive"
       });
     } finally {
@@ -49,21 +49,21 @@ const RecordingsPage = () => {
     fetchRecordings();
   }, []);
 
-  // Descargar grabación
+  // Download recording
   const handleDownload = async (recording: GameRecording) => {
     try {
       setDownloading(recording.id);
       GameRecorder.createRecordingDownload(recording);
       
       toast({
-        title: "Descarga iniciada",
-        description: "Tu archivo se está descargando.",
+        title: "Download started",
+        description: "Your file is being downloaded.",
       });
     } catch (error) {
-      console.error("Error al descargar:", error);
+      console.error("Error downloading:", error);
       toast({
         title: "Error",
-        description: "No se pudo descargar la grabación.",
+        description: "Could not download recording.",
         variant: "destructive"
       });
     } finally {
@@ -90,8 +90,8 @@ const RecordingsPage = () => {
     setRecordings(prev => [tempDisplayRecording, ...prev]);
     
     toast({
-      title: "Grabación cargada",
-      description: "La grabación está lista para visualizarse.",
+      title: "Recording loaded",
+      description: "The recording is ready to be viewed.",
     });
 
     // Initialize player with the first frame
@@ -111,7 +111,7 @@ const RecordingsPage = () => {
     if (!recording.game_data || !recording.game_data.frames || recording.game_data.frames.length === 0) {
       toast({
         title: "Error",
-        description: "La grabación no contiene datos válidos para visualizar.",
+        description: "The recording does not contain valid data to visualize.",
         variant: "destructive"
       });
       return;
@@ -123,9 +123,36 @@ const RecordingsPage = () => {
     setCurrentFrame(0);
     setIsPlaying(true);
 
+    // Process the snakes to ensure they have a valid brain object for visualization
+    if (recording.game_data.frames[0].snakes) {
+      const processedSnakes = recording.game_data.frames[0].snakes.map(snake => {
+        // If brain is missing or incomplete, create a placeholder
+        if (!snake.brain || typeof snake.brain.getGeneration !== 'function') {
+          return {
+            ...snake,
+            brain: {
+              getGeneration: () => 0,
+              getPerformanceStats: () => ({ 
+                learningAttempts: 1, 
+                successfulMoves: 0 
+              })
+            }
+          };
+        }
+        return snake;
+      });
+      
+      const processedState = {
+        ...recording.game_data.frames[0],
+        snakes: processedSnakes
+      };
+      
+      setCurrentGameState(processedState);
+    }
+
     toast({
-      title: "Reproduciendo grabación",
-      description: `Mostrando grabación con ${recording.game_data.frames.length} frames.`,
+      title: "Playing recording",
+      description: `Showing recording with ${recording.game_data.frames.length} frames.`,
     });
   };
 
@@ -150,8 +177,36 @@ const RecordingsPage = () => {
             return prev; // Stay on last frame
           }
           
-          // Update game state with next frame
-          setCurrentGameState(frames[nextFrame]);
+          // Process the snakes to ensure they have a valid brain object
+          if (frames[nextFrame].snakes) {
+            const processedSnakes = frames[nextFrame].snakes.map(snake => {
+              // If brain is missing or incomplete, create a placeholder
+              if (!snake.brain || typeof snake.brain.getGeneration !== 'function') {
+                return {
+                  ...snake,
+                  brain: {
+                    getGeneration: () => 0,
+                    getPerformanceStats: () => ({ 
+                      learningAttempts: 1, 
+                      successfulMoves: 0 
+                    })
+                  }
+                };
+              }
+              return snake;
+            });
+            
+            const processedState = {
+              ...frames[nextFrame],
+              snakes: processedSnakes
+            };
+            
+            setCurrentGameState(processedState);
+          } else {
+            // Update game state with next frame
+            setCurrentGameState(frames[nextFrame]);
+          }
+          
           return nextFrame;
         });
       }, 200); // Adjust speed as needed
@@ -173,7 +228,7 @@ const RecordingsPage = () => {
         
         {showUploader && (
           <div className="mb-6 p-4 bg-gray-900 rounded-lg border border-gray-800">
-            <h3 className="text-lg font-semibold mb-3">Cargar una grabación</h3>
+            <h3 className="text-lg font-semibold mb-3">Upload a recording</h3>
             <RecordingUploader onFileLoaded={handleFileLoaded} />
           </div>
         )}
@@ -184,7 +239,7 @@ const RecordingsPage = () => {
             <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 mb-4">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">
-                  Visualización de Grabación {uploadedRecording?.id && 
+                  Recording Visualization {uploadedRecording?.id && 
                     <span className="text-sm text-gray-400">
                       (Frame {currentFrame + 1}/{uploadedRecording.game_data.frames.length})
                     </span>
@@ -197,8 +252,17 @@ const RecordingsPage = () => {
                     onClick={() => setIsPlaying(!isPlaying)}
                     className="border-gray-700"
                   >
-                    <Play className="w-4 h-4 mr-1" />
-                    {isPlaying ? 'Pausar' : 'Reproducir'}
+                    {isPlaying ? (
+                      <>
+                        <Pause className="w-4 h-4 mr-1" />
+                        Pause
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-1" />
+                        Play
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>

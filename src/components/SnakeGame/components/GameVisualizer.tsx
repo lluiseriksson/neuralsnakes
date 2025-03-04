@@ -30,12 +30,16 @@ const GameVisualizer: React.FC<GameVisualizerProps> = ({
       
       <div className="overflow-hidden">
         {gameState.snakes && gameState.snakes.length > 0 ? (
-          <GameCanvas gameState={gameState} onSelectSnake={onSelectSnake} />
+          <GameCanvas 
+            gameState={gameState} 
+            onSelectSnake={onSelectSnake}
+            isRecording={isRecording} 
+          />
         ) : (
           <div className="w-[600px] h-[600px] flex items-center justify-center bg-gray-900 text-white animate-pulse">
             <div className="text-center">
               <div className="inline-block mb-4 w-12 h-12 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
-              <p className="text-xl">Cargando juego...</p>
+              <p className="text-xl">Loading game...</p>
             </div>
           </div>
         )}

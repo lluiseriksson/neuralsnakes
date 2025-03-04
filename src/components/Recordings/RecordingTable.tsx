@@ -10,7 +10,7 @@ interface RecordingTableProps {
   loading: boolean;
   downloading: string | null;
   onDownload: (recording: GameRecording) => void;
-  onPlay: (recording: GameRecording) => void; // New prop for playing recordings
+  onPlay: (recording: GameRecording) => void;
 }
 
 const RecordingTable: React.FC<RecordingTableProps> = ({
@@ -23,16 +23,16 @@ const RecordingTable: React.FC<RecordingTableProps> = ({
   return (
     <div className="relative overflow-x-auto">
       <Table>
-        <TableCaption>Lista de grabaciones disponibles</TableCaption>
+        <TableCaption>List of available recordings</TableCaption>
         
         <TableHeader className="bg-gray-800">
           <tr>
             <TableHead className="text-gray-300">ID</TableHead>
-            <TableHead className="text-gray-300">Fecha</TableHead>
-            <TableHead className="text-gray-300">Duración</TableHead>
-            <TableHead className="text-gray-300">Puntuación Máx</TableHead>
-            <TableHead className="text-gray-300">Generación</TableHead>
-            <TableHead className="text-gray-300">Serpientes</TableHead>
+            <TableHead className="text-gray-300">Date</TableHead>
+            <TableHead className="text-gray-300">Duration</TableHead>
+            <TableHead className="text-gray-300">Max Score</TableHead>
+            <TableHead className="text-gray-300">Generation</TableHead>
+            <TableHead className="text-gray-300">Snakes</TableHead>
             <TableHead className="text-gray-300"></TableHead>
           </tr>
         </TableHeader>
@@ -54,7 +54,7 @@ const RecordingTable: React.FC<RecordingTableProps> = ({
           ) : recordings.length === 0 ? (
             <tr>
               <td colSpan={7} className="py-4 text-center text-gray-400">
-                No hay grabaciones disponibles. Juega algunas partidas para generar grabaciones.
+                No recordings available. Play some games to generate recordings.
               </td>
             </tr>
           ) : (

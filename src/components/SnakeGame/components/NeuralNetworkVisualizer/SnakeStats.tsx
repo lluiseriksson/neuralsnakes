@@ -20,8 +20,21 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
   }, [activeSnake]);
   
   // Calculate success rate with safety check
-  const totalAttempts = activeSnake.brain.getPerformanceStats().learningAttempts || 1;
-  const successRate = (activeSnake.brain.getPerformanceStats().successfulMoves / totalAttempts * 100).toFixed(1);
+  const getStats = () => {
+    if (typeof activeSnake.brain?.getPerformanceStats === 'function') {
+      const stats = activeSnake.brain.getPerformanceStats();
+      const totalAttempts = stats.learningAttempts || 1;
+      return {
+        successRate: (stats.successfulMoves / totalAttempts * 100).toFixed(1),
+        generation: typeof activeSnake.brain?.getGeneration === 'function' 
+          ? activeSnake.brain.getGeneration() 
+          : 0
+      };
+    }
+    return { successRate: "0.0", generation: 0 };
+  };
+  
+  const { successRate, generation } = getStats();
   
   // Special styling for different snake types
   const getSnakeTypeStyle = () => {
@@ -35,8 +48,8 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
   // Get snake type label
   const getSnakeTypeLabel = () => {
     switch (activeSnake.id) {
-      case 0: return "Modelo Óptimo (Amarillo)";
-      case 1: return "Modelo Combinado (Azul)";
+      case 0: return "Best Model (Yellow)";
+      case 1: return "Combined Model (Blue)";
       default: return `Experimental #${activeSnake.id}`;
     }
   };
@@ -44,11 +57,11 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
   return (
     <div className="mt-2 text-xs px-2">
       <p className={`font-semibold ${getSnakeTypeStyle()}`}>
-        {getSnakeTypeLabel()} - Puntuación: {score}
+        {getSnakeTypeLabel()} - Score: {score}
       </p>
       <div className="flex justify-between text-xs mt-1">
-        <span>Tasa de éxito: {successRate}%</span>
-        <span>Generación: {activeSnake.brain.getGeneration()}</span>
+        <span>Success Rate: {successRate}%</span>
+        <span>Generation: {generation}</span>
       </div>
       <div className="mt-1 flex justify-between items-center">
         <div className="w-3/4 bg-gray-800 h-1 rounded-full">
@@ -57,7 +70,7 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
             style={{ width: `${Math.min(parseInt(successRate), 100)}%` }}
           ></div>
         </div>
-        <span className="text-xs ml-2">Manzanas: {applesEaten}</span>
+        <span className="text-xs ml-2">Apples: {applesEaten}</span>
       </div>
     </div>
   );

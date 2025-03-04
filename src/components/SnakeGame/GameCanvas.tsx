@@ -9,9 +9,14 @@ import LoadingOverlay from './canvas/LoadingOverlay';
 interface GameCanvasProps {
   gameState: GameState;
   onSelectSnake?: (snake: Snake) => void;
+  isRecording?: boolean;
 }
 
-const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onSelectSnake }) => {
+const GameCanvas: React.FC<GameCanvasProps> = ({ 
+  gameState, 
+  onSelectSnake,
+  isRecording = false
+}) => {
   const canvasWidth = GRID_SIZE * CELL_SIZE;
   const canvasHeight = GRID_SIZE * CELL_SIZE;
   
@@ -57,7 +62,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onSelectSnake }) => 
       
       {!hasSnakes && <LoadingOverlay />}
       
-      {hasSnakes && (
+      {hasSnakes && !isRecording && (
         <GenerationTracker snakes={gameState.snakes} />
       )}
       
@@ -71,7 +76,9 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onSelectSnake }) => 
             </div>
             <div>Direction: {selectedSnake.direction}</div>
             <div>Apples eaten: {selectedSnake.decisionMetrics?.applesEaten || 0}</div>
-            <div>Generation: {selectedSnake.brain.getGeneration()}</div>
+            <div>Generation: {typeof selectedSnake.brain?.getGeneration === 'function' 
+              ? selectedSnake.brain.getGeneration() 
+              : 0}</div>
           </div>
           {selectedSnake.debugInfo?.lastDecision && (
             <div className="text-xs mt-2 p-1 bg-gray-800 bg-opacity-60 rounded border-l-2 border-green-500">

@@ -57,11 +57,16 @@ const NetworkCanvas: React.FC<NetworkCanvasProps> = ({ activeSnake }) => {
         drawLearningHistory(ctx, learningEvents, canvas);
       }
 
-      // Get generation info for display
+      // Get generation info for display - handle null brain
       ctx.fillStyle = '#AAAAAA';
       ctx.font = '10px Arial';
       ctx.textAlign = 'right';
-      ctx.fillText(`Generation: ${activeSnake.brain.getGeneration()}`, canvas.width - 10, 20);
+      
+      const generation = typeof activeSnake.brain?.getGeneration === 'function' 
+        ? activeSnake.brain.getGeneration() 
+        : 0;
+        
+      ctx.fillText(`Generation: ${generation}`, canvas.width - 10, 20);
       
       // Continue animation loop
       animationFrameId = requestAnimationFrame(renderFrame);

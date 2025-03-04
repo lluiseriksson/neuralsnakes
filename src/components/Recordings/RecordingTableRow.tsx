@@ -9,7 +9,7 @@ interface RecordingTableRowProps {
   recording: GameRecording;
   downloading: boolean;
   onDownload: () => void;
-  onPlay: () => void; // New prop for handling play functionality
+  onPlay: () => void;
 }
 
 const RecordingTableRow: React.FC<RecordingTableRowProps> = ({ 
@@ -38,7 +38,7 @@ const RecordingTableRow: React.FC<RecordingTableRowProps> = ({
     <TableRow className={`border-b border-gray-800 ${isUploaded ? 'bg-blue-900/20' : ''}`}>
       <TableCell className="font-mono text-xs">
         {isUploaded ? (
-          <span className="bg-blue-500/30 text-blue-200 px-2 py-1 rounded text-xs">Cargado</span>
+          <span className="bg-blue-500/30 text-blue-200 px-2 py-1 rounded text-xs">Uploaded</span>
         ) : (
           recording.id.substring(0, 8)
         )}
@@ -63,7 +63,7 @@ const RecordingTableRow: React.FC<RecordingTableRowProps> = ({
             onClick={onPlay}
           >
             <Play className="w-4 h-4 mr-1 text-green-400" />
-            <span className="text-green-400">Ver</span>
+            <span className="text-green-400">View</span>
           </Button>
           <Button
             variant="outline"
@@ -73,11 +73,11 @@ const RecordingTableRow: React.FC<RecordingTableRowProps> = ({
             className="border-blue-800 bg-blue-950/30 hover:bg-blue-900/50"
           >
             {downloading ? (
-              <span className="animate-pulse text-blue-400">Descargando...</span>
+              <span className="animate-pulse text-blue-400">Downloading...</span>
             ) : (
               <>
                 <Download className="w-4 h-4 mr-1 text-blue-400" />
-                <span className="text-blue-400">Descargar</span>
+                <span className="text-blue-400">Download</span>
               </>
             )}
           </Button>

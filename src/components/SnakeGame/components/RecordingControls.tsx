@@ -19,7 +19,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
 }) => {
   return (
     <div className="p-4 bg-gray-900 rounded-xl border border-gray-700 shadow-lg text-white">
-      <h3 className="text-lg font-semibold mb-3 border-b border-gray-700 pb-2">Herramientas de grabación</h3>
+      <h3 className="text-lg font-semibold mb-3 border-b border-gray-700 pb-2">Recording Tools</h3>
       
       <div className="flex flex-col gap-3">
         <div className="flex gap-3">
@@ -30,7 +30,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
             className="flex-1"
           >
             <Circle className="w-4 h-4 mr-2" />
-            Iniciar grabación
+            Start Recording
           </Button>
           
           <Button
@@ -40,21 +40,21 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
             className="flex-1 border-red-900 text-red-400"
           >
             <StopCircle className="w-4 h-4 mr-2" />
-            Detener
+            Stop
           </Button>
         </div>
         
         <Link to="/recordings" className="w-full">
           <Button className="w-full bg-purple-700 hover:bg-purple-800">
             <Database className="w-4 h-4 mr-2" />
-            Ver grabaciones
+            View Recordings
           </Button>
         </Link>
       </div>
       
       {isRecording && (
         <div className="mt-3 text-xs text-red-400 animate-pulse">
-          Grabando partida actual...
+          Recording current game...
         </div>
       )}
     </div>

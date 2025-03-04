@@ -28,7 +28,11 @@ export const drawNetworkTitle = (
         snakeType = `⚪ Experimental Snake #${activeSnake.id}`;
     }
     
-    titleText = `${snakeType} - Generation ${activeSnake.brain.getGeneration()}`;
+    const generation = typeof activeSnake.brain?.getGeneration === 'function' 
+      ? activeSnake.brain.getGeneration() 
+      : 0;
+    
+    titleText = `${snakeType} - Generation ${generation}`;
   }
   
   ctx.fillText(titleText, canvas.width / 2, 25);
