@@ -96,7 +96,7 @@ const NetworkCanvas: React.FC<NetworkCanvasProps> = ({ activeSnake }) => {
     <canvas 
       ref={canvasRef} 
       width={550}
-      height={300} 
+      height={350} // Aumentamos la altura para dar más espacio
       className={`w-full h-full transition-all duration-300 animate-fade-in border border-opacity-30 rounded ${getAnimationClass()}`}
     />
   );

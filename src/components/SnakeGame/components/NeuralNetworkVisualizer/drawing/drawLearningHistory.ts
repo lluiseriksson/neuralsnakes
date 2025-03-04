@@ -6,11 +6,11 @@ export const drawLearningHistory = (
   learningEvents: LearningEvent[],
   canvas: HTMLCanvasElement
 ) => {
-  // Draw a small learning history chart at the bottom - moved lower to avoid text overlap
+  // Moved the learning history chart much lower to avoid overlapping with input labels
   const chartStartX = 40;
   const chartWidth = canvas.width - 80;
-  const chartY = canvas.height - 25; // Moved further down to avoid text overlap
-  const chartHeight = 20; // Made smaller to avoid text overlap
+  const chartY = canvas.height - 55; // Moved much further down
+  const chartHeight = 35; // Made taller for better visibility
   
   // Background for chart with rounded corners
   ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
@@ -31,7 +31,7 @@ export const drawLearningHistory = (
   
   // Draw chart title
   ctx.fillStyle = '#AAAAAA';
-  ctx.font = '9px Arial';
+  ctx.font = '10px Arial';
   ctx.textAlign = 'center';
   ctx.fillText('Learning History (last 20 events)', chartStartX + chartWidth / 2, chartY - chartHeight - 5);
   

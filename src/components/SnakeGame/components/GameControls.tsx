@@ -16,7 +16,7 @@ const GameControls: React.FC<GameControlsProps> = ({
       <Button 
         onClick={onInitializeGame} 
         disabled={isInitializing}
-        className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg border border-blue-400 text-lg"
+        className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors shadow-lg border border-blue-400 text-lg font-bold"
       >
         {isInitializing ? 'Initializing...' : 'New Generation'}
       </Button>
