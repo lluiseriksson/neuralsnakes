@@ -25,6 +25,18 @@ export const useRoundManagement = (
 ) => {
   const { toast } = useToast();
   
+  // Helper function to get snake color name based on ID - placed at the function level
+  // so it can be used in multiple places within endRound
+  const getSnakeColorName = (id: number) => {
+    switch (id) {
+      case 0: return "Yellow";
+      case 1: return "Blue";
+      case 2: return "Green";
+      case 3: return "Purple";
+      default: return `Snake #${id}`;
+    }
+  };
+  
   const endRound = useCallback(async () => {
     console.log("🔴 endRound called - beginning end of round processing");
     
@@ -84,19 +96,8 @@ export const useRoundManagement = (
         setVictories(prevVictories => {
           const newVictories = { ...prevVictories };
           winningSnakes.forEach(winner => {
-            console.log(`🔴 Snake ${winner.id} (${winner.color}) won with ${winner.score} points! (Generation ${winner.brain.getGeneration()})`);
+            console.log(`🔴 ${getSnakeColorName(winner.id)} Snake (${winner.color}) won with ${winner.score} points! (Generation ${winner.brain.getGeneration()})`);
             newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
-            
-            // Get snake color name based on ID
-            const getSnakeColorName = (id: number) => {
-              switch (id) {
-                case 0: return "Yellow";
-                case 1: return "Blue";
-                case 2: return "Green";
-                case 3: return "Purple";
-                default: return `#${id}`;
-              }
-            };
             
             // Show a toast for the winner with color name
             toast({
@@ -124,12 +125,12 @@ export const useRoundManagement = (
             
             // Save the model to DB
             const savedId = await winner.brain.save(winner.score);
-            console.log(`🔴 Saved winning model for snake ${winner.id} (${winner.color}) with score ${winner.score} (gen: ${winner.brain.getGeneration()}) - ID: ${savedId}`);
+            console.log(`🔴 Saved winning model for ${getSnakeColorName(winner.id)} Snake (${winner.color}) with score ${winner.score} (gen: ${winner.brain.getGeneration()}) - ID: ${savedId}`);
             
             // Make sure generation tracking is updated
             forceGenerationUpdate(winner.brain.getGeneration());
           } catch (saveError) {
-            console.error(`Error saving winning model for snake ${winner.id}:`, saveError);
+            console.error(`Error saving winning model for ${getSnakeColorName(winner.id)} Snake ${winner.id}:`, saveError);
           }
         }
       }
@@ -153,9 +154,9 @@ export const useRoundManagement = (
         snake.brain.updateGeneration(snakeNewGen);
         
         await snake.brain.save(snake.score);
-        console.log(`🔴 Saved model for snake ${snake.id} (${snake.color}) with score ${snake.score} (gen: ${snake.brain.getGeneration()})`);
+        console.log(`🔴 Saved model for ${getSnakeColorName(snake.id)} Snake (${snake.color}) with score ${snake.score} (gen: ${snake.brain.getGeneration()})`);
       } catch (saveError) {
-        console.error(`Error saving model for snake ${snake.id}:`, saveError);
+        console.error(`Error saving model for ${getSnakeColorName(snake.id)} Snake ${snake.id}:`, saveError);
       }
     }
 

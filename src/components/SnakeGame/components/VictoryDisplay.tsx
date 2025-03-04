@@ -13,7 +13,7 @@ const VictoryDisplay: React.FC<VictoryDisplayProps> = ({ victories }) => {
       case 1: return "Blue";
       case 2: return "Green";
       case 3: return "Purple";
-      default: return `#${id}`;
+      default: return `Snake #${id}`;
     }
   };
 
