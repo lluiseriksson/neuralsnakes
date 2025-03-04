@@ -64,6 +64,8 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
     switch (activeSnake.id) {
       case 0: return "text-yellow-400"; // Yellow snake
       case 1: return "text-blue-400";   // Blue snake
+      case 2: return "text-green-500";  // Green snake
+      case 3: return "text-purple-400"; // Purple snake
       default: return "text-gray-300";  // Other snakes
     }
   };
@@ -71,9 +73,11 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
   // Get snake type label
   const getSnakeTypeLabel = () => {
     switch (activeSnake.id) {
-      case 0: return "Best Model (Yellow)";
-      case 1: return "Combined Model (Blue)";
-      default: return `Experimental #${activeSnake.id}`;
+      case 0: return "Yellow Snake (Best Model)";
+      case 1: return "Blue Snake (Combined)";
+      case 2: return "Green Snake (Experimental)";
+      case 3: return "Purple Snake (Experimental)";
+      default: return `Snake #${activeSnake.id} (Experimental)`;
     }
   };
 
@@ -89,7 +93,12 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
       <div className="mt-1 flex justify-between items-center">
         <div className="w-3/4 bg-gray-800 h-1 rounded-full">
           <div 
-            className={`h-1 rounded-full ${activeSnake.id === 0 ? 'bg-yellow-400' : activeSnake.id === 1 ? 'bg-blue-500' : 'bg-green-500'}`}
+            className={`h-1 rounded-full ${
+              activeSnake.id === 0 ? 'bg-yellow-400' : 
+              activeSnake.id === 1 ? 'bg-blue-500' : 
+              activeSnake.id === 2 ? 'bg-green-500' : 
+              activeSnake.id === 3 ? 'bg-purple-400' : 'bg-gray-500'
+            }`}
             style={{ width: `${Math.min(parseFloat(successRate), 100)}%` }}
           ></div>
         </div>

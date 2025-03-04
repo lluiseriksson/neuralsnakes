@@ -19,13 +19,19 @@ export const drawNetworkTitle = (
     
     switch (activeSnake.id) {
       case 0:
-        snakeType = '🟡 Best Model (Yellow)';
+        snakeType = '🟡 Yellow Snake (Best Model)';
         break;
       case 1:
-        snakeType = '🔵 Combined Model (Blue)';
+        snakeType = '🔵 Blue Snake (Combined)';
+        break;
+      case 2:
+        snakeType = '🟢 Green Snake (Experimental)';
+        break;
+      case 3:
+        snakeType = '🟣 Purple Snake (Experimental)';
         break;
       default:
-        snakeType = `⚪ Experimental Snake #${activeSnake.id}`;
+        snakeType = `⚪ Snake #${activeSnake.id} (Experimental)`;
     }
     
     const generation = typeof activeSnake.brain?.getGeneration === 'function' 

@@ -45,6 +45,17 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
   const selectedSnake = selectedSnakeId !== null 
     ? gameState.snakes.find(s => s.id === selectedSnakeId) 
     : null;
+    
+  // Get snake name based on ID
+  const getSnakeName = (id: number) => {
+    switch (id) {
+      case 0: return "Yellow Snake";
+      case 1: return "Blue Snake";
+      case 2: return "Green Snake";
+      case 3: return "Purple Snake";
+      default: return `Snake #${id}`;
+    }
+  };
 
   return (
     <div className="relative overflow-hidden rounded-xl border-2 border-gray-600 shadow-lg bg-black">
@@ -59,7 +70,9 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
       
       {selectedSnakeId !== null && selectedSnake && (
         <div className="absolute top-3 left-3 bg-black/90 backdrop-blur-md text-white px-4 py-3 text-sm rounded-lg border border-gray-600 shadow-lg animate-fade-in">
-          <div className="font-bold text-lg text-yellow-400">Snake #{selectedSnakeId}</div>
+          <div className="font-bold text-lg" style={{ color: selectedSnake.color }}>
+            {getSnakeName(selectedSnakeId)}
+          </div>
           <div className="grid grid-cols-2 gap-x-4 mt-2">
             <div className="flex items-center">
               <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: selectedSnake.color }}></div>
