@@ -22,7 +22,8 @@ const ScoreBoard: React.FC<ScoreBoardProps> = ({ snakes, generationInfo }) => {
     if (snakes && snakes.length > 0) {
       const newScores: {[key: number]: number} = {};
       snakes.forEach(snake => {
-        newScores[snake.id] = snake.score;
+        // Ensure scores are whole numbers
+        newScores[snake.id] = Math.floor(snake.score);
       });
       setSnakeScores(newScores);
     }
@@ -33,7 +34,7 @@ const ScoreBoard: React.FC<ScoreBoardProps> = ({ snakes, generationInfo }) => {
       {generationInfo && (
         <GenerationInfoCard 
           generation={generationInfo.generation}
-          bestScore={generationInfo.bestScore}
+          bestScore={Math.floor(generationInfo.bestScore)}
           progress={generationInfo.progress}
         />
       )}

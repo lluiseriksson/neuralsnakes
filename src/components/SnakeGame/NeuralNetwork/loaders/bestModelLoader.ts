@@ -20,7 +20,7 @@ export const loadBestModel = async (): Promise<INeuralNetwork | null> => {
       console.log("Using cached best model from global cache");
       
       // Always increment the generation significantly when reusing cached model
-      const newGeneration = bestModelCache.getGeneration() + 5;
+      const newGeneration = bestModelCache.getGeneration() + 1;
       bestModelCache.updateGeneration(newGeneration);
       forceGenerationUpdate(newGeneration);
       console.log(`⚡ FIXED: Incremented cached best model generation to ${bestModelCache.getGeneration()} ⚡`);
@@ -39,11 +39,12 @@ export const loadBestModel = async (): Promise<INeuralNetwork | null> => {
     
     // Extract metadata if available
     const metadata = model.metadata as Record<string, any> || {};
-    const bestScore = metadata.best_score || model.score || 0;
+    // Ensure best score is a whole number
+    const bestScore = Math.floor(metadata.best_score || model.score || 0);
     const gamesPlayed = metadata.games_played || 0;
     
-    // Make sure the generation is at least 10
-    const loadedGeneration = Math.max(model.generation, 10);
+    // Make sure the generation is reset to 1 to start fresh with new rules
+    const loadedGeneration = 1;
     
     const neuralNetwork = new NeuralNetwork(
       8, 
@@ -57,19 +58,11 @@ export const loadBestModel = async (): Promise<INeuralNetwork | null> => {
       gamesPlayed
     );
     
-    // Update the generation tracking system
-    if (loadedGeneration > 0) {
-      // Always add at least 5 to the loaded generation
-      const newGeneration = loadedGeneration + 5;
-      neuralNetwork.updateGeneration(newGeneration);
-      forceGenerationUpdate(newGeneration);
-      console.log(`⚡ FIXED: Incremented loaded best model generation to ${neuralNetwork.getGeneration()} ⚡`);
-    }
+    console.log(`⭐ Reset loaded best model generation to ${neuralNetwork.getGeneration()} with new game rules ⭐`);
     
     // Update global cache
     setBestModelCache(neuralNetwork);
     
-    console.log(`⭐ Loaded best model with generation ${neuralNetwork.getGeneration()} and score ${model.score || 0} ⭐`);
     return neuralNetwork;
   } catch (err) {
     console.error('Exception loading best neural network:', err);

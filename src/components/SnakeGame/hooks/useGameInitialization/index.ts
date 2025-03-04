@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { GameState, Snake, Direction } from '../../types';
 import { GRID_SIZE, APPLE_COUNT } from '../../constants';
@@ -8,6 +7,7 @@ import { validateAndFixSnake } from './validateSnake';
 import { createFallbackSnake } from './createFallbackSnake';
 import { getGenerationInfo } from './getGenerationInfo';
 import { createEmergencyGameState } from './emergencyRecovery';
+import { purgeAllModelCaches } from '../snakeCreation/modelCache';
 
 // Cache for initial apples
 const cachedInitialApples = Array.from({ length: APPLE_COUNT }, generateApple);
@@ -28,6 +28,12 @@ export const useGameInitialization = (
   const initializeGame = useCallback(async () => {
     try {
       console.log("Iniciando inicialización del juego...");
+      
+      // Reset all model caches and generation counters on first load
+      if (gamesPlayedRef.current === 0) {
+        console.log("Primera partida: Reseteando todos los caches y contadores de generación");
+        purgeAllModelCaches();
+      }
       
       if (gameLoopRef.current) {
         clearInterval(gameLoopRef.current);

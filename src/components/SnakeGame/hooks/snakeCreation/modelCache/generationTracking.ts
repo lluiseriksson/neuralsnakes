@@ -4,9 +4,9 @@
 import { resetGamesSinceLastIncrement } from './gameTracking';
 import { getModelCache } from './cacheManagement';
 
-// Start with a high baseline generation to avoid having low generation numbers at startup
-// This prevents the issue where some snakes show low generation numbers at game start
-let currentGeneration = 7000; 
+// Reset the generation counter to a reasonable starting value
+// This forces re-learning with the new game rules
+let currentGeneration = 1; 
 
 export const getCurrentGeneration = (): number => {
   return currentGeneration;
@@ -124,9 +124,9 @@ const updateModelCachesGeneration = (newGeneration: number): void => {
 export const purgeAllModelCaches = (): void => {
   console.log("🔄 PURGING ALL MODEL CACHES - FORCING COMPLETE RESET 🔄");
   
-  // Force a generation jump to prevent stagnation
-  currentGeneration += 10; // Reduced to force smaller generation jumps
-  console.log(`⚡ Post-reset generation set to ${currentGeneration} ⚡`);
+  // Reset the generation to 1 to start fresh learning with new rules
+  currentGeneration = 1;
+  console.log(`⚡ Generation reset to ${currentGeneration} to apply new game rules ⚡`);
   
   // Break circular dependency using dynamic import
   const resetModelCaches = require('./cacheManagement').resetModelCaches;
