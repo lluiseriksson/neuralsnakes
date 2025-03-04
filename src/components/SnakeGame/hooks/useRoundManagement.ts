@@ -24,21 +24,25 @@ export const useRoundManagement = (
   const { toast } = useToast();
   
   const endRound = useCallback(async () => {
-    // Only proceed if we're actually ending a round (not when snake vs snake collisions happen)
-    if (!gameLoopRef.current) {
-      console.log("Preventing duplicate endRound execution - no active game loop");
+    console.log("🔴 endRound called - beginning end of round processing");
+    
+    // Prevent duplicate execution
+    if (!gameState.snakes || gameState.snakes.length === 0) {
+      console.log("🔴 Preventing endRound execution - no snakes in game state");
       return;
     }
 
+    // Clear any existing game loop
     if (gameLoopRef.current) {
       clearInterval(gameLoopRef.current);
       gameLoopRef.current = null;
     }
 
+    // Make sure we stop the game and update processing flag
     setIsGameRunning(false);
     isProcessingUpdate.current = false;
 
-    console.log("Round ended, processing results");
+    console.log("🔴 Round ended, processing results");
 
     // Get performance metrics from all snakes
     const totalScore = gameState.snakes.reduce((sum, snake) => sum + snake.score, 0);
@@ -50,14 +54,14 @@ export const useRoundManagement = (
     const totalSuicides = gameState.snakes.reduce((sum, snake) => 
       sum + (snake.decisionMetrics?.suicides || 0), 0);
     
-    console.log(`Round ended with metrics: score=${totalScore}, apples=${totalApplesEaten}, kills=${totalKills}, deaths=${totalDeaths}, suicides=${totalSuicides}`);
+    console.log(`🔴 Round metrics: score=${totalScore}, apples=${totalApplesEaten}, kills=${totalKills}, deaths=${totalDeaths}, suicides=${totalSuicides}`);
     
     // Always track that a game has been played
     trackGamePlayed();
     
     // Get current generation before updates
     let currentGen = getCurrentGeneration();
-    console.log(`Current generation at end of round: ${currentGen}`);
+    console.log(`🔴 Current generation at end of round: ${currentGen}`);
     
     // Use advanced metrics-based generation advancement
     let newGeneration = advanceGenerationBasedOnMetrics(
@@ -92,12 +96,12 @@ export const useRoundManagement = (
       const winningSnakes = gameState.snakes.filter(snake => snake.score === maxScore);
       
       if (winningSnakes.length > 0) {
-        console.log(`Found ${winningSnakes.length} winners with score ${maxScore}`);
+        console.log(`🔴 Found ${winningSnakes.length} winners with score ${maxScore}`);
         
         setVictories(prevVictories => {
           const newVictories = { ...prevVictories };
           winningSnakes.forEach(winner => {
-            console.log(`Snake ${winner.id} (${winner.color}) won with ${winner.score} points! (Generation ${winner.brain.getGeneration()})`);
+            console.log(`🔴 Snake ${winner.id} (${winner.color}) won with ${winner.score} points! (Generation ${winner.brain.getGeneration()})`);
             newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
             
             // Show a toast for the winner
@@ -111,7 +115,7 @@ export const useRoundManagement = (
         });
       
         // Log current generation state
-        console.log(`Current generation before saving winners: ${newGeneration}`);
+        console.log(`🔴 Current generation before saving winners: ${newGeneration}`);
         
         // Save the winning models with significant generation boost
         for (const winner of winningSnakes) {
@@ -125,7 +129,7 @@ export const useRoundManagement = (
             
             // Save the model to DB
             const savedId = await winner.brain.save(winner.score);
-            console.log(`Saved winning model for snake ${winner.id} (${winner.color}) with score ${winner.score} (gen: ${winner.brain.getGeneration()}) - ID: ${savedId}`);
+            console.log(`🔴 Saved winning model for snake ${winner.id} (${winner.color}) with score ${winner.score} (gen: ${winner.brain.getGeneration()}) - ID: ${savedId}`);
             
             // Make sure generation tracking is updated
             forceGenerationUpdate(winner.brain.getGeneration());
@@ -154,7 +158,7 @@ export const useRoundManagement = (
         snake.brain.updateGeneration(snakeNewGen);
         
         await snake.brain.save(snake.score);
-        console.log(`Saved model for snake ${snake.id} (${snake.color}) with score ${snake.score} (gen: ${snake.brain.getGeneration()})`);
+        console.log(`🔴 Saved model for snake ${snake.id} (${snake.color}) with score ${snake.score} (gen: ${snake.brain.getGeneration()})`);
         
         // Make sure generation tracking is updated
         forceGenerationUpdate(snake.brain.getGeneration());
@@ -166,9 +170,26 @@ export const useRoundManagement = (
     // Force a delay to ensure all saves have completed
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Always restart the game after a round ends
-    console.log("Restarting game after round ended");
-    setTimeout(initializeGame, 1500);
+    // Explicitly initialize a new game after processing is complete
+    console.log("🔴 Restarting game after round ended");
+    
+    try {
+      setTimeout(() => {
+        initializeGame();
+        console.log("🔴 Game successfully restarted");
+      }, 1500);
+    } catch (error) {
+      console.error("🔴 Error restarting game:", error);
+      // Fallback attempt if the first restart fails
+      setTimeout(() => {
+        try {
+          initializeGame();
+          console.log("🔴 Game restarted on second attempt");
+        } catch (secondError) {
+          console.error("🔴 Critical failure restarting game:", secondError);
+        }
+      }, 3000);
+    }
   }, [gameState.snakes, initializeGame, gameLoopRef, setIsGameRunning, isProcessingUpdate, setVictories, toast]);
 
   return { endRound };

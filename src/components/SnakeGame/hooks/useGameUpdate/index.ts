@@ -26,11 +26,15 @@ export const useGameUpdate = (
       const currentTime = Date.now();
       const timeElapsed = currentTime - startTime;
       
-      // Check if time has expired, but don't directly end the round here
-      // This allows the timer component to handle it via the timer-end event
+      // Check if time has expired (60 seconds)
       if (timeElapsed >= 60000) {
-        console.log("Round time limit reached in updateGame");
+        console.log("Time limit reached in updateGame - should end round");
         isProcessingUpdate.current = false;
+        
+        // Dispatch timer-end event programmatically if we reach this point
+        // This is a fallback in case the Timer component's event didn't work
+        const timerEndEvent = new CustomEvent('timer-end', { detail: { timeEnded: true, source: 'gameUpdate' } });
+        window.dispatchEvent(timerEndEvent);
         return;
       }
 
@@ -72,7 +76,6 @@ export const useGameUpdate = (
       console.error("Critical error in updateGame:", error);
     } finally {
       // Always reset the processing flag in the finally block
-      // to prevent game from freezing due to unhandled exceptions
       isProcessingUpdate.current = false;
     }
   }, [isGameRunning, startTime, endRound, ensureMinimumApples, setGameState]);

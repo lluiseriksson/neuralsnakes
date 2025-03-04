@@ -71,19 +71,26 @@ export const useGameLogic = () => {
     gameState
   );
 
-  // Handle timer end event
+  // Handle timer end event with improved reliability
   useEffect(() => {
-    const handleTimerEnd = () => {
-      console.log("Timer end event received in useGameLogic");
+    const handleTimerEnd = (event: Event) => {
+      console.log("Timer end event received in useGameLogic", event);
       
-      if (isGameRunning && !isProcessingUpdate.current && !timerEndHandled.current) {
+      if (isGameRunning && !timerEndHandled.current) {
         console.log("Processing timer end event - ending round");
         timerEndHandled.current = true;
         
-        // Add small delay to ensure all game state updates have completed
+        // Force game state to update and end round
+        setIsGameRunning(false);
+        
+        // Add small delay to ensure proper cleanup before ending round
         setTimeout(() => {
+          if (gameLoopRef.current) {
+            clearInterval(gameLoopRef.current);
+            gameLoopRef.current = null;
+          }
           endRound();
-        }, 100);
+        }, 200);
       }
     };
     
@@ -92,7 +99,7 @@ export const useGameLogic = () => {
     return () => {
       window.removeEventListener('timer-end', handleTimerEnd);
     };
-  }, [isGameRunning, endRound, isProcessingUpdate]);
+  }, [isGameRunning, endRound, gameLoopRef, setIsGameRunning]);
 
   // Reset the timerEndHandled ref when the game state changes
   useEffect(() => {

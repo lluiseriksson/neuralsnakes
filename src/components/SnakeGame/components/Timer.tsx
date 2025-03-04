@@ -15,9 +15,9 @@ const Timer: React.FC<TimerProps> = ({ startTime }) => {
     if (hasDispatchedEndEvent.current) return; // Prevent multiple dispatches
     
     hasDispatchedEndEvent.current = true;
-    const timerEndEvent = new CustomEvent('timer-end');
+    const timerEndEvent = new CustomEvent('timer-end', { detail: { timeEnded: true } });
     window.dispatchEvent(timerEndEvent);
-    console.log('Timer end event dispatched');
+    console.log('Timer end event dispatched with detail payload');
   };
 
   useEffect(() => {
