@@ -96,7 +96,7 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
             otherSnake.brain.setScore(otherSnake.score);
           }
           
-          // The total segments to add is equal to the length of the killed snake (RESTORED FUNCTIONALITY)
+          // The total segments to add is equal to the length of the killed snake
           const segmentsToAdd = snake.positions.length;
           console.log(`Snake ${otherSnake.id} will grow by ${segmentsToAdd} segments`);
           
@@ -142,4 +142,3 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
   
   return updatedSnakes;
 };
-

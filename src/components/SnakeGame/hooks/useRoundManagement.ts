@@ -24,6 +24,12 @@ export const useRoundManagement = (
   const { toast } = useToast();
   
   const endRound = useCallback(async () => {
+    // Only proceed if we're actually ending a round (not when snake vs snake collisions happen)
+    if (!gameLoopRef.current) {
+      console.log("Preventing duplicate endRound execution - no active game loop");
+      return;
+    }
+
     if (gameLoopRef.current) {
       clearInterval(gameLoopRef.current);
       gameLoopRef.current = null;
