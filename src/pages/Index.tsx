@@ -8,7 +8,6 @@ import { Snake } from "../components/SnakeGame/types";
 import GameVisualizer from "../components/SnakeGame/components/GameVisualizer";
 import SnakeVisualizer from "../components/SnakeGame/components/SnakeVisualizer";
 import GenerationInfo from "../components/SnakeGame/components/GenerationInfo";
-import RecordingControls from "../components/SnakeGame/components/RecordingControls";
 import GameControls from "../components/SnakeGame/components/GameControls";
 
 const Index = () => {
@@ -21,10 +20,7 @@ const Index = () => {
     generationInfo, 
     initializeGame, 
     restartGame, 
-    isGameRunning,
-    startRecording,
-    stopRecording,
-    isRecording
+    isGameRunning
   } = useGameLogic();
   const { toast } = useToast();
   
@@ -58,26 +54,6 @@ const Index = () => {
       setIsInitializing(false);
     }
   }, [initializeGame, isInitializing, gameState.snakes, toast, generationInfo]);
-  
-  const handleStartRecording = useCallback(() => {
-    if (isRecording) {
-      return;
-    }
-    
-    startRecording();
-    toast({
-      title: "Grabación iniciada",
-      description: "Se está grabando la partida actual."
-    });
-  }, [isRecording, startRecording, toast]);
-  
-  const handleStopRecording = useCallback(async () => {
-    if (!isRecording) {
-      return;
-    }
-    
-    await stopRecording();
-  }, [isRecording, stopRecording]);
   
   useEffect(() => {
     if (activeSnake && !gameState.snakes.some(s => s.id === activeSnake.id && s.alive)) {
@@ -136,7 +112,7 @@ const Index = () => {
         <GameVisualizer 
           gameState={gameState}
           startTime={startTime}
-          isRecording={isRecording}
+          isRecording={false}
           onSelectSnake={handleSelectSnake}
         />
         
@@ -155,13 +131,6 @@ const Index = () => {
             progress={generationInfo.progress}
             snakeCount={gameState.snakes?.filter(s => s.alive).length || 0}
             appleCount={gameState.apples?.length || 0}
-          />
-          
-          <RecordingControls
-            isRecording={isRecording}
-            isGameRunning={isGameRunning}
-            onStartRecording={handleStartRecording}
-            onStopRecording={handleStopRecording}
           />
         </div>
       </div>

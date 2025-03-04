@@ -12,7 +12,6 @@ import {
   advanceGenerationBasedOnMetrics,
   getCurrentGeneration 
 } from './snakeCreation/modelCache';
-import { GameRecorder } from '../database/gameRecordingService';
 
 export const useRoundManagement = (
   gameState: GameState,
@@ -20,13 +19,10 @@ export const useRoundManagement = (
   setIsGameRunning: React.Dispatch<React.SetStateAction<boolean>>,
   isProcessingUpdate: React.MutableRefObject<boolean>,
   gameLoopRef: React.MutableRefObject<NodeJS.Timeout | null>,
-  initializeGame: () => void,
-  recorderRef?: React.MutableRefObject<GameRecorder>,
-  isRecordingRef?: React.MutableRefObject<boolean>
+  initializeGame: () => void
 ) => {
   const { toast } = useToast();
   
-  // Función para finalizar la ronda y guardar grabación si está activa
   const endRound = useCallback(async () => {
     if (gameLoopRef.current) {
       clearInterval(gameLoopRef.current);
@@ -35,31 +31,6 @@ export const useRoundManagement = (
 
     setIsGameRunning(false);
     isProcessingUpdate.current = false;
-
-    // Manejar grabación si está activa
-    let recordingId = null;
-    if (isRecordingRef?.current && recorderRef?.current) {
-      try {
-        // Detener grabación
-        const recording = recorderRef.current.stopRecording();
-        isRecordingRef.current = false;
-        
-        if (recording) {
-          // Guardar grabación
-          recordingId = await recorderRef.current.saveRecording(recording);
-          
-          if (recordingId) {
-            console.log(`🎥 Grabación guardada automáticamente al final de la ronda: ${recordingId}`);
-            toast({
-              title: "Grabación guardada",
-              description: "La partida ha sido grabada y guardada al finalizar la ronda.",
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Error al guardar grabación al final de la ronda:", error);
-      }
-    }
 
     // Get performance metrics from all snakes
     const totalScore = gameState.snakes.reduce((sum, snake) => sum + snake.score, 0);
@@ -171,7 +142,7 @@ export const useRoundManagement = (
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     setTimeout(initializeGame, 1500);
-  }, [gameState.snakes, initializeGame, gameLoopRef, setIsGameRunning, isProcessingUpdate, setVictories, isRecordingRef, recorderRef, toast]);
+  }, [gameState.snakes, initializeGame, gameLoopRef, setIsGameRunning, isProcessingUpdate, setVictories, toast]);
 
   return { endRound };
 };

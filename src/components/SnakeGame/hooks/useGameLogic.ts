@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 import { useGameState } from './useGameState';
 import { useGameLoop } from './useGameLoop';
@@ -6,7 +7,6 @@ import { useGameInitialization } from './useGameInitialization';
 import { useGameUpdate } from './useGameUpdate';
 import { useRoundManagement } from './useRoundManagement';
 import { useAppleManagement } from './useAppleManagement';
-import { GameRecorder } from '../database/gameRecordingService';
 
 export const useGameLogic = () => {
   // Extract game state management
@@ -32,10 +32,6 @@ export const useGameLogic = () => {
   const isProcessingUpdate = useRef(false);
   const frameCountRef = useRef(0);
   
-  // Ref para el grabador de partidas
-  const recorderRef = useRef<GameRecorder>(new GameRecorder());
-  const isRecordingRef = useRef<boolean>(false);
-  
   // Extract game initialization logic
   const { initializeGame } = useGameInitialization(
     setGameState,
@@ -47,28 +43,24 @@ export const useGameLogic = () => {
     gamesPlayedRef
   );
 
-  // Extract round management logic with recording support
+  // Extract round management logic
   const { endRound } = useRoundManagement(
     gameState,
     setVictories,
     setIsGameRunning,
     isProcessingUpdate,
     gameLoopRef,
-    initializeGame,
-    recorderRef,
-    isRecordingRef
+    initializeGame
   );
 
-  // Extract game update logic with recording support
+  // Extract game update logic
   const { updateGame } = useGameUpdate(
     isGameRunning,
     startTime,
     isProcessingUpdate,
     setGameState,
     endRound,
-    ensureMinimumApples,
-    recorderRef,
-    isRecordingRef
+    ensureMinimumApples
   );
 
   // Extract game loop logic
@@ -77,15 +69,13 @@ export const useGameLogic = () => {
     updateGame
   );
 
-  // Extract game controls with recording
-  const { restartGame, startRecording, stopRecording, isRecording } = useGameControls(
+  // Extract game controls
+  const { restartGame } = useGameControls(
     initializeGame,
     gameLoopRef,
     isProcessingUpdate,
     setIsGameRunning,
-    gameState,
-    recorderRef,
-    isRecordingRef
+    gameState
   );
 
   // Inicialización inicial - convertida a useCallback para evitar recreaciones
@@ -148,10 +138,6 @@ export const useGameLogic = () => {
     generationInfo, 
     initializeGame, 
     restartGame,
-    isGameRunning,
-    // Funciones de grabación
-    startRecording,
-    stopRecording,
-    isRecording
+    isGameRunning
   };
 };
