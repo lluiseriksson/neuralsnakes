@@ -87,9 +87,20 @@ export const useRoundManagement = (
             console.log(`🔴 Snake ${winner.id} (${winner.color}) won with ${winner.score} points! (Generation ${winner.brain.getGeneration()})`);
             newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
             
-            // Show a toast for the winner
+            // Get snake color name based on ID
+            const getSnakeColorName = (id: number) => {
+              switch (id) {
+                case 0: return "Yellow";
+                case 1: return "Blue";
+                case 2: return "Green";
+                case 3: return "Purple";
+                default: return `#${id}`;
+              }
+            };
+            
+            // Show a toast for the winner with color name
             toast({
-              title: `Snake ${winner.id} Wins!`,
+              title: `${getSnakeColorName(winner.id)} Snake Wins!`,
               description: `Score: ${winner.score} - Generation: ${winner.brain.getGeneration()}`,
               variant: "default",
             });
