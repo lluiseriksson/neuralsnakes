@@ -1,6 +1,7 @@
 
 import { supabase } from "../../../integrations/supabase/client";
 import { GameState, Snake } from "../types";
+import { Json } from "../../../integrations/supabase/types";
 
 // Tipo de datos para la grabación
 export interface GameRecording {
@@ -150,9 +151,9 @@ export class GameRecorder {
       const winners = finalScores.filter(score => score.score === maxScore && score.score > 0);
       const winner = winners.length > 0 ? winners[0] : null;
 
-      // Datos a guardar
+      // Datos a guardar - asegurarnos de que es compatible con Json
       const gameRecordingData = {
-        game_data: recording,
+        game_data: recording as unknown as Json,
         duration,
         max_score: maxScore,
         generation: recording.initialGeneration,
@@ -199,7 +200,8 @@ export class GameRecorder {
         return [];
       }
 
-      return data as GameRecording[];
+      // Convertir tipos de datos
+      return (data as unknown) as GameRecording[];
     } catch (error) {
       console.error("Error al procesar la consulta:", error);
       return [];
@@ -220,7 +222,8 @@ export class GameRecorder {
         return null;
       }
 
-      return data as GameRecording;
+      // Convertir tipos de datos
+      return (data as unknown) as GameRecording;
     } catch (error) {
       console.error("Error al procesar la consulta:", error);
       return null;

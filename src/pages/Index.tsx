@@ -12,7 +12,7 @@ import { Button } from "../components/ui/button";
 import { useToast } from "../components/ui/use-toast";
 import { Snake } from "../components/SnakeGame/types";
 import { Link } from "react-router-dom";
-import { Record, StopCircle, Database, Download } from "lucide-react";
+import { CircleRecord, StopCircle, Database, Download } from "lucide-react";
 
 const Index = () => {
   const [isInitializing, setIsInitializing] = useState(false);
@@ -208,7 +208,7 @@ const Index = () => {
                   variant="destructive"
                   className="flex-1"
                 >
-                  <Record className="w-4 h-4 mr-2" />
+                  <CircleRecord className="w-4 h-4 mr-2" />
                   Iniciar grabación
                 </Button>
                 
