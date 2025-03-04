@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      game_recordings: {
+        Row: {
+          apple_count: number | null
+          apples_eaten: number | null
+          created_at: string
+          duration: number | null
+          game_data: Json
+          generation: number | null
+          id: string
+          max_score: number | null
+          metadata: Json | null
+          snake_count: number | null
+          total_moves: number | null
+          winner_color: string | null
+          winner_id: number | null
+        }
+        Insert: {
+          apple_count?: number | null
+          apples_eaten?: number | null
+          created_at?: string
+          duration?: number | null
+          game_data: Json
+          generation?: number | null
+          id?: string
+          max_score?: number | null
+          metadata?: Json | null
+          snake_count?: number | null
+          total_moves?: number | null
+          winner_color?: string | null
+          winner_id?: number | null
+        }
+        Update: {
+          apple_count?: number | null
+          apples_eaten?: number | null
+          created_at?: string
+          duration?: number | null
+          game_data?: Json
+          generation?: number | null
+          id?: string
+          max_score?: number | null
+          metadata?: Json | null
+          snake_count?: number | null
+          total_moves?: number | null
+          winner_color?: string | null
+          winner_id?: number | null
+        }
+        Relationships: []
+      }
       neural_networks: {
         Row: {
           created_at: string | null

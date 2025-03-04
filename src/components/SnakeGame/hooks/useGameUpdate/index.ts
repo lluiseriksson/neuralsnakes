@@ -5,6 +5,7 @@ import { checkCollisions, getCollisionInfo } from '../../collisionDetection';
 import { processSnakesMovement, hasLivingSnakes, storePreviousPositions } from './snakeProcessing';
 import { calculatePreviousDistances, calculateDistanceToClosestApple } from './calculateDistances';
 import { applyPositiveAppleLearning, applyDistanceBasedLearning, applyMissedApplePenalty } from './applyLearning';
+import { GameRecorder } from '../../database/gameRecordingService';
 
 export const useGameUpdate = (
   isGameRunning: boolean,
@@ -12,7 +13,9 @@ export const useGameUpdate = (
   isProcessingUpdate: React.MutableRefObject<boolean>,
   setGameState: React.Dispatch<React.SetStateAction<GameState>>,
   endRound: () => void,
-  ensureMinimumApples: (apples: GameState['apples']) => GameState['apples']
+  ensureMinimumApples: (apples: GameState['apples']) => GameState['apples'],
+  recorderRef?: React.MutableRefObject<GameRecorder>,
+  isRecordingRef?: React.MutableRefObject<boolean>
 ) => {
   const updateGame = useCallback(() => {
     if (!isGameRunning || isProcessingUpdate.current) {
@@ -116,11 +119,19 @@ export const useGameUpdate = (
 
           finalApples = ensureMinimumApples(finalApples);
           
-          return {
+          // Crear nuevo estado
+          const updatedState = {
             ...prevState,
             snakes: snakesToUpdate,
             apples: finalApples
           };
+          
+          // Si estamos grabando, añadir frame
+          if (isRecordingRef?.current && recorderRef?.current) {
+            recorderRef.current.addFrame(updatedState);
+          }
+          
+          return updatedState;
         } catch (error) {
           console.error("Error in game update:", error);
           return prevState; // Return unchanged state in case of error
@@ -133,7 +144,7 @@ export const useGameUpdate = (
       // to prevent game from freezing due to unhandled exceptions
       isProcessingUpdate.current = false;
     }
-  }, [isGameRunning, startTime, endRound, ensureMinimumApples, setGameState]);
+  }, [isGameRunning, startTime, endRound, ensureMinimumApples, setGameState, recorderRef, isRecordingRef]);
 
   return { updateGame };
 };

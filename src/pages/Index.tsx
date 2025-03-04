@@ -11,11 +11,25 @@ import GenerationTracker from "../components/SnakeGame/components/GenerationTrac
 import { Button } from "../components/ui/button";
 import { useToast } from "../components/ui/use-toast";
 import { Snake } from "../components/SnakeGame/types";
+import { Link } from "react-router-dom";
+import { Record, StopCircle, Database, Download } from "lucide-react";
 
 const Index = () => {
   const [isInitializing, setIsInitializing] = useState(false);
   const [activeSnake, setActiveSnake] = useState<Snake | null>(null);
-  const { gameState, victories, startTime, generationInfo, initializeGame, restartGame, isGameRunning } = useGameLogic();
+  const { 
+    gameState, 
+    victories, 
+    startTime, 
+    generationInfo, 
+    initializeGame, 
+    restartGame, 
+    isGameRunning,
+    // Nuevas propiedades para grabación
+    startRecording,
+    stopRecording,
+    isRecording
+  } = useGameLogic();
   const { toast } = useToast();
   
   // Función segura para inicializar el juego
@@ -49,6 +63,27 @@ const Index = () => {
       setIsInitializing(false);
     }
   }, [initializeGame, isInitializing, gameState.snakes, toast, generationInfo]);
+  
+  // Manejar grabación
+  const handleStartRecording = useCallback(() => {
+    if (isRecording) {
+      return;
+    }
+    
+    startRecording();
+    toast({
+      title: "Grabación iniciada",
+      description: "Se está grabando la partida actual."
+    });
+  }, [isRecording, startRecording, toast]);
+  
+  const handleStopRecording = useCallback(async () => {
+    if (!isRecording) {
+      return;
+    }
+    
+    await stopRecording();
+  }, [isRecording, stopRecording]);
   
   // Update active snake when game state changes
   useEffect(() => {
@@ -105,6 +140,14 @@ const Index = () => {
         <div className="relative bg-gray-900 p-4 rounded-xl border border-gray-700 shadow-xl">
           <Timer startTime={startTime} />
           
+          {/* Indicador de grabación */}
+          {isRecording && (
+            <div className="absolute top-2 right-2 flex items-center bg-red-900/80 text-white px-3 py-1 rounded-full text-xs font-medium animate-pulse z-10">
+              <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+              REC
+            </div>
+          )}
+          
           <div className="overflow-hidden">
             {gameState.snakes && gameState.snakes.length > 0 ? (
               <GameCanvas gameState={gameState} onSelectSnake={handleSelectSnake} />
@@ -151,6 +194,48 @@ const Index = () => {
               <span>{gameState.snakes?.filter(s => s.alive).length || 0} serpientes activas</span>
               <span>Manzanas: {gameState.apples?.length || 0}</span>
             </div>
+          </div>
+          
+          {/* Controles de grabación */}
+          <div className="p-4 bg-gray-900 rounded-xl border border-gray-700 shadow-lg text-white">
+            <h3 className="text-lg font-semibold mb-3 border-b border-gray-700 pb-2">Herramientas de grabación</h3>
+            
+            <div className="flex flex-col gap-3">
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleStartRecording}
+                  disabled={isRecording || !isGameRunning}
+                  variant="destructive"
+                  className="flex-1"
+                >
+                  <Record className="w-4 h-4 mr-2" />
+                  Iniciar grabación
+                </Button>
+                
+                <Button
+                  onClick={handleStopRecording}
+                  disabled={!isRecording}
+                  variant="outline"
+                  className="flex-1 border-red-900 text-red-400"
+                >
+                  <StopCircle className="w-4 h-4 mr-2" />
+                  Detener
+                </Button>
+              </div>
+              
+              <Link to="/recordings" className="w-full">
+                <Button className="w-full bg-purple-700 hover:bg-purple-800">
+                  <Database className="w-4 h-4 mr-2" />
+                  Ver grabaciones
+                </Button>
+              </Link>
+            </div>
+            
+            {isRecording && (
+              <div className="mt-3 text-xs text-red-400 animate-pulse">
+                Grabando partida actual...
+              </div>
+            )}
           </div>
         </div>
       </div>
