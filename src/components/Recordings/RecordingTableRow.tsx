@@ -1,88 +1,87 @@
 
 import React from "react";
-import { GameRecording } from "../../components/SnakeGame/database/gameRecordingService";
 import { Button } from "../../components/ui/button";
 import { TableCell, TableRow } from "../../components/ui/table";
-import { Badge } from "../../components/ui/badge";
-import { format } from "date-fns";
-import { Loader2, Download, Clock, Brain, Award } from "lucide-react";
+import { Download, Play } from "lucide-react";
+import { GameRecording } from "../../components/SnakeGame/database/gameRecordingService";
 
 interface RecordingTableRowProps {
   recording: GameRecording;
-  downloading: string | null;
-  onDownload: (recording: GameRecording) => void;
+  downloading: boolean;
+  onDownload: () => void;
+  onPlay: () => void; // New prop for handling play functionality
 }
 
-const RecordingTableRow: React.FC<RecordingTableRowProps> = ({
-  recording,
+const RecordingTableRow: React.FC<RecordingTableRowProps> = ({ 
+  recording, 
   downloading,
   onDownload,
+  onPlay
 }) => {
-  // Formatear duración
-  const formatDuration = (milliseconds: number) => {
-    const seconds = Math.floor(milliseconds / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  // Format date
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
-
+  
+  // Format duration in seconds to mm:ss
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+  
+  // Check if recording is uploaded (not from database)
+  const isUploaded = 'is_uploaded' in recording;
+  
   return (
-    <TableRow key={recording.id} className="hover:bg-gray-800/50">
-      <TableCell>
-        {format(new Date(recording.created_at), "dd/MM/yyyy HH:mm")}
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center">
-          <Brain className="w-4 h-4 mr-1 text-purple-400" />
-          <span className="font-mono">{recording.generation}</span>
-        </div>
-      </TableCell>
-      <TableCell>
-        <Badge className="bg-green-600/20 text-green-400 hover:bg-green-600/30 border border-green-800">
-          {recording.max_score}
-        </Badge>
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center">
-          <Clock className="w-4 h-4 mr-1 text-blue-400" />
-          <span className="font-mono">{formatDuration(recording.duration)}</span>
-        </div>
-      </TableCell>
-      <TableCell>{recording.snake_count}</TableCell>
-      <TableCell>{recording.total_moves}</TableCell>
-      <TableCell>
-        {recording.winner_color ? (
-          <div className="flex items-center">
-            <Award className="w-4 h-4 mr-1 text-yellow-400" />
-            <div 
-              className="w-3 h-3 rounded-full mr-1" 
-              style={{ backgroundColor: recording.winner_color }}
-            />
-            <span>#{recording.winner_id}</span>
-          </div>
+    <TableRow className={`border-b border-gray-800 ${isUploaded ? 'bg-blue-900/20' : ''}`}>
+      <TableCell className="font-mono text-xs">
+        {isUploaded ? (
+          <span className="bg-blue-500/30 text-blue-200 px-2 py-1 rounded text-xs">Cargado</span>
         ) : (
-          <span className="text-gray-500">-</span>
+          recording.id.substring(0, 8)
         )}
       </TableCell>
+      <TableCell>{formatDate(recording.created_at)}</TableCell>
+      <TableCell>{formatDuration(recording.duration || 0)}</TableCell>
       <TableCell>
-        <Button
-          size="sm"
-          onClick={() => onDownload(recording)}
-          disabled={downloading === recording.id}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          {downloading === recording.id ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-              Descargando...
-            </>
-          ) : (
-            <>
-              <Download className="w-4 h-4 mr-1" />
-              Descargar
-            </>
-          )}
-        </Button>
+        {recording.max_score > 0 ? (
+          <span className="text-green-400">{recording.max_score}</span>
+        ) : (
+          <span className="text-gray-400">-</span>
+        )}
+      </TableCell>
+      <TableCell>{recording.generation || 1}</TableCell>
+      <TableCell>{recording.snake_count || '-'}</TableCell>
+      <TableCell className="text-right">
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-green-800 bg-green-950/30 hover:bg-green-900/50"
+            onClick={onPlay}
+          >
+            <Play className="w-4 h-4 mr-1 text-green-400" />
+            <span className="text-green-400">Ver</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onDownload}
+            disabled={downloading}
+            className="border-blue-800 bg-blue-950/30 hover:bg-blue-900/50"
+          >
+            {downloading ? (
+              <span className="animate-pulse text-blue-400">Descargando...</span>
+            ) : (
+              <>
+                <Download className="w-4 h-4 mr-1 text-blue-400" />
+                <span className="text-blue-400">Descargar</span>
+              </>
+            )}
+          </Button>
+        </div>
       </TableCell>
     </TableRow>
   );
