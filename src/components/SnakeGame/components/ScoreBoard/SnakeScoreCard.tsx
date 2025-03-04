@@ -16,8 +16,13 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
   useEffect(() => {
     if (typeof score === 'number' && !isNaN(score)) {
       setCurrentScore(score);
+      
+      // Update the snake's best score if this is higher
+      if (snake.brain && typeof snake.brain.updateBestScore === 'function' && score > 0) {
+        snake.brain.updateBestScore(score);
+      }
     }
-  }, [score]);
+  }, [score, snake.brain]);
 
   // Update generation whenever snake prop changes
   useEffect(() => {
@@ -47,12 +52,22 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
       if (displayScore !== currentScore) {
         console.log(`Snake ${snake.id} score updated in UI: ${currentScore} -> ${displayScore}`);
         setCurrentScore(displayScore);
+        
+        // Also update the snake's brain best score
+        if (snake.brain && typeof snake.brain.updateBestScore === 'function' && displayScore > 0) {
+          snake.brain.updateBestScore(displayScore);
+        }
       }
     } else if (typeof snake.score === 'number' && !isNaN(snake.score) && snake.score !== currentScore) {
       console.log(`Snake ${snake.id} score updated in UI from properties: ${currentScore} -> ${snake.score}`);
       setCurrentScore(snake.score);
+      
+      // Also update the snake's brain best score
+      if (snake.brain && typeof snake.brain.updateBestScore === 'function' && snake.score > 0) {
+        snake.brain.updateBestScore(snake.score);
+      }
     }
-  }, [snake.positions, snake.score, currentScore, snake.id]);
+  }, [snake.positions, snake.score, currentScore, snake.id, snake.brain]);
 
   // Determine a status label for the snake
   const getSnakeStatus = () => {

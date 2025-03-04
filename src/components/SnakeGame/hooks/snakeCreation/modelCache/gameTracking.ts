@@ -3,12 +3,12 @@ import { getCurrentGeneration, incrementGeneration, purgeAllModelCaches } from '
 
 // Track games played since last generation increment
 let gamesSinceLastIncrement = 0;
-// Force less frequent generation increments for more stability
-const GAMES_TO_FORCE_INCREMENT = 3; // Force increment after 3 games
+// Reduce number of games required to force increment for more frequent generation updates
+const GAMES_TO_FORCE_INCREMENT = 2; // Changed from 3 to 2 for faster progression
 
 // Track games since last complete reset
 let gamesSinceLastReset = 0;
-const GAMES_TO_FORCE_RESET = 10; // Changed back to 10 for more stability
+const GAMES_TO_FORCE_RESET = 10; // Keep at 10 for stability
 
 // Track the highest score achieved
 let highestScoreAchieved = 0;
@@ -48,7 +48,7 @@ export const trackGamePlayed = (): number => {
     return getCurrentGeneration();
   }
   
-  // Force generation increment less frequently for more stability
+  // Force generation increment after a set number of games for more predictable progression
   if (gamesSinceLastIncrement >= GAMES_TO_FORCE_INCREMENT) {
     console.log(`⚡ Forcing generation increment after ${GAMES_TO_FORCE_INCREMENT} games ⚡`);
     resetGamesSinceLastIncrement();

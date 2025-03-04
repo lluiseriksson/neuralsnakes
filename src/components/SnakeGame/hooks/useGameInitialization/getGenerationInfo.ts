@@ -1,4 +1,3 @@
-
 import { Snake } from '../../types';
 import { getCurrentGeneration } from '../snakeCreation/modelCache';
 
@@ -25,8 +24,14 @@ export const getGenerationInfo = (snakes: Snake[]) => {
   
   // Fix: Properly capture scores with fallback
   const scores = snakes.map(s => {
+    // Try to get the best score from the brain first
     const bestScore = s.brain?.getBestScore?.();
-    return typeof bestScore === 'number' ? bestScore : s.score || 0;
+    // If brain's best score is available and valid, use it
+    if (typeof bestScore === 'number' && bestScore > 0) {
+      return bestScore;
+    }
+    // Otherwise fallback to current snake score
+    return s.score || 0;
   });
   
   // Fix: Properly calculate progress percentage
