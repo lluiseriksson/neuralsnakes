@@ -15,9 +15,10 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
     if (!snake.alive) continue;
     
     if (checkSelfCollision(snake)) {
-      // Generate apple explosion when snake collides with itself
+      // Generate apple explosion when snake collides with itself (RESTORED FUNCTIONALITY)
       const explosionApples = generateAppleExplosion(snake);
       newApplePositions.push(...explosionApples);
+      console.log(`Snake ${snake.id} self-collision generated ${explosionApples.length} apples`);
       
       // Mark snake as dead
       snake.alive = false;
@@ -26,7 +27,27 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
   }
   
   // Process snake-to-snake collisions
+  const snakesBeforeCollisions = [...updatedSnakes.map(s => ({
+    id: s.id,
+    alive: s.alive,
+    positions: [...s.positions]
+  }))];
+  
   updatedSnakes = checkSnakeCollisions(updatedSnakes);
+  
+  // Generate apple explosions for snake-vs-snake collisions
+  for (let i = 0; i < snakesBeforeCollisions.length; i++) {
+    const snakeBefore = snakesBeforeCollisions[i];
+    const snakeAfter = updatedSnakes[i];
+    
+    // If a snake was alive before and is now dead, generate apples
+    if (snakeBefore.alive && !snakeAfter.alive) {
+      // For head-to-head collisions, generate apples equal to the snake's segments
+      const explosionApples = generateAppleExplosion(snakeBefore);
+      newApplePositions.push(...explosionApples);
+      console.log(`Snake ${snakeBefore.id} collision generated ${explosionApples.length} apples`);
+    }
+  }
   
   // Process apple collisions
   const appleCollisionResult = checkAppleCollisions(updatedSnakes, updatedApples);
@@ -49,3 +70,4 @@ export const checkCollisions = (snakes: Snake[], currentApples: Apple[]) => {
   
   return { newSnakes: updatedSnakes, newApples: updatedApples };
 };
+
