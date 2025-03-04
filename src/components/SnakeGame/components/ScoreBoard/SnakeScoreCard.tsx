@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Snake } from '../../types';
 
 interface SnakeScoreCardProps {
@@ -8,6 +8,14 @@ interface SnakeScoreCardProps {
 }
 
 const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
+  // Use local state to ensure the score updates visually
+  const [currentScore, setCurrentScore] = useState(score);
+  
+  // Update the local score whenever the prop changes
+  useEffect(() => {
+    setCurrentScore(score);
+  }, [score]);
+
   return (
     <div className="bg-gray-900 p-3 rounded-lg flex items-center gap-3">
       <div 
@@ -16,7 +24,7 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
       />
       <div className="flex-1">
         <span className="font-medium text-white">
-          Score: {score} 
+          Score: {currentScore} 
         </span>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400">Gen: {snake.brain.getGeneration()}</span>

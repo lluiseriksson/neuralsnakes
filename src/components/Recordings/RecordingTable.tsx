@@ -1,73 +1,93 @@
 
-import React from "react";
-import { Table, TableBody, TableCaption, TableHead, TableHeader } from "../../components/ui/table";
-import { Skeleton } from "../../components/ui/skeleton";
-import { GameRecording } from "../../components/SnakeGame/database/gameRecordingService";
+import React from 'react';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
+import { Button } from "../ui/button";
+import { Download, Play } from "lucide-react";
+import { GameRecording } from "../SnakeGame/database/gameRecordingService";
 import RecordingTableRow from "./RecordingTableRow";
 
 interface RecordingTableProps {
   recordings: GameRecording[];
   loading: boolean;
-  downloading: string | null;
+  downloading: { [key: string]: boolean };
   onDownload: (recording: GameRecording) => void;
   onPlay: (recording: GameRecording) => void;
 }
 
 const RecordingTable: React.FC<RecordingTableProps> = ({
-  recordings,
-  loading,
-  downloading,
+  recordings, 
+  loading, 
+  downloading, 
   onDownload,
   onPlay
 }) => {
+  // Sort recordings by date (newest first)
+  const sortedRecordings = [...recordings].sort((a, b) => {
+    return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+  });
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="inline-block w-8 h-8 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin mb-2"></div>
+        <p className="text-gray-400">Loading recordings...</p>
+      </div>
+    );
+  }
+
+  if (sortedRecordings.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-400">No recordings found. Play a game and enable recording to create one.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative overflow-x-auto">
+    <div className="overflow-x-auto">
       <Table>
-        <TableCaption>List of available recordings</TableCaption>
-        
-        <TableHeader className="bg-gray-800">
-          <tr>
-            <TableHead className="text-gray-300">ID</TableHead>
-            <TableHead className="text-gray-300">Date</TableHead>
-            <TableHead className="text-gray-300">Duration</TableHead>
-            <TableHead className="text-gray-300">Max Score</TableHead>
-            <TableHead className="text-gray-300">Generation</TableHead>
-            <TableHead className="text-gray-300">Snakes</TableHead>
-            <TableHead className="text-gray-300"></TableHead>
-          </tr>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Duration</TableHead>
+            <TableHead>Frames</TableHead>
+            <TableHead>Generation</TableHead>
+            <TableHead>Best Score</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
         </TableHeader>
-        
         <TableBody>
-          {loading ? (
-            // Loading skeletons
-            Array.from({ length: 5 }).map((_, i) => (
-              <tr key={`skeleton-${i}`} className="border-b border-gray-800">
-                <td className="py-3 px-4"><Skeleton className="h-4 w-16 bg-gray-700" /></td>
-                <td className="py-3 px-4"><Skeleton className="h-4 w-32 bg-gray-700" /></td>
-                <td className="py-3 px-4"><Skeleton className="h-4 w-20 bg-gray-700" /></td>
-                <td className="py-3 px-4"><Skeleton className="h-4 w-16 bg-gray-700" /></td>
-                <td className="py-3 px-4"><Skeleton className="h-4 w-16 bg-gray-700" /></td>
-                <td className="py-3 px-4"><Skeleton className="h-4 w-16 bg-gray-700" /></td>
-                <td className="py-3 px-4"><Skeleton className="h-8 w-24 bg-gray-700" /></td>
-              </tr>
-            ))
-          ) : recordings.length === 0 ? (
-            <tr>
-              <td colSpan={7} className="py-4 text-center text-gray-400">
-                No recordings available. Play some games to generate recordings.
-              </td>
-            </tr>
-          ) : (
-            recordings.map((recording) => (
+          {sortedRecordings.map(recording => (
+            <TableRow key={recording.id}>
               <RecordingTableRow 
-                key={recording.id} 
                 recording={recording} 
-                downloading={downloading === recording.id}
-                onDownload={() => onDownload(recording)}
-                onPlay={() => onPlay(recording)}
+                isDownloading={downloading[recording.id || '']} 
               />
-            ))
-          )}
+              <TableCell className="text-right">
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onPlay(recording)}
+                    className="border-gray-700 bg-gray-800 hover:bg-gray-700 text-white"
+                  >
+                    <Play className="w-4 h-4 mr-1" />
+                    Play
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDownload(recording)}
+                    disabled={downloading[recording.id || '']}
+                    className="border-gray-700 bg-gray-800 hover:bg-gray-700 text-white"
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    {downloading[recording.id || ''] ? 'Downloading...' : 'Download'}
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
     </div>

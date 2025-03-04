@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "../../../components/ui/button";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, RefreshCw } from "lucide-react";
 
 interface PlayerControlsProps {
   isPlaying: boolean;
@@ -21,7 +21,7 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
       <h3 className="text-lg font-semibold">
         Recording Visualization 
         {totalFrames > 0 && 
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-gray-400 ml-2">
             (Frame {currentFrame + 1}/{totalFrames})
           </span>
         }
@@ -31,7 +31,7 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
           variant="outline" 
           size="sm"
           onClick={onTogglePlay}
-          className="border-gray-700"
+          className="border-gray-700 bg-gray-800 hover:bg-gray-700 text-white"
         >
           {isPlaying ? (
             <>
