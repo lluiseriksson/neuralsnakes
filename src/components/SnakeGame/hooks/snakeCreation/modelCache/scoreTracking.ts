@@ -15,6 +15,12 @@ if (typeof window !== 'undefined') {
     console.log("🔄 Resetting highest score on page load");
     resetHighestScore();
   });
+
+  // Also reset on DOMContentLoaded for more reliable reset
+  window.addEventListener('DOMContentLoaded', () => {
+    console.log("🔄 Resetting highest score on DOMContentLoaded");
+    resetHighestScore();
+  });
 }
 
 /**

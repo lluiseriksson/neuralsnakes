@@ -8,6 +8,7 @@ import { getCurrentGeneration, resetHighestScore } from './snakeCreation/modelCa
 export const useGameState = () => {
   // Reset the highest score on component mount
   useEffect(() => {
+    // Make sure high score is reset when component mounts
     resetHighestScore();
     console.log("High score reset on game state initialization");
   }, []);
