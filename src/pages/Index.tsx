@@ -8,52 +8,18 @@ import { Snake } from "../components/SnakeGame/types";
 import GameVisualizer from "../components/SnakeGame/components/GameVisualizer";
 import SnakeVisualizer from "../components/SnakeGame/components/SnakeVisualizer";
 import GenerationInfo from "../components/SnakeGame/components/GenerationInfo";
-import GameControls from "../components/SnakeGame/components/GameControls";
 import LearningHistory from "../components/SnakeGame/components/LearningHistory";
 
 const Index = () => {
-  const [isInitializing, setIsInitializing] = useState(false);
   const [activeSnake, setActiveSnake] = useState<Snake | null>(null);
   const { 
     gameState, 
     victories, 
     startTime, 
     generationInfo, 
-    initializeGame, 
     isGameRunning
   } = useGameLogic();
   const { toast } = useToast();
-  
-  const handleInitializeGame = useCallback(async () => {
-    if (isInitializing) return;
-    
-    setIsInitializing(true);
-    console.log("Solicitando inicialización del juego desde Index...");
-    
-    try {
-      toast({
-        title: "Starting New Evolution",
-        description: "Creating neural networks and preparing the simulation..."
-      });
-      
-      await initializeGame();
-      console.log("Inicialización completada desde Index");
-      
-      toast({
-        title: "Evolution Started!",
-        description: `${gameState.snakes?.length || 0} neural networks are learning (Generation ${generationInfo.generation})`
-      });
-    } catch (error) {
-      console.error("Error en la inicialización desde Index:", error);
-      toast({
-        title: "Initialization Error",
-        description: "There was a problem starting the simulation. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsInitializing(false);
-    }
-  }, [initializeGame, isInitializing, gameState.snakes, toast, generationInfo]);
   
   useEffect(() => {
     if (activeSnake && !gameState.snakes.some(s => s.id === activeSnake.id && s.alive)) {
@@ -74,17 +40,6 @@ const Index = () => {
       }
     }
   }, [gameState.snakes, activeSnake]);
-  
-  useEffect(() => {
-    console.log("Componente Index montado");
-    
-    const timer = setTimeout(() => {
-      console.log("Iniciando juego automáticamente después de time out");
-      handleInitializeGame();
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, [handleInitializeGame]);
   
   const handleSelectSnake = (snake: Snake) => {
     setActiveSnake(snake);
@@ -136,11 +91,6 @@ const Index = () => {
           />
         </div>
       </div>
-      
-      <GameControls
-        onInitializeGame={handleInitializeGame}
-        isInitializing={isInitializing}
-      />
     </div>
   );
 };

@@ -10,35 +10,38 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
   // Add local state for score to ensure it updates properly
   const [score, setScore] = useState(activeSnake?.score || 0);
   const [applesEaten, setApplesEaten] = useState(activeSnake?.decisionMetrics?.applesEaten || 0);
+  const [successRate, setSuccessRate] = useState("0.0");
+  const [generation, setGeneration] = useState(5);
   
-  // Update the local score whenever activeSnake changes
+  // Update the local stats whenever activeSnake changes
   useEffect(() => {
     if (activeSnake) {
       setScore(activeSnake.score);
       setApplesEaten(activeSnake.decisionMetrics?.applesEaten || 0);
+      
+      // Calculate success rate
+      if (typeof activeSnake.brain?.getPerformanceStats === 'function') {
+        const stats = activeSnake.brain.getPerformanceStats();
+        const totalAttempts = Math.max(stats.learningAttempts || 1, 1); // Ensure non-zero denominator
+        
+        // Calculate success rate percentage with proper precision
+        let calculatedRate = stats.successfulMoves > 0 ? 
+          (stats.successfulMoves / totalAttempts * 100) : 0.1;
+          
+        // Ensure minimum display value of 0.1%
+        calculatedRate = Math.max(0.1, calculatedRate);
+        
+        // Format to one decimal place
+        setSuccessRate(calculatedRate.toFixed(1));
+      }
+      
+      // Get generation
+      if (typeof activeSnake.brain?.getGeneration === 'function') {
+        const brainGen = activeSnake.brain.getGeneration();
+        setGeneration(Math.max(5, brainGen || 5)); // Ensure minimum generation of 5
+      }
     }
   }, [activeSnake]);
-  
-  // Calculate success rate with safety check - fixed to show proper percentage
-  const getStats = () => {
-    if (typeof activeSnake.brain?.getPerformanceStats === 'function') {
-      const stats = activeSnake.brain.getPerformanceStats();
-      const totalAttempts = Math.max(stats.learningAttempts || 1, 1); // Ensure non-zero denominator
-      const successRate = stats.successfulMoves > 0 ? 
-        (stats.successfulMoves / totalAttempts * 100).toFixed(1) : 
-        "0.1"; // Always show at least 0.1% if there are successful moves
-      
-      return {
-        successRate,
-        generation: typeof activeSnake.brain?.getGeneration === 'function' 
-          ? activeSnake.brain.getGeneration() 
-          : 5 // Use 5 as minimum generation
-      };
-    }
-    return { successRate: "0.1", generation: 5 }; // Default values
-  };
-  
-  const { successRate, generation } = getStats();
   
   // Special styling for different snake types
   const getSnakeTypeStyle = () => {

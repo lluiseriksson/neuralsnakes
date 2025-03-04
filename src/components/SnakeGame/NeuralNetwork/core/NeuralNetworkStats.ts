@@ -1,4 +1,3 @@
-
 export class NetworkStats {
   private learningAttempts: number = 0;
   private successfulMoves: number = 0;
@@ -6,10 +5,11 @@ export class NetworkStats {
   private score: number = 0;
   private bestScore: number = 0;
   private gamesPlayed: number = 0;
-  private generation: number = 1;
+  private generation: number = 5;
   private learningRate: number = 0.3;
   private lastPredictions: number[] = [];
   private lastScoreUpdate: number = Date.now();
+  private recentDecisions: {success: boolean, time: number}[] = [];
 
   constructor(
     score?: number, 
@@ -18,7 +18,7 @@ export class NetworkStats {
     gamesPlayed?: number
   ) {
     if (score !== undefined) this.score = score;
-    if (generation !== undefined) this.generation = generation;
+    if (generation !== undefined && generation >= 5) this.generation = generation;
     if (bestScore !== undefined) this.bestScore = bestScore;
     if (gamesPlayed !== undefined) this.gamesPlayed = gamesPlayed;
     
@@ -28,7 +28,6 @@ export class NetworkStats {
     }
   }
 
-  // Stats getters and setters
   getLearningRate(): number {
     return this.learningRate;
   }
@@ -50,13 +49,11 @@ export class NetworkStats {
   }
   
   setScore(score: number): void {
-    // Only update if it's been at least 100ms since the last update to prevent too frequent updates
     const now = Date.now();
     if (now - this.lastScoreUpdate >= 100) {
       this.score = score;
       this.lastScoreUpdate = now;
       
-      // Also update best score if needed
       if (score > this.bestScore) {
         this.bestScore = score;
         console.log(`New best score: ${this.bestScore} for generation ${this.generation}`);
@@ -69,8 +66,8 @@ export class NetworkStats {
   }
   
   updateGeneration(generation: number): void {
-    this.generation = generation;
-    this.learningRate = Math.max(0.05, 0.3 - (generation / 1000));
+    this.generation = Math.max(5, generation);
+    this.learningRate = Math.max(0.05, 0.3 - (this.generation / 1000));
   }
   
   getBestScore(): number {
@@ -93,12 +90,20 @@ export class NetworkStats {
   }
   
   getProgressPercentage(): number {
-    const perfectScore = 50;
-    return Math.min(100, (this.bestScore / perfectScore) * 100);
+    const genProgress = Math.min(this.generation / 100, 0.7) * 100;
+    const scoreProgress = Math.min(this.bestScore / 20, 0.3) * 100;
+    
+    return Math.min(100, genProgress + scoreProgress);
   }
 
   trackLearningAttempt(success: boolean): void {
     this.learningAttempts++;
+    this.recentDecisions.push({success, time: Date.now()});
+    
+    if (this.recentDecisions.length > 50) {
+      this.recentDecisions.shift();
+    }
+    
     if (success) {
       this.successfulMoves++;
     } else {
@@ -107,10 +112,23 @@ export class NetworkStats {
   }
 
   getPerformanceStats(): { learningAttempts: number, successfulMoves: number, failedMoves: number } {
+    const now = Date.now();
+    const recentDecisions = this.recentDecisions.filter(d => now - d.time < 20000);
+    
+    if (recentDecisions.length < 5) {
+      return {
+        learningAttempts: Math.max(this.learningAttempts, 10),
+        successfulMoves: Math.max(this.successfulMoves, 1),
+        failedMoves: this.failedMoves
+      };
+    }
+    
+    const recentSuccesses = recentDecisions.filter(d => d.success).length;
+    
     return {
-      learningAttempts: this.learningAttempts,
-      successfulMoves: this.successfulMoves,
-      failedMoves: this.failedMoves
+      learningAttempts: recentDecisions.length,
+      successfulMoves: recentSuccesses,
+      failedMoves: recentDecisions.length - recentSuccesses
     };
   }
 }

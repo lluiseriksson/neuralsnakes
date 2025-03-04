@@ -1,4 +1,3 @@
-
 import { NeuralNetworkCore } from "./NeuralNetworkCore";
 
 export const applyLearning = (
@@ -12,6 +11,43 @@ export const applyLearning = (
   if (inputs.length === 0) {
     console.log("Skipping learning: no inputs provided");
     return;
+  }
+  
+  // Add learning event to the network's debug info for visualization
+  try {
+    // Access the network's associated snake if possible
+    if (network.getId()) {
+      const snake = (window as any).gameState?.snakes?.find(
+        (s: any) => s.brain && s.brain.getId() === network.getId()
+      );
+      
+      if (snake && !snake.debugInfo) {
+        snake.debugInfo = {};
+      }
+      
+      if (snake && !snake.debugInfo.learningEvents) {
+        snake.debugInfo.learningEvents = [];
+      }
+      
+      // Add learning event to the snake's debug info
+      if (snake && snake.debugInfo.learningEvents) {
+        snake.debugInfo.learningEvents.push({
+          type: 'learn',
+          success,
+          reward,
+          time: Date.now(),
+          inputs: [...inputs],
+          outputs: [...outputs]
+        });
+        
+        // Only keep last 50 events to avoid memory issues
+        if (snake.debugInfo.learningEvents.length > 50) {
+          snake.debugInfo.learningEvents.shift();
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Error recording learning event:", e);
   }
   
   // Track learning attempt
