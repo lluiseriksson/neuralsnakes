@@ -52,6 +52,9 @@ export const checkAppleCollisions = (snakes: Snake[], apples: Apple[]): { snakes
       snake.positions.push({ ...lastSegment });
       console.log(`Snake ${snake.id} grew to ${snake.positions.length} segments`);
       
+      // Update score based on snake length
+      snake.score = snake.positions.length - 3; // Base score is segments minus initial length (3)
+      
       // Remove the eaten apple
       updatedApples.splice(appleIndex, 1);
     }

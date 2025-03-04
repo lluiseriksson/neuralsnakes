@@ -1,5 +1,6 @@
+
 import { Snake } from '../types';
-import { createSnake, generateSnakeSpawnConfig } from '../hooks/useSnakeCreation';
+import { createSnake, generateSnakeSpawnConfig } from '../hooks/snakeCreation';
 import { incrementGeneration } from '../hooks/snakeCreation/modelCache';
 
 /**
@@ -40,6 +41,7 @@ export const handleRespawn = (snakes: Snake[]): Snake[] => {
       updatedSnakes[i].direction = direction;
       updatedSnakes[i].color = color;
       updatedSnakes[i].alive = true; // Critical: Set alive to true immediately
+      updatedSnakes[i].score = 0; // Reset score for respawned snake
       
       console.log(`Snake ${snake.id} (${color}) temporarily respawned at (${spawnX},${spawnY})`);
       
@@ -54,6 +56,7 @@ export const handleRespawn = (snakes: Snake[]): Snake[] => {
                   // Update the snake with new properties while keeping the reference
                   Object.assign(updatedSnakes[snakeIndex], newSnake);
                   updatedSnakes[snakeIndex].alive = true; // Ensure alive is set again
+                  updatedSnakes[snakeIndex].score = 0; // Reset score again to be sure
                   console.log(`Snake ${snake.id} (${color}) fully respawned with generation ${newSnake.brain.getGeneration()}`);
                 } else {
                   console.error(`Created snake ${snake.id} has invalid brain, keeping fallback values`);

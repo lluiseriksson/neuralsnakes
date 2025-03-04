@@ -32,12 +32,19 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
     }
   }, [snake]);
 
-  // Also update when snake.score changes (double tracking for reliability)
+  // Also update score based on snake length
   useEffect(() => {
-    if (snake.score !== undefined && snake.score > currentScore) {
+    if (snake.positions && snake.positions.length > 3) {
+      const lengthScore = snake.positions.length - 3;
+      const displayScore = Math.max(lengthScore, snake.score || 0);
+      
+      if (displayScore !== currentScore) {
+        setCurrentScore(displayScore);
+      }
+    } else if (snake.score !== undefined && snake.score > currentScore) {
       setCurrentScore(snake.score);
     }
-  }, [snake.score, currentScore]);
+  }, [snake.positions, snake.score, currentScore]);
 
   return (
     <div className="bg-gray-900 p-3 rounded-lg flex items-center gap-3">

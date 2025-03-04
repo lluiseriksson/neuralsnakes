@@ -16,7 +16,10 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
   // Update the local stats whenever activeSnake changes
   useEffect(() => {
     if (activeSnake) {
-      setScore(activeSnake.score);
+      // Update score based on snake length
+      const currentScore = activeSnake.positions ? activeSnake.positions.length - 3 : 0;
+      setScore(Math.max(0, currentScore));
+      
       setApplesEaten(activeSnake.decisionMetrics?.applesEaten || 0);
       
       // Calculate success rate

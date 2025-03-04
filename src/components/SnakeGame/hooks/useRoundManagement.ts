@@ -38,6 +38,8 @@ export const useRoundManagement = (
     setIsGameRunning(false);
     isProcessingUpdate.current = false;
 
+    console.log("Round ended, processing results");
+
     // Get performance metrics from all snakes
     const totalScore = gameState.snakes.reduce((sum, snake) => sum + snake.score, 0);
     const totalApplesEaten = gameState.snakes.reduce((sum, snake) => 
@@ -82,43 +84,60 @@ export const useRoundManagement = (
     }
     
     // Process victories and winners
-    if (totalScore > 0) {
-      // Find snakes with the maximum score
-      const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
+    // Find the snake with the highest score regardless of alive status
+    const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
+    
+    // Consider any snake with the max score as a winner
+    if (maxScore > 0) {
       const winningSnakes = gameState.snakes.filter(snake => snake.score === maxScore);
       
-      setVictories(prevVictories => {
-        const newVictories = { ...prevVictories };
-        winningSnakes.forEach(winner => {
-          console.log(`Snake ${winner.id} (${winner.color}) won with ${winner.score} points! (Generation ${winner.brain.getGeneration()})`);
-          newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
+      if (winningSnakes.length > 0) {
+        console.log(`Found ${winningSnakes.length} winners with score ${maxScore}`);
+        
+        setVictories(prevVictories => {
+          const newVictories = { ...prevVictories };
+          winningSnakes.forEach(winner => {
+            console.log(`Snake ${winner.id} (${winner.color}) won with ${winner.score} points! (Generation ${winner.brain.getGeneration()})`);
+            newVictories[winner.id] = (prevVictories[winner.id] || 0) + 1;
+            
+            // Show a toast for the winner
+            toast({
+              title: `Snake ${winner.id} Wins!`,
+              description: `Score: ${winner.score} - Generation: ${winner.brain.getGeneration()}`,
+              variant: "default",
+            });
+          });
+          return newVictories;
         });
-        return newVictories;
-      });
       
-      // Log current generation state
-      console.log(`Current generation before saving winners: ${newGeneration}`);
-      
-      // Save the winning models with significant generation boost
-      for (const winner of winningSnakes) {
-        try {
-          // Update the winner's best score first
-          winner.brain.updateBestScore(winner.score);
-          
-          // Give winning models an extra generation boost
-          const winnerNewGen = newGeneration + 25; // Increased from 15 to 25
-          winner.brain.updateGeneration(winnerNewGen);
-          
-          // Save the model to DB
-          const savedId = await winner.brain.save(winner.score);
-          console.log(`Saved winning model for snake ${winner.id} (${winner.color}) with score ${winner.score} (gen: ${winner.brain.getGeneration()}) - ID: ${savedId}`);
-          
-          // Make sure generation tracking is updated
-          forceGenerationUpdate(winner.brain.getGeneration());
-        } catch (saveError) {
-          console.error(`Error saving winning model for snake ${winner.id}:`, saveError);
+        // Log current generation state
+        console.log(`Current generation before saving winners: ${newGeneration}`);
+        
+        // Save the winning models with significant generation boost
+        for (const winner of winningSnakes) {
+          try {
+            // Update the winner's best score first
+            winner.brain.updateBestScore(winner.score);
+            
+            // Give winning models an extra generation boost
+            const winnerNewGen = newGeneration + 25; // Increased from 15 to 25
+            winner.brain.updateGeneration(winnerNewGen);
+            
+            // Save the model to DB
+            const savedId = await winner.brain.save(winner.score);
+            console.log(`Saved winning model for snake ${winner.id} (${winner.color}) with score ${winner.score} (gen: ${winner.brain.getGeneration()}) - ID: ${savedId}`);
+            
+            // Make sure generation tracking is updated
+            forceGenerationUpdate(winner.brain.getGeneration());
+          } catch (saveError) {
+            console.error(`Error saving winning model for snake ${winner.id}:`, saveError);
+          }
         }
+      } else {
+        console.log("No winners found despite positive max score.");
       }
+    } else {
+      console.log("No winners: all scores are 0 or negative");
     }
 
     // Save ALL snakes regardless of score with incrementing generations
@@ -147,6 +166,8 @@ export const useRoundManagement = (
     // Force a delay to ensure all saves have completed
     await new Promise(resolve => setTimeout(resolve, 1000));
     
+    // Always restart the game after a round ends
+    console.log("Restarting game after round ended");
     setTimeout(initializeGame, 1500);
   }, [gameState.snakes, initializeGame, gameLoopRef, setIsGameRunning, isProcessingUpdate, setVictories, toast]);
 

@@ -97,7 +97,7 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
           }
           
           // The total segments to add is equal to the length of the killed snake
-          const segmentsToAdd = snake.positions.length;
+          const segmentsToAdd = Math.max(1, Math.floor(snake.positions.length / 2));
           console.log(`Snake ${otherSnake.id} will grow by ${segmentsToAdd} segments`);
           
           // Track kill for the surviving snake
@@ -111,6 +111,9 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
             otherSnake.positions.push({ ...lastSegment });
           }
           console.log(`Snake ${otherSnake.id} grew to ${otherSnake.positions.length} segments`);
+          
+          // Update score based on new length
+          otherSnake.score = otherSnake.positions.length - 3;
           
           break;
         }
