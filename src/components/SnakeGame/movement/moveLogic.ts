@@ -59,9 +59,19 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
     
     // Apply reinforcement learning for good decision
     applyReinforcementLearning(snake, true, false);
+    
+    // Add animation flag for eating
+    if (!snake.animation) snake.animation = {};
+    snake.animation.isEating = true;
+    snake.animation.eatStartTime = Date.now();
   } 
   // STEP 3: If no safe apples, use neural network or fallback to safe direction
   else {
+    // Clear eating animation flag
+    if (snake.animation) {
+      snake.animation.isEating = false;
+    }
+    
     // If there are adjacent apples but they're blocked, record them
     if (adjacentApples.length > 0) {
       snake.decisionMetrics.applesIgnored++;
@@ -81,6 +91,11 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
         predictionValue = predictions[['UP', 'RIGHT', 'DOWN', 'LEFT'].indexOf(newDirection)];
         decisionReason = "neural_network";
         
+        // Add animation flag for high confidence decision
+        if (!snake.animation) snake.animation = {};
+        snake.animation.confidence = predictionValue;
+        snake.animation.decisionTime = Date.now();
+        
         if (predictionValue < 0.6) {
           console.log(`Snake ${snake.id} chose risky direction: ${newDirection} with confidence ${predictionValue.toFixed(2)}`);
         }
@@ -99,6 +114,16 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
     if (adjacentObstacles.some(obs => obs.dir === newDirection)) {
       console.log(`Snake ${snake.id} chose dangerous direction: ${newDirection}`);
       decisionReason = "risky_direction";
+      
+      // Add animation flag for danger
+      if (!snake.animation) snake.animation = {};
+      snake.animation.isDangerous = true;
+      snake.animation.dangerTime = Date.now();
+    } else {
+      // Clear danger flag
+      if (snake.animation) {
+        snake.animation.isDangerous = false;
+      }
     }
   }
 
@@ -136,6 +161,7 @@ export const moveSnake = (snake: Snake, gameState: GameState, predictions?: numb
     direction: newDirection,
     lastOutputs: outputs,  // Save outputs for learning
     lastInputs: inputs,    // Save inputs for learning
-    movesWithoutEating: snake.movesWithoutEating
+    movesWithoutEating: snake.movesWithoutEating,
+    animation: updatedSnake.animation || {} // Ensure animation data is preserved
   };
 };

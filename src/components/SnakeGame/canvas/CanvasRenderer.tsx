@@ -44,7 +44,10 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       return;
     }
 
-    // Create a state hash to avoid unnecessary redraws
+    // Force redraw on every frame for smoother animation
+    const forceRedraw = frameCount % 2 === 0;
+
+    // Create a state hash to avoid unnecessary redraws when identical
     const currentStateHash = JSON.stringify({
       snakes: gameState.snakes.map(s => ({ 
         pos: s.positions, 
@@ -53,12 +56,11 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       })),
       apples: gameState.apples,
       selected: effectiveSelectedSnakeId,
-      frame: frameCount
+      frame: forceRedraw ? Date.now() : frameCount // Force more frequent redraws
     });
     
-    // Skip redraw if nothing has changed and it's not an animation frame
-    // Always redraw for better animations
-    if (currentStateHash === lastDrawnStateRef.current && frameCount % 2 !== 0) {
+    // Skip redraw if nothing has changed and it's not a forced animation frame
+    if (currentStateHash === lastDrawnStateRef.current && !forceRedraw) {
       return;
     }
     
@@ -162,7 +164,7 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     
     console.log(`Canvas initialized: ${canvas.width}x${canvas.height} (${pixelRatio}x)`);
 
-    // Set up animation loop
+    // Set up animation loop with higher refresh rate for smoother animation
     let animationFrameId: number;
     const render = () => {
       drawGame();
