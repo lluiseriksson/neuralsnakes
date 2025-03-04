@@ -1,4 +1,3 @@
-
 export type Position = {
   x: number;
   y: number;
@@ -7,6 +6,7 @@ export type Position = {
 export type Apple = {
   id: number;
   position: Position;
+  type?: string; // Added optional type property
 };
 
 export type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';

@@ -29,7 +29,7 @@ export const drawApples = (
       
       // Determine if this is a regular apple or a collision apple (Type B)
       // Type B apples are from more recent collisions (later in the array)
-      const isCollisionApple = index >= apples.length - 10 || apple.type === 'B'; // Assume newest apples are from collisions
+      const isCollisionApple = index >= apples.length - 10 || (apple.type && apple.type === 'B'); // Safely check for type property
       
       // Add pulsing glow effect with increased brightness
       ctx.save();
