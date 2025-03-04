@@ -8,8 +8,7 @@ interface SnakeScoreCardProps {
   score: number;
 }
 
-// Maximum generation to display to prevent visual inconsistencies
-const MAX_GENERATION_DISPLAY = 100;
+// Removed MAX_GENERATION_DISPLAY cap
 
 const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
   // Use local state to track score and ensure it updates visually
@@ -37,8 +36,8 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
         const generation = snake.brain.getGeneration();
         // Only update if we get a valid generation number
         if (typeof generation === 'number' && generation >= 0) {
-          // Cap generation to prevent display issues with extremely high values
-          setCurrentGeneration(Math.min(generation, MAX_GENERATION_DISPLAY));
+          // No cap on generation to allow unlimited values
+          setCurrentGeneration(generation);
         }
       } catch (error) {
         console.error("Error getting generation from snake brain:", error);

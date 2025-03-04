@@ -45,13 +45,13 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
         setSuccessRate(calculatedRate.toFixed(1));
       }
       
-      // Get generation with sanity check to prevent extremely high values
+      // Get generation without capping - allow unlimited values
       if (typeof activeSnake.brain?.getGeneration === 'function') {
         try {
           const brainGen = activeSnake.brain.getGeneration();
           if (typeof brainGen === 'number' && brainGen > 0) {
-            // Cap generation display to prevent unusually high numbers
-            setGeneration(Math.min(brainGen, 100));
+            // No cap on generation display
+            setGeneration(brainGen);
           }
         } catch (error) {
           console.error("Error getting generation:", error);

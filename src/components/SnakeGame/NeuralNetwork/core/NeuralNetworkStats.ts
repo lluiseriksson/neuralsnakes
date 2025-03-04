@@ -24,6 +24,8 @@ export class NetworkStats {
     if (bestScore !== undefined) this.bestScore = bestScore;
     if (gamesPlayed !== undefined) this.gamesPlayed = gamesPlayed;
     
+    // Adaptively reduce learning rate for higher generations
+    // but don't limit the generation value itself
     if (generation && generation > 50) {
       this.learningRate = Math.max(0.05, 0.3 - (generation / 1000));
       console.log(`Network (gen ${generation}) using adaptive learning rate: ${this.learningRate.toFixed(4)}`);
@@ -129,8 +131,9 @@ export class NetworkStats {
   }
   
   getProgressPercentage(): number {
-    // More meaningful progression calculation that scales with generation and score
-    const genProgress = Math.min(this.generation / 100, 0.7) * 100;
+    // More meaningful progression calculation that scales with generation
+    // But limit the display percentage to avoid UI issues
+    const genProgress = Math.min((this.generation / 1000) * 70, 70);
     const scoreProgress = Math.min(this.bestScore / 20, 0.3) * 100;
     
     return Math.min(100, genProgress + scoreProgress);
