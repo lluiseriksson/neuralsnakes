@@ -1,17 +1,15 @@
 
 import { getCurrentGeneration, incrementGeneration, purgeAllModelCaches } from './generationTracking';
+import { updateHighestScoreAchieved } from './scoreTracking';
 
 // Track games played since last generation increment
 let gamesSinceLastIncrement = 0;
-// Reduce number of games required to force increment for more frequent generation updates
-const GAMES_TO_FORCE_INCREMENT = 2; // Changed from 3 to 2 for faster progression
+// Always increment generation after each game
+const GAMES_TO_FORCE_INCREMENT = 1; 
 
 // Track games since last complete reset
 let gamesSinceLastReset = 0;
-const GAMES_TO_FORCE_RESET = 10; // Keep at 10 for stability
-
-// Track the highest score achieved
-let highestScoreAchieved = 0;
+const GAMES_TO_FORCE_RESET = 15; // Increased for better stability
 
 export const getGamesSinceLastIncrement = (): number => {
   return gamesSinceLastIncrement;
@@ -22,14 +20,12 @@ export const resetGamesSinceLastIncrement = (): void => {
 };
 
 export const updateHighestScore = (score: number): void => {
-  if (score > highestScoreAchieved) {
-    highestScoreAchieved = score;
-    console.log(`🏆 New highest score achieved: ${highestScoreAchieved}`);
-  }
+  updateHighestScoreAchieved(score);
 };
 
 export const getHighestScore = (): number => {
-  return highestScoreAchieved;
+  // This function now delegates to the scoreTracking module
+  return updateHighestScoreAchieved(0);
 };
 
 export const trackGamePlayed = (): number => {
@@ -48,9 +44,9 @@ export const trackGamePlayed = (): number => {
     return getCurrentGeneration();
   }
   
-  // Force generation increment after a set number of games for more predictable progression
+  // Force generation increment after every game
   if (gamesSinceLastIncrement >= GAMES_TO_FORCE_INCREMENT) {
-    console.log(`⚡ Forcing generation increment after ${GAMES_TO_FORCE_INCREMENT} games ⚡`);
+    console.log(`⚡ Incrementing generation after ${GAMES_TO_FORCE_INCREMENT} game ⚡`);
     resetGamesSinceLastIncrement();
     return incrementGeneration();
   }

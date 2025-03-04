@@ -1,3 +1,4 @@
+
 // We need to fix the circular dependencies
 // Import from modelCache directory structure 
 import { resetGamesSinceLastIncrement } from './gameTracking';
@@ -15,6 +16,19 @@ export const incrementGeneration = (): number => {
   currentGeneration += 1;
   resetGamesSinceLastIncrement();
   console.log(`⚡ Generation incrementally increased to ${currentGeneration} ⚡`);
+  
+  // Also update model caches with new generation
+  updateModelCachesGeneration(currentGeneration);
+  
+  return currentGeneration;
+};
+
+// Add a special function to increment generation by a larger amount upon victory
+export const incrementGenerationAfterVictory = (): number => {
+  // Larger generation boost for victories
+  currentGeneration += 3;
+  resetGamesSinceLastIncrement();
+  console.log(`🏆 Generation boosted to ${currentGeneration} after victory 🏆`);
   
   // Also update model caches with new generation
   updateModelCachesGeneration(currentGeneration);

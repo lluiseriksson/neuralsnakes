@@ -9,6 +9,7 @@ export {
 
 export {
   incrementGeneration,
+  incrementGenerationAfterVictory,
   updateCurrentGeneration,
   forceGenerationUpdate,
   getCurrentGeneration,
@@ -19,5 +20,12 @@ export {
 export {
   trackGamePlayed,
   getGamesSinceLastIncrement,
-  resetGamesSinceLastIncrement
+  resetGamesSinceLastIncrement,
+  updateHighestScore,
+  getHighestScore
 } from './gameTracking';
+
+export {
+  updateHighestScoreAchieved,
+  resetHighestScore
+} from './scoreTracking';

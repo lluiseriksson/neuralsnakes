@@ -21,7 +21,7 @@ const GenerationInfo: React.FC<GenerationInfoProps> = ({
   const displayProgress = Math.max(5, Math.min(Math.round(progress * 100), 100));
   
   // Ensure best score is a whole number for display purposes
-  const displayBestScore = Math.floor(bestScore);
+  const displayBestScore = Math.max(0, Math.floor(bestScore));
   
   // Calculate more accurate mutation and learning rates based on generation
   const mutationRate = Math.max(5, Math.round(35 - generation/10));
@@ -33,7 +33,7 @@ const GenerationInfo: React.FC<GenerationInfoProps> = ({
       
       <div className="flex justify-between items-center mb-2">
         <p className="text-lg">Generation: <span className="font-bold text-yellow-400">{generation}</span></p>
-        <p className="text-lg">Best Score: <span className="font-bold text-green-400">{displayBestScore}</span></p>
+        <p className="text-lg">High Score: <span className="font-bold text-green-400">{displayBestScore}</span></p>
       </div>
       
       <div className="w-full bg-gray-800 h-4 mt-2 rounded-full overflow-hidden">
@@ -44,15 +44,15 @@ const GenerationInfo: React.FC<GenerationInfoProps> = ({
       </div>
       
       <div className="mt-2 text-sm text-gray-300 flex justify-between">
-        <span>AI Progress: {displayProgress}%</span>
-        <span>{snakeCount} active snakes</span>
+        <span>Learning: {displayProgress}%</span>
+        <span>Active: {snakeCount}</span>
         <span>Apples: {appleCount}</span>
       </div>
       
       <div className="mt-4 grid grid-cols-2 gap-2">
         <div className="bg-gray-800 p-2 rounded-lg col-span-2">
           <p className="text-sm font-medium text-gray-300">Evolution Strategy</p>
-          <p className="text-xs text-gray-400">Automatic evolution based on performance metrics</p>
+          <p className="text-xs text-gray-400">Generation advances after each game (+3 for victory)</p>
         </div>
         
         <div className="bg-gray-800 p-2 rounded-lg">

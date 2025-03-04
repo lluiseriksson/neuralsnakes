@@ -5,12 +5,14 @@ import { useToast } from "../../../components/ui/use-toast";
 import { 
   getModelCache, 
   updateCurrentGeneration, 
-  incrementGeneration, 
+  incrementGeneration,
+  incrementGenerationAfterVictory,
   trackGamePlayed, 
   resetModelCaches, 
   forceGenerationUpdate,
   advanceGenerationBasedOnMetrics,
-  getCurrentGeneration 
+  getCurrentGeneration,
+  updateHighestScore
 } from './snakeCreation/modelCache';
 
 export const useRoundManagement = (
@@ -63,40 +65,21 @@ export const useRoundManagement = (
     let currentGen = getCurrentGeneration();
     console.log(`🔴 Current generation at end of round: ${currentGen}`);
     
-    // Use advanced metrics-based generation advancement
-    let newGeneration = advanceGenerationBasedOnMetrics(
-      totalScore, 
-      totalApplesEaten,
-      totalKills,
-      totalDeaths,
-      totalSuicides
-    );
+    // Update the global highest score
+    const maxSnakeScore = Math.max(...gameState.snakes.map(snake => snake.score));
+    updateHighestScore(maxSnakeScore);
     
-    console.log(`⚡ Advanced to generation ${newGeneration} based on performance metrics ⚡`);
-    
-    // Additional increment if exceptional score achieved
-    if (totalScore >= 2 || totalApplesEaten >= 3 || totalKills >= 1) {
-      // For exceptional performance, increment generation again to advance faster
-      newGeneration = incrementGeneration();
-      console.log(`⚡ Exceptional performance! Incrementing generation again to ${newGeneration} ⚡`);
-    }
-    
-    // More aggressive cache reset - 90% chance instead of 80%
-    if (Math.random() < 0.9) { 
-      resetModelCaches();
-      console.log("Model caches reset to force fresh model loading");
-    }
-    
-    // Process victories and winners
     // Find the snake with the highest score regardless of alive status
     const maxScore = Math.max(...gameState.snakes.map(snake => snake.score));
     
     // Consider any snake with the max score as a winner
+    let hasWinner = false;
     if (maxScore > 0) {
       const winningSnakes = gameState.snakes.filter(snake => snake.score === maxScore);
       
       if (winningSnakes.length > 0) {
         console.log(`🔴 Found ${winningSnakes.length} winners with score ${maxScore}`);
+        hasWinner = true;
         
         setVictories(prevVictories => {
           const newVictories = { ...prevVictories };
@@ -113,9 +96,10 @@ export const useRoundManagement = (
           });
           return newVictories;
         });
-      
-        // Log current generation state
-        console.log(`🔴 Current generation before saving winners: ${newGeneration}`);
+        
+        // VICTORY - Increment generation by a bigger amount
+        incrementGenerationAfterVictory();
+        console.log(`🏆 Advanced generation after victory to ${getCurrentGeneration()}`);
         
         // Save the winning models with significant generation boost
         for (const winner of winningSnakes) {
@@ -124,7 +108,7 @@ export const useRoundManagement = (
             winner.brain.updateBestScore(winner.score);
             
             // Give winning models an extra generation boost
-            const winnerNewGen = newGeneration + 25; // Increased from 15 to 25
+            const winnerNewGen = getCurrentGeneration() + 5;
             winner.brain.updateGeneration(winnerNewGen);
             
             // Save the model to DB
@@ -137,31 +121,26 @@ export const useRoundManagement = (
             console.error(`Error saving winning model for snake ${winner.id}:`, saveError);
           }
         }
-      } else {
-        console.log("No winners found despite positive max score.");
       }
-    } else {
-      console.log("No winners: all scores are 0 or negative");
+    }
+    
+    // If there was no winner, still increment the generation by 1
+    if (!hasWinner) {
+      incrementGeneration();
+      console.log(`⚡ Advanced generation after game without winner to ${getCurrentGeneration()}`);
     }
 
-    // Save ALL snakes regardless of score with incrementing generations
+    // Save ALL snakes regardless of score
     for (const snake of gameState.snakes) {
       try {
         snake.brain.updateBestScore(Math.max(snake.score, 0));
         
-        // Assign varied generation increments based on performance
-        const baseIncrement = newGeneration;
-        const performanceBonus = snake.score * 8 + (snake.decisionMetrics?.applesEaten || 0) * 5 - (snake.decisionMetrics?.badDirections || 0) * 0.5;
-        const finalIncrement = Math.max(10, Math.floor(performanceBonus));
-        
-        const snakeNewGen = baseIncrement + finalIncrement;
+        // Assign generation to match current global generation
+        const snakeNewGen = getCurrentGeneration();
         snake.brain.updateGeneration(snakeNewGen);
         
         await snake.brain.save(snake.score);
         console.log(`🔴 Saved model for snake ${snake.id} (${snake.color}) with score ${snake.score} (gen: ${snake.brain.getGeneration()})`);
-        
-        // Make sure generation tracking is updated
-        forceGenerationUpdate(snake.brain.getGeneration());
       } catch (saveError) {
         console.error(`Error saving model for snake ${snake.id}:`, saveError);
       }
@@ -169,6 +148,12 @@ export const useRoundManagement = (
 
     // Force a delay to ensure all saves have completed
     await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Reset model caches randomly to force fresh models
+    if (Math.random() < 0.3) {
+      resetModelCaches();
+      console.log("Model caches reset to force fresh model loading");
+    }
     
     // Explicitly initialize a new game after processing is complete
     console.log("🔴 Restarting game after round ended");
