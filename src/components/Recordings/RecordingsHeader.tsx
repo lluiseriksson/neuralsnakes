@@ -16,7 +16,7 @@ const RecordingsHeader: React.FC<RecordingsHeaderProps> = ({
 }) => {
   return (
     <div className="flex justify-between items-center mb-6">
-      <h1 className="text-2xl font-bold">Recorded Games</h1>
+      <h1 className="text-2xl font-bold text-white">Recorded Games</h1>
       <div className="flex gap-2">
         <Button 
           variant="outline" 

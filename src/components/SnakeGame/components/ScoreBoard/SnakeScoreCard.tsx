@@ -16,6 +16,13 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
     setCurrentScore(score);
   }, [score]);
 
+  // Also update when snake.score changes
+  useEffect(() => {
+    if (snake.score > currentScore) {
+      setCurrentScore(snake.score);
+    }
+  }, [snake.score, currentScore]);
+
   return (
     <div className="bg-gray-900 p-3 rounded-lg flex items-center gap-3">
       <div 

@@ -15,11 +15,9 @@ class MinimalBrain implements NeuralNetwork {
   
   // Implement required methods
   predict(inputs: number[]): number[] { return [0, 0, 0, 0]; }
-  learn(success: boolean): void {}
   learn(success: boolean, inputs?: number[], outputs?: number[], reward?: number): void {}
-  clone(): NeuralNetwork { return new MinimalBrain(this.generation, this.score); }
-  save(): Promise<string | null> { return Promise.resolve(null); }
-  save(score: number): Promise<string | null> { return Promise.resolve(null); }
+  clone(mutationRate?: number): NeuralNetwork { return new MinimalBrain(this.generation, this.score); }
+  save(score?: number): Promise<string | null> { return Promise.resolve(null); }
   getId(): string | null { return null; }
   getWeights(): number[] { return []; }
   setWeights(weights: number[]): void {}
@@ -48,7 +46,8 @@ export function useRecordingPlayer() {
   const processSnake = (snake: Snake): Snake => {
     if (!snake.brain || typeof snake.brain.getGeneration !== 'function') {
       // Get brain data from the snake object if available
-      const generation = snake.brain?.generation || 0;
+      const generation = typeof snake.brain === 'object' && snake.brain !== null ? 
+                         (snake.brain.getGeneration ? snake.brain.getGeneration() : 0) : 0;
       const score = snake.score || 0;
       
       // Create a proper NeuralNetwork implementation

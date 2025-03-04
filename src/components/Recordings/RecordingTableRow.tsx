@@ -1,8 +1,8 @@
 
 import React from "react";
-import { Button } from "../../components/ui/button";
 import { TableCell, TableRow } from "../../components/ui/table";
 import { Download, Play } from "lucide-react";
+import { Button } from "../../components/ui/button";
 import { GameRecording } from "../../components/SnakeGame/database/gameRecordingService";
 
 interface RecordingTableRowProps {
@@ -59,25 +59,25 @@ const RecordingTableRow: React.FC<RecordingTableRowProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className="border-green-800 bg-green-950/30 hover:bg-green-900/50"
+            className="border-green-800 bg-green-950/30 hover:bg-green-900/50 text-green-400"
             onClick={onPlay}
           >
-            <Play className="w-4 h-4 mr-1 text-green-400" />
-            <span className="text-green-400">View</span>
+            <Play className="w-4 h-4 mr-1" />
+            View
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={onDownload}
             disabled={downloading}
-            className="border-blue-800 bg-blue-950/30 hover:bg-blue-900/50"
+            className="border-blue-800 bg-blue-950/30 hover:bg-blue-900/50 text-blue-400"
           >
             {downloading ? (
-              <span className="animate-pulse text-blue-400">Downloading...</span>
+              <span className="animate-pulse">Downloading...</span>
             ) : (
               <>
-                <Download className="w-4 h-4 mr-1 text-blue-400" />
-                <span className="text-blue-400">Download</span>
+                <Download className="w-4 h-4 mr-1" />
+                Download
               </>
             )}
           </Button>

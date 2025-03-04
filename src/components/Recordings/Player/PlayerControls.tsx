@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "../../../components/ui/button";
-import { Play, Pause, RefreshCw } from "lucide-react";
+import { Play, Pause } from "lucide-react";
 
 interface PlayerControlsProps {
   isPlaying: boolean;
@@ -18,7 +18,7 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
 }) => {
   return (
     <div className="flex justify-between items-center mb-4">
-      <h3 className="text-lg font-semibold">
+      <h3 className="text-lg font-semibold text-white">
         Recording Visualization 
         {totalFrames > 0 && 
           <span className="text-sm text-gray-400 ml-2">

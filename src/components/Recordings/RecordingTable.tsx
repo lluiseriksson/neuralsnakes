@@ -1,8 +1,6 @@
 
 import React from 'react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
-import { Button } from "../ui/button";
-import { Download, Play } from "lucide-react";
 import { GameRecording } from "../SnakeGame/database/gameRecordingService";
 import RecordingTableRow from "./RecordingTableRow";
 
@@ -48,45 +46,24 @@ const RecordingTable: React.FC<RecordingTableProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>ID</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Duration</TableHead>
-            <TableHead>Frames</TableHead>
+            <TableHead>Max Score</TableHead>
             <TableHead>Generation</TableHead>
-            <TableHead>Best Score</TableHead>
+            <TableHead>Snakes</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sortedRecordings.map(recording => (
-            <TableRow key={recording.id}>
-              <RecordingTableRow 
-                recording={recording} 
-                isDownloading={downloading[recording.id || '']} 
-              />
-              <TableCell className="text-right">
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => onPlay(recording)}
-                    className="border-gray-700 bg-gray-800 hover:bg-gray-700 text-white"
-                  >
-                    <Play className="w-4 h-4 mr-1" />
-                    Play
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onDownload(recording)}
-                    disabled={downloading[recording.id || '']}
-                    className="border-gray-700 bg-gray-800 hover:bg-gray-700 text-white"
-                  >
-                    <Download className="w-4 h-4 mr-1" />
-                    {downloading[recording.id || ''] ? 'Downloading...' : 'Download'}
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
+            <RecordingTableRow 
+              key={recording.id}
+              recording={recording} 
+              downloading={downloading[recording.id || '']} 
+              onDownload={() => onDownload(recording)}
+              onPlay={() => onPlay(recording)}
+            />
           ))}
         </TableBody>
       </Table>
