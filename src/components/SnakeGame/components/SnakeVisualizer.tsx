@@ -17,7 +17,7 @@ const SnakeVisualizer: React.FC<SnakeVisualizerProps> = ({
 }) => {
   return (
     <div className="p-4 bg-gray-900 rounded-xl border border-gray-700 shadow-lg text-white">
-      <h3 className="text-lg font-semibold mb-2 border-b border-gray-700 pb-2">Visualización de Decisiones</h3>
+      <h3 className="text-lg font-semibold mb-2 border-b border-gray-700 pb-2">Decision Visualization</h3>
       <SnakeSelector 
         snakes={snakes} 
         onSelectSnake={onSelectSnake} 

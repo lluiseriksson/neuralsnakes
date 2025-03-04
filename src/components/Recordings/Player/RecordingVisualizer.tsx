@@ -26,7 +26,9 @@ const RecordingVisualizer: React.FC<RecordingVisualizerProps> = ({
   onTogglePlay,
   onSelectSnake
 }) => {
-  if (!currentGameState) return null;
+  if (!currentGameState) {
+    return <div className="p-4 text-white bg-gray-900 rounded-lg">Loading recording data...</div>;
+  }
 
   return (
     <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 mb-4">

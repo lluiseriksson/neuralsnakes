@@ -47,7 +47,8 @@ export function useRecordingPlayer() {
     if (!snake.brain || typeof snake.brain.getGeneration !== 'function') {
       // Get brain data from the snake object if available
       const generation = typeof snake.brain === 'object' && snake.brain !== null ? 
-                         (snake.brain.getGeneration ? snake.brain.getGeneration() : 0) : 0;
+                         (snake.brain.getGeneration ? snake.brain.getGeneration() : 
+                          snake.brain.generation || 0) : 0;
       const score = snake.score || 0;
       
       // Create a proper NeuralNetwork implementation
@@ -61,6 +62,11 @@ export function useRecordingPlayer() {
 
   // Process all snakes in a game state
   const processGameState = (state: GameState): GameState => {
+    if (!state.snakes) {
+      console.error("Invalid game state - missing snakes array");
+      return state;
+    }
+    
     return {
       ...state,
       snakes: state.snakes.map(processSnake)
@@ -76,20 +82,24 @@ export function useRecordingPlayer() {
 
     setCurrentRecording(recording);
     
-    // Process first frame with valid brain objects
-    const firstProcessedState = processGameState(recording.game_data.frames[0]);
-    
-    setCurrentGameState(firstProcessedState);
-    setStartTime(Date.now());
-    setCurrentFrame(0);
-    setIsPlaying(true);
-    
-    // Set an active snake by default (first one)
-    if (firstProcessedState.snakes.length > 0) {
-      setActiveSnake(firstProcessedState.snakes[0]);
+    try {
+      // Process first frame with valid brain objects
+      const firstProcessedState = processGameState(recording.game_data.frames[0]);
+      
+      setCurrentGameState(firstProcessedState);
+      setStartTime(Date.now());
+      setCurrentFrame(0);
+      setIsPlaying(true);
+      
+      // Set an active snake by default (first one)
+      if (firstProcessedState.snakes.length > 0) {
+        setActiveSnake(firstProcessedState.snakes[0]);
+      }
+      
+      console.log("Started playing recording with", recording.game_data.frames.length, "frames");
+    } catch (error) {
+      console.error("Error processing recording:", error);
     }
-    
-    console.log("Started playing recording with", recording.game_data.frames.length, "frames");
   };
 
   // Toggle play/pause
@@ -117,21 +127,27 @@ export function useRecordingPlayer() {
             return prev; // Stay on last frame
           }
           
-          // Process the next frame
-          const processedState = processGameState(frames[nextFrame]);
-          setCurrentGameState(processedState);
-          
-          // If we have an active snake, find the corresponding snake in the new frame
-          if (activeSnake) {
-            const updatedActiveSnake = processedState.snakes.find(s => s.id === activeSnake.id);
-            if (updatedActiveSnake) {
-              setActiveSnake(updatedActiveSnake);
+          try {
+            // Process the next frame
+            const processedState = processGameState(frames[nextFrame]);
+            setCurrentGameState(processedState);
+            
+            // If we have an active snake, find the corresponding snake in the new frame
+            if (activeSnake) {
+              const updatedActiveSnake = processedState.snakes.find(s => s.id === activeSnake.id);
+              if (updatedActiveSnake) {
+                setActiveSnake(updatedActiveSnake);
+              }
             }
+          } catch (error) {
+            console.error("Error processing frame:", error);
+            setIsPlaying(false);
+            return prev;
           }
           
           return nextFrame;
         });
-      }, playbackSpeed); // Adjust speed as needed
+      }, playbackSpeed);
     }
     
     return () => {
