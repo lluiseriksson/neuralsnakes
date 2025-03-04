@@ -34,9 +34,18 @@ export const drawNetworkTitle = (
         snakeType = `⚪ Snake #${activeSnake.id} (Experimental)`;
     }
     
-    const generation = typeof activeSnake.brain?.getGeneration === 'function' 
-      ? activeSnake.brain.getGeneration() 
-      : 0;
+    // Get generation with priority order: brain function, snake property, fallback
+    let generation;
+    if (typeof activeSnake.brain?.getGeneration === 'function') {
+      try {
+        generation = activeSnake.brain.getGeneration();
+      } catch (error) {
+        console.error("Error getting generation from brain in title:", error);
+        generation = activeSnake.generation || 0;
+      }
+    } else {
+      generation = activeSnake.generation || 0;
+    }
     
     titleText = `${snakeType} - Generation ${generation}`;
   }

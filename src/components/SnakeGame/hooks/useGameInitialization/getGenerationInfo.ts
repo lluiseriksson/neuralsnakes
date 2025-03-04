@@ -1,3 +1,4 @@
+
 import { Snake } from '../../types';
 import { getCurrentGeneration, getHighestScore } from '../snakeCreation/modelCache';
 
@@ -8,7 +9,7 @@ export const getGenerationInfo = (snakes: Snake[]) => {
   // Get global highest score
   const globalHighestScore = getHighestScore();
   
-  // Fix: Ensure all snakes report the correct generation
+  // Get individual snake generations, using brain when possible
   const generations = snakes.map(s => {
     // Ensure we're getting proper generation from the brain
     let brainGen = s.brain?.getGeneration?.();
@@ -22,10 +23,13 @@ export const getGenerationInfo = (snakes: Snake[]) => {
       }
     }
     
+    // Also update the snake's own generation property for consistency
+    s.generation = brainGen;
+    
     return brainGen;
   });
   
-  // Fix: Properly capture scores with fallback
+  // Get scores with fallback
   const scores = snakes.map(s => {
     // Try to get the best score from the brain first
     const bestScore = s.brain?.getBestScore?.();
@@ -37,7 +41,7 @@ export const getGenerationInfo = (snakes: Snake[]) => {
     return s.score || 0;
   });
   
-  // Fix: Properly calculate progress percentage
+  // Calculate progress percentage
   const progresses = snakes.map(s => {
     const progress = s.brain?.getProgressPercentage?.();
     return typeof progress === 'number' ? progress / 100 : (s.score / 50);
@@ -56,6 +60,9 @@ export const getGenerationInfo = (snakes: Snake[]) => {
     // If snake has a valid generation, use it, otherwise use global generation
     snakeGenerations[snake.id] = (typeof brainGen === 'number' && brainGen > 0) ? 
       brainGen : globalGeneration;
+      
+    // Also update the snake's own generation property for display consistency
+    snake.generation = snakeGenerations[snake.id];
   });
   
   // Debug output to help with troubleshooting

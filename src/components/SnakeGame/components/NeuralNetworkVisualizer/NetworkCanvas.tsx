@@ -55,11 +55,22 @@ const NetworkCanvas: React.FC<NetworkCanvasProps> = ({ activeSnake }) => {
       ctx.font = '10px Arial';
       ctx.textAlign = 'right';
       
-      const generation = typeof activeSnake.brain?.getGeneration === 'function' 
-        ? activeSnake.brain.getGeneration() 
-        : 5;
-        
-      ctx.fillText(`Generation: ${generation}`, canvas.width - 10, 20);
+      // First check for brain's generation function
+      let generationDisplay;
+      if (typeof activeSnake.brain?.getGeneration === 'function') {
+        try {
+          generationDisplay = activeSnake.brain.getGeneration();
+        } catch (error) {
+          console.error("Error getting generation from brain:", error);
+          // Fallback to snake's own generation property
+          generationDisplay = activeSnake.generation || 5;
+        }
+      } else {
+        // Fallback to snake's own generation property
+        generationDisplay = activeSnake.generation || 5;
+      }
+      
+      ctx.fillText(`Generation: ${generationDisplay}`, canvas.width - 10, 20);
       
       // Continue animation loop
       animationFrameId = requestAnimationFrame(renderFrame);
@@ -81,6 +92,8 @@ const NetworkCanvas: React.FC<NetworkCanvasProps> = ({ activeSnake }) => {
     switch(activeSnake.id) {
       case 0: return "border-yellow-400";  // Yellow snake
       case 1: return "border-blue-400";    // Blue snake
+      case 2: return "border-green-500";   // Green snake
+      case 3: return "border-purple-400";  // Purple snake
       default: return "border-gray-600";
     }
   };

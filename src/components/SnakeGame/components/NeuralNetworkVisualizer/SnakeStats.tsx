@@ -11,7 +11,7 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
   const [score, setScore] = useState(activeSnake?.score || 0);
   const [applesEaten, setApplesEaten] = useState(activeSnake?.decisionMetrics?.applesEaten || 0);
   const [successRate, setSuccessRate] = useState("0.0");
-  const [generation, setGeneration] = useState(5);
+  const [generation, setGeneration] = useState(activeSnake?.generation || 5);
   
   // Update the local stats whenever activeSnake changes
   useEffect(() => {
@@ -45,17 +45,31 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
         setSuccessRate(calculatedRate.toFixed(1));
       }
       
-      // Get generation without capping - allow unlimited values
+      // Get generation without capping (updated logic)
       if (typeof activeSnake.brain?.getGeneration === 'function') {
         try {
           const brainGen = activeSnake.brain.getGeneration();
-          if (typeof brainGen === 'number' && brainGen > 0) {
-            // No cap on generation display
+          // Important: Log actual generation for debugging
+          console.log(`Snake ${activeSnake.id} (${getSnakeTypeLabel()}) actual generation: ${brainGen}`);
+          
+          if (typeof brainGen === 'number') {
+            // Use the brain's generation value directly with no limit
             setGeneration(brainGen);
+          } else if (activeSnake.generation && typeof activeSnake.generation === 'number') {
+            // Fallback to snake's own generation property
+            setGeneration(activeSnake.generation);
           }
         } catch (error) {
-          console.error("Error getting generation:", error);
+          console.error(`Error getting generation for snake ${activeSnake.id}:`, error);
+          // Use snake's generation property as fallback
+          if (activeSnake.generation && typeof activeSnake.generation === 'number') {
+            setGeneration(activeSnake.generation);
+          }
         }
+      } else if (activeSnake.generation && typeof activeSnake.generation === 'number') {
+        // Direct fallback if brain.getGeneration() is not available
+        console.log(`Snake ${activeSnake.id} using direct generation property: ${activeSnake.generation}`);
+        setGeneration(activeSnake.generation);
       }
     }
   }, [activeSnake]);
