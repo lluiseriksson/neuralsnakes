@@ -3,12 +3,12 @@ import { getCurrentGeneration, incrementGeneration, purgeAllModelCaches } from '
 
 // Track games played since last generation increment
 let gamesSinceLastIncrement = 0;
-// Force very frequent generation increments
-const GAMES_TO_FORCE_INCREMENT = 1; // Force increment after EVERY game
+// Force less frequent generation increments for more stability
+const GAMES_TO_FORCE_INCREMENT = 3; // Force increment after 3 games
 
 // Track games since last complete reset
 let gamesSinceLastReset = 0;
-const GAMES_TO_FORCE_RESET = 5; // Reduced from 10 to 5 for more frequent resets
+const GAMES_TO_FORCE_RESET = 10; // Changed back to 10 for more stability
 
 export const getGamesSinceLastIncrement = (): number => {
   return gamesSinceLastIncrement;
@@ -34,12 +34,10 @@ export const trackGamePlayed = (): number => {
     return getCurrentGeneration();
   }
   
-  // Force generation increment EVERY game with larger increments
+  // Force generation increment less frequently for more stability
   if (gamesSinceLastIncrement >= GAMES_TO_FORCE_INCREMENT) {
     console.log(`⚡ Forcing generation increment after ${GAMES_TO_FORCE_INCREMENT} games ⚡`);
-    const newGeneration = getCurrentGeneration() + 20; // Increased from 10 to 20
     resetGamesSinceLastIncrement();
-    console.log(`⚡ New generation: ${newGeneration} ⚡`);
     return incrementGeneration();
   }
   

@@ -17,10 +17,6 @@ const GenerationTracker: React.FC<GenerationTrackerProps> = ({ snakes }) => {
   const totalApplesEaten = snakes.reduce((sum, snake) => 
     sum + (snake.decisionMetrics?.applesEaten || 0), 0);
   
-  // Calculate kill counts (if available)
-  const totalKills = snakes.reduce((sum, snake) => 
-    sum + (snake.decisionMetrics?.killCount || 0), 0);
-  
   // Calculate survival rate
   const aliveSnakes = snakes.filter(s => s.alive).length;
   const survivalRate = snakes.length > 0 ? (aliveSnakes / snakes.length) * 100 : 0;
@@ -37,7 +33,7 @@ const GenerationTracker: React.FC<GenerationTrackerProps> = ({ snakes }) => {
     <div className="fixed top-4 right-4 bg-black/85 text-white p-3 rounded-md text-sm z-50 max-w-xs shadow-lg border border-gray-700">
       <h3 className="font-bold text-yellow-400 mb-2 text-base">Información de evolución:</h3>
       <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-        <div>Generación actual:</div>
+        <div>Generación global:</div>
         <div className="font-mono">{currentGeneration}</div>
         
         <div>Gen. serpiente amarilla:</div>
@@ -46,65 +42,31 @@ const GenerationTracker: React.FC<GenerationTrackerProps> = ({ snakes }) => {
         <div>Gen. serpiente azul:</div>
         <div className="font-mono text-blue-400">{blueSnakeGeneration}</div>
         
-        <div>Mayor generación:</div>
-        <div className="font-mono">{highestSnakeGeneration}</div>
-        
-        <div>Mejor puntuación:</div>
+        <div>Mayor puntuación:</div>
         <div className="font-mono">{highestScore}</div>
         
         <div>Manzanas comidas:</div>
         <div className="font-mono">{totalApplesEaten}</div>
         
-        <div>Muertes causadas:</div>
-        <div className="font-mono">{totalKills}</div>
-        
         <div>Tasa de supervivencia:</div>
         <div className="font-mono">{survivalRate.toFixed(0)}%</div>
       </div>
       
-      {/* Detailed decision metrics for advanced users */}
-      <details className="mt-2 text-xs">
-        <summary className="cursor-pointer hover:text-yellow-400 transition-colors">Métricas detalladas</summary>
-        <div className="mt-2 space-y-2">
-          {snakes.map(snake => {
-            // Calculate effectiveness metrics
-            const goodDecisions = snake.decisionMetrics?.goodDirections || 0;
-            const badDecisions = snake.decisionMetrics?.badDirections || 0;
-            const totalDecisions = goodDecisions + badDecisions;
-            const effectiveness = totalDecisions > 0 ? (goodDecisions / totalDecisions) * 100 : 0;
-            
-            return (
-              <div key={snake.id} className="border-t border-gray-700 pt-2">
-                <div className="font-semibold" style={{ color: snake.color }}>
-                  Serpiente {snake.id} (Gen: {snake.brain?.getGeneration() || 0})
-                </div>
-                <div className="grid grid-cols-2 gap-x-1">
-                  <div>Manzanas comidas:</div>
-                  <div>{snake.decisionMetrics?.applesEaten || 0}</div>
-                  
-                  <div>Manzanas ignoradas:</div>
-                  <div>{snake.decisionMetrics?.applesIgnored || 0}</div>
-                  
-                  <div>Buenas decisiones:</div>
-                  <div>{snake.decisionMetrics?.goodDirections || 0}</div>
-                  
-                  <div>Malas decisiones:</div>
-                  <div>{snake.decisionMetrics?.badDirections || 0}</div>
-                  
-                  <div>Efectividad:</div>
-                  <div>{effectiveness.toFixed(1)}%</div>
-                  
-                  <div>Muertes causadas:</div>
-                  <div>{snake.decisionMetrics?.killCount || 0}</div>
-                  
-                  <div>Suicidios:</div>
-                  <div>{snake.decisionMetrics?.suicides || 0}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </details>
+      {/* Simple snake status indicators */}
+      <div className="mt-2 space-y-1 border-t border-gray-700 pt-2">
+        {snakes.map(snake => (
+          <div key={snake.id} className="flex justify-between items-center">
+            <div style={{ color: snake.color }}>
+              Serpiente {snake.id === 0 ? "Amarilla" : snake.id === 1 ? "Azul" : snake.id === 2 ? "Roja" : "Verde"}
+            </div>
+            <div className="flex items-center gap-2">
+              <span>Gen: {snake.brain?.getGeneration() || 0}</span>
+              <span>Score: {snake.score}</span>
+              {!snake.alive && <span className="text-red-500">(Muerta)</span>}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

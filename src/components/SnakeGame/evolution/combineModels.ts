@@ -37,11 +37,11 @@ export const combineModels = (models: INeuralNetwork[]): INeuralNetwork | null =
     const { combinedWeights, newGeneration } = combineWeights(modelData, weightsLength);
     
     // Calculate explicit new generation number - FORCE HIGHER PROGRESSION
-    // Always increment by at least 15 to ensure faster evolution
+    // Always increment by at least 3 to ensure faster evolution
     const explicitNewGeneration = Math.max(
       newGeneration,
-      currentGeneration + 15, // Increased from 2 to 15
-      Math.max(...sortedModels.map(m => m.getGeneration())) + 15 // Increased from 2 to 15
+      currentGeneration + 3,
+      Math.max(...sortedModels.map(m => m.getGeneration())) + 3
     );
     
     // Log the new generation calculation
@@ -59,12 +59,11 @@ export const combineModels = (models: INeuralNetwork[]): INeuralNetwork | null =
     // Set best score based on parent models
     const bestParentScore = Math.max(...sortedModels.map(m => m.getBestScore()));
     if (bestParentScore > 0) {
-      combinedModel.updateBestScore(bestParentScore * 0.9); // Slightly reduce to encourage improvement
+      combinedModel.updateBestScore(bestParentScore * 0.8); // Slightly reduce to encourage improvement
     }
     
-    // Add stronger mutation to explore new solutions
-    // Much higher mutation rate to escape local optima
-    const mutatedWeights = mutateWeights(combinedModel.getWeights(), 0.5, 0.8); // Increased mutation rates
+    // Add mutation to explore new solutions - more moderate mutation rate
+    const mutatedWeights = mutateWeights(combinedModel.getWeights(), 0.35, 0.4);
     combinedModel.setWeights(mutatedWeights);
     
     // Make sure to update the global generation tracker

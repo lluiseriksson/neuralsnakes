@@ -81,14 +81,25 @@ export class NeuralNetwork implements INeuralNetwork {
     return this.core.getGeneration();
   }
   
-  // Update the implementation of updateGeneration method
+  // Fixed implementation of updateGeneration method
   updateGeneration(generation: number): void {
-    // Use the core's new updateGeneration method
+    if (typeof generation !== 'number' || generation < 1) {
+      console.error(`Invalid generation value: ${generation}, using 1 instead`);
+      generation = 1;
+    }
+    // Use the core's updateGeneration method
     this.core.updateGeneration(generation);
     
     // Also update the model cache generation
-    const { updateCurrentGeneration } = require('./hooks/snakeCreation/modelCache');
-    updateCurrentGeneration(generation);
+    if (generation > 1) {
+      try {
+        const { updateCurrentGeneration } = require('./hooks/snakeCreation/modelCache');
+        updateCurrentGeneration(generation);
+        console.log(`Neural network updated to generation ${generation} and propagated to global cache`);
+      } catch (err) {
+        console.error("Error updating global generation:", err);
+      }
+    }
   }
   
   getBestScore(): number {

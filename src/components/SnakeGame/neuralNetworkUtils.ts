@@ -16,13 +16,13 @@ export const combineWeights = (
   let totalScore = models.reduce((sum, model) => sum + (model.score || 0), 0);
   if (totalScore === 0) totalScore = models.length; // Avoid division by zero
   
-  // Enhanced exponential weighting to give much more influence to better models
-  // This makes the best models have EXPONENTIALLY more influence than lower scoring ones
+  // Enhanced weighting to give more influence to better models
+  // This makes the best models have more influence than lower scoring ones
   const scores = models.map(model => Math.max(model.score || 0, 0.1));
   const maxScore = Math.max(...scores);
   
-  // Use cubic power for even more dramatic weighting difference
-  const influences = scores.map(score => Math.pow(score / maxScore, 3));
+  // Use squared power for more reasonable weighting difference
+  const influences = scores.map(score => Math.pow(score / maxScore, 2));
   const totalInfluence = influences.reduce((sum, inf) => sum + inf, 0);
   
   // Normalize influences
@@ -41,9 +41,9 @@ export const combineWeights = (
     }
   }
   
-  // Calculate the new generation - take maximum and add a significant boost
+  // Calculate the new generation - take maximum and add a moderate boost
   const maxGen = Math.max(...models.map(model => model.generation || 1));
-  const newGeneration = maxGen + 40; // Increased from 30 to 40
+  const newGeneration = maxGen + 5; // Reduced from 40 to 5
   
   return { combinedWeights, newGeneration };
 };
@@ -63,8 +63,8 @@ export const mutateWeights = (weights: number[], mutationProbability: number = 0
       // Use different mutation strategies with different probabilities
       const strategy = Math.random();
       
-      if (strategy < 0.4) { // Reduced from 0.5 to 0.4 to increase variety
-        // 40% chance: Normal distribution for more natural mutations
+      if (strategy < 0.6) { // Increased from 0.4 to 0.6 for more stability
+        // 60% chance: Normal distribution for more natural mutations
         // This creates a bell curve of mutations centered on the current weight
         const gaussianRandom = () => {
           let u = 0, v = 0;
@@ -73,15 +73,15 @@ export const mutateWeights = (weights: number[], mutationProbability: number = 0
           return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
         };
         
-        return w + gaussianRandom() * mutationRange * 1.5; // Multiplied by 1.5 for stronger mutations
+        return w + gaussianRandom() * mutationRange * 1.0; // Reduced to 1.0 from 1.5 for less drastic changes
       } 
-      else if (strategy < 0.7) { // Reduced from 0.8 to 0.7
-        // 30% chance: Sign flip with small adjustment (create opposite behaviors)
-        return -w * (0.9 + Math.random() * 0.6); // Flip sign and adjust magnitude more dramatically
+      else if (strategy < 0.8) { // Increased from 0.7 to 0.8
+        // 20% chance: Sign flip with small adjustment (create opposite behaviors)
+        return -w * (0.9 + Math.random() * 0.3); // Reduced from 0.6 to 0.3 for less extreme flips
       }
       else {
-        // 30% chance: Complete reset to random value for more exploration
-        return (Math.random() * 6 - 3); // Increased range from [-2, 2] to [-3, 3]
+        // 20% chance: Complete reset to random value for more exploration
+        return (Math.random() * 4 - 2); // Reduced range from [-3, 3] to [-2, 2]
       }
     }
     return w;
