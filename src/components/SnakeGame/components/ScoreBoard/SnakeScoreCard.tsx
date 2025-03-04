@@ -54,6 +54,16 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
     }
   }, [snake.positions, snake.score, currentScore, snake.id]);
 
+  // Determine a status label for the snake
+  const getSnakeStatus = () => {
+    if (!snake.alive) return "Dead";
+    if (snake.animation?.isEating) return "Eating";
+    if (snake.animation?.isDangerous) return "Danger";
+    return "";
+  };
+  
+  const snakeStatus = getSnakeStatus();
+
   return (
     <div className="bg-gray-900 p-3 rounded-lg flex items-center gap-3">
       <div 
@@ -66,7 +76,13 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
         </span>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400">Gen: {currentGeneration}</span>
-          {!snake.alive && <span className="text-xs text-red-400">(Dead)</span>}
+          {snakeStatus && (
+            <span className={`text-xs ${snakeStatus === "Dead" ? "text-red-400" : 
+              snakeStatus === "Eating" ? "text-green-400" : 
+              snakeStatus === "Danger" ? "text-yellow-400" : "text-gray-400"}`}>
+              ({snakeStatus})
+            </span>
+          )}
         </div>
       </div>
     </div>

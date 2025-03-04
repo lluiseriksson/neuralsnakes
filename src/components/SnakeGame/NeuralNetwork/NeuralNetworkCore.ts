@@ -1,20 +1,10 @@
 
 import { NeuralNetwork as INeuralNetwork } from "../types";
-import { deserializeWeights, serializeWeights, generateRandomWeights } from "../NeuralNetworkMatrix";
-import { applyLearning, cloneNetwork, mutateNetwork } from "./NeuralNetworkLearning";
-import { ExperienceManager } from "./core/NeuralNetworkExperience";
-import { NetworkStats } from "./core/NeuralNetworkStats";
-import { Predictor } from "./core/NeuralNetworkPrediction";
-import { NetworkPersistence } from "./core/NeuralNetworkPersistence";
+import { NeuralNetworkCoreImpl } from "./core/NeuralNetworkCoreImpl";
 
+// Reexporting the implementation as NeuralNetworkCore for backwards compatibility
 export class NeuralNetworkCore implements INeuralNetwork {
-  private inputSize: number;
-  private hiddenSize: number;
-  private outputSize: number;
-  private predictor: Predictor;
-  private persistence: NetworkPersistence;
-  private stats: NetworkStats;
-  private experiences: ExperienceManager;
+  private implementation: NeuralNetworkCoreImpl;
   
   // Required interface properties
   inputNodes: number;
@@ -34,181 +24,142 @@ export class NeuralNetworkCore implements INeuralNetwork {
     bestScore?: number,
     gamesPlayed?: number
   ) {
-    this.inputSize = inputSize;
-    this.hiddenSize = hiddenSize;
-    this.outputSize = outputSize;
-    
-    // Initialize interface required properties
-    this.inputNodes = inputSize;
-    this.hiddenNodes = hiddenSize;
-    this.outputNodes = outputSize;
-    this.weights = []; // Will be populated after predictor is created
-    this.bias = []; // Placeholder for bias (managed internally by predictor)
-    
-    const initialWeights = generateRandomWeights(inputSize, hiddenSize, outputSize);
-    this.predictor = new Predictor(
+    this.implementation = new NeuralNetworkCoreImpl(
       inputSize, 
       hiddenSize, 
       outputSize, 
-      initialWeights.weightsInputHidden, 
-      initialWeights.weightsHiddenOutput
+      weights, 
+      id, 
+      score, 
+      generation,
+      bestScore,
+      gamesPlayed
     );
     
-    // Update the weights array with actual weights
-    this.weights = [
-      this.predictor.getWeightsInputHidden(),
-      this.predictor.getWeightsHiddenOutput()
-    ];
-    
-    // Initialize bias with empty arrays (as they're managed internally by predictor)
-    this.bias = [Array(hiddenSize).fill(0), Array(outputSize).fill(0)];
-    
-    if (weights && weights.length === (inputSize * hiddenSize + hiddenSize * outputSize)) {
-      const deserialized = deserializeWeights(weights, inputSize, hiddenSize, outputSize);
-      this.predictor.setWeights(deserialized.weightsInputHidden, deserialized.weightsHiddenOutput);
-      
-      // Update the interface properties
-      this.weights = [
-        deserialized.weightsInputHidden,
-        deserialized.weightsHiddenOutput
-      ];
-    }
-    
-    this.persistence = new NetworkPersistence(id);
-    this.stats = new NetworkStats(score, generation, bestScore, gamesPlayed);
-    this.experiences = new ExperienceManager();
+    // Mirror the properties from the implementation
+    this.inputNodes = this.implementation.inputNodes;
+    this.hiddenNodes = this.implementation.hiddenNodes;
+    this.outputNodes = this.implementation.outputNodes;
+    this.weights = this.implementation.weights;
+    this.bias = this.implementation.bias;
   }
 
+  // Forward all method calls to the implementation
   predict(inputs: number[]): number[] {
-    const outputs = this.predictor.predict(inputs, this.stats.getGeneration());
-    this.stats.setLastPredictions(outputs);
-    return outputs;
+    return this.implementation.predict(inputs);
   }
 
   getWeights(): number[] {
-    return this.serializeWeights();
+    return this.implementation.getWeights();
   }
 
   setWeights(weights: number[]): void {
-    this.deserializeWeights(weights);
+    this.implementation.setWeights(weights);
+    
+    // Update the mirror properties
+    this.weights = this.implementation.weights;
+    this.bias = this.implementation.bias;
   }
   
   getId(): string | null {
-    return this.persistence.getId();
+    return this.implementation.getId();
   }
   
   getGeneration(): number {
-    return this.stats.getGeneration();
+    return this.implementation.getGeneration();
   }
   
   updateGeneration(generation: number): void {
-    this.stats.updateGeneration(generation);
+    this.implementation.updateGeneration(generation);
   }
   
   getBestScore(): number {
-    return this.stats.getBestScore();
+    return this.implementation.getBestScore();
   }
   
   getGamesPlayed(): number {
-    return this.stats.getGamesPlayed();
+    return this.implementation.getGamesPlayed();
   }
   
   setGamesPlayed(count: number): void {
-    this.stats.setGamesPlayed(count);
+    this.implementation.setGamesPlayed(count);
   }
   
   updateBestScore(score: number): void {
-    this.stats.updateBestScore(score);
+    this.implementation.updateBestScore(score);
   }
 
   getProgressPercentage(): number {
-    return this.stats.getProgressPercentage();
+    return this.implementation.getProgressPercentage();
   }
 
   async save(score: number): Promise<string | null> {
-    this.stats.setScore(score);
-    this.stats.updateBestScore(score);
-    
-    const performanceStats = {
-      ...this.stats.getPerformanceStats(),
-      learningRate: this.stats.getLearningRate()
-    };
-    
-    return await this.persistence.save(
-      this.getWeights(),
-      score,
-      this.stats.getGeneration(),
-      this.stats.getBestScore(),
-      this.stats.getGamesPlayed(),
-      performanceStats
-    );
+    return this.implementation.save(score);
   }
 
   async saveTrainingData(inputs: number[], outputs: number[], success: boolean): Promise<void> {
-    await this.persistence.saveTrainingData(inputs, outputs, success);
-  }
-
-  serializeWeights(): number[] {
-    return serializeWeights(
-      this.predictor.getWeightsInputHidden(), 
-      this.predictor.getWeightsHiddenOutput()
-    );
-  }
-  
-  deserializeWeights(flat: number[]): void {
-    const deserialized = deserializeWeights(flat, this.inputSize, this.hiddenSize, this.outputSize);
-    this.predictor.setWeights(deserialized.weightsInputHidden, deserialized.weightsHiddenOutput);
-    
-    // Update the interface properties
-    this.weights = [
-      deserialized.weightsInputHidden,
-      deserialized.weightsHiddenOutput
-    ];
+    await this.implementation.saveTrainingData(inputs, outputs, success);
   }
 
   learn(success: boolean, inputs: number[] = [], outputs: number[] = [], reward: number = 1): void {
-    this.trackLearningAttempt(success);
-    
-    if (inputs.length > 0 && outputs.length > 0) {
-      this.experiences.addExperience([...inputs], [...outputs], success, reward);
-    }
-    
-    applyLearning(this, success, inputs, outputs, reward);
-    
-    const replayThreshold = success ? 0.5 : 0.3;
-    if (Math.random() < replayThreshold || reward > 1.5) {
-      this.experiences.replayExperiences(5, (exp_success, exp_inputs, exp_outputs, exp_reward) => {
-        applyLearning(this, exp_success, exp_inputs, exp_outputs, exp_reward);
-      });
-    }
+    this.implementation.learn(success, inputs, outputs, reward);
   }
 
   clone(mutationRate: number = 0.1): INeuralNetwork {
-    return cloneNetwork(this, mutationRate);
+    return this.implementation.clone(mutationRate);
   }
 
   mutate(mutationRate: number = 0.1): void {
-    mutateNetwork(this, mutationRate);
+    this.implementation.mutate(mutationRate);
+    
+    // Update the mirror properties after mutation
+    this.weights = this.implementation.weights;
+    this.bias = this.implementation.bias;
   }
 
   getPerformanceStats(): { learningAttempts: number, successfulMoves: number, failedMoves: number } {
-    return this.stats.getPerformanceStats();
+    return this.implementation.getPerformanceStats();
   }
 
   trackLearningAttempt(success: boolean): void {
-    this.stats.trackLearningAttempt(success);
+    this.implementation.trackLearningAttempt(success);
   }
 
   setScore(score: number): void {
-    this.stats.setScore(score);
+    this.implementation.setScore(score);
   }
   
   // Additional methods for core functionality
   getWeightsInputHidden(): number[][] {
-    return this.predictor.getWeightsInputHidden();
+    return this.implementation.getWeightsInputHidden();
   }
   
   getWeightsHiddenOutput(): number[][] {
-    return this.predictor.getWeightsHiddenOutput();
+    return this.implementation.getWeightsHiddenOutput();
+  }
+
+  serializeWeights(): number[] {
+    // Forward to the implementation if it has this method
+    if ('serializeWeights' in this.implementation) {
+      return (this.implementation as any).serializeWeights();
+    }
+    
+    // Fallback implementation
+    return this.getWeights();
+  }
+  
+  deserializeWeights(flat: number[]): void {
+    // Forward to the implementation if it has this method
+    if ('deserializeWeights' in this.implementation) {
+      (this.implementation as any).deserializeWeights(flat);
+      
+      // Update the mirror properties
+      this.weights = this.implementation.weights;
+      this.bias = this.implementation.bias;
+      return;
+    }
+    
+    // Fallback implementation
+    this.setWeights(flat);
   }
 }

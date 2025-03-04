@@ -23,6 +23,10 @@ const GenerationInfo: React.FC<GenerationInfoProps> = ({
   // Ensure best score is a whole number for display purposes
   const displayBestScore = Math.floor(bestScore);
   
+  // Calculate more accurate mutation and learning rates based on generation
+  const mutationRate = Math.max(5, Math.round(35 - generation/10));
+  const learningRate = Math.max(5, Math.round(30 - generation/30));
+  
   return (
     <div className="p-4 bg-gray-900 rounded-xl border border-gray-700 shadow-lg text-white">
       <h3 className="text-xl font-semibold mb-3 text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">AI Population Stats</h3>
@@ -53,12 +57,12 @@ const GenerationInfo: React.FC<GenerationInfoProps> = ({
         
         <div className="bg-gray-800 p-2 rounded-lg">
           <p className="text-sm font-medium text-gray-300">Mutation Rate</p>
-          <p className="text-xs text-gray-400">Adaptive ({Math.round(35 - generation/10)}%)</p>
+          <p className="text-xs text-gray-400">Adaptive ({mutationRate}%)</p>
         </div>
         
         <div className="bg-gray-800 p-2 rounded-lg">
           <p className="text-sm font-medium text-gray-300">Learning Rate</p>
-          <p className="text-xs text-gray-400">Adaptive ({Math.max(5, Math.round(30 - generation/30))}%)</p>
+          <p className="text-xs text-gray-400">Adaptive ({learningRate}%)</p>
         </div>
       </div>
     </div>
