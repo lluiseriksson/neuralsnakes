@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState } from "react";
 import { useGameLogic } from "../components/SnakeGame/hooks/useGameLogic";
 import GameCanvas from "../components/SnakeGame/GameCanvas";
@@ -12,7 +11,7 @@ import { Button } from "../components/ui/button";
 import { useToast } from "../components/ui/use-toast";
 import { Snake } from "../components/SnakeGame/types";
 import { Link } from "react-router-dom";
-import { CircleRecord, StopCircle, Database, Download } from "lucide-react";
+import { Circle, StopCircle, Database, Download } from "lucide-react";
 
 const Index = () => {
   const [isInitializing, setIsInitializing] = useState(false);
@@ -25,14 +24,12 @@ const Index = () => {
     initializeGame, 
     restartGame, 
     isGameRunning,
-    // Nuevas propiedades para grabación
     startRecording,
     stopRecording,
     isRecording
   } = useGameLogic();
   const { toast } = useToast();
   
-  // Función segura para inicializar el juego
   const handleInitializeGame = useCallback(async () => {
     if (isInitializing) return;
     
@@ -64,7 +61,6 @@ const Index = () => {
     }
   }, [initializeGame, isInitializing, gameState.snakes, toast, generationInfo]);
   
-  // Manejar grabación
   const handleStartRecording = useCallback(() => {
     if (isRecording) {
       return;
@@ -85,14 +81,11 @@ const Index = () => {
     await stopRecording();
   }, [isRecording, stopRecording]);
   
-  // Update active snake when game state changes
   useEffect(() => {
-    // Reset active snake if it's no longer alive
     if (activeSnake && !gameState.snakes.some(s => s.id === activeSnake.id && s.alive)) {
       setActiveSnake(null);
     }
     
-    // If no active snake is selected and we have living snakes, select the first one
     if (!activeSnake && gameState.snakes && gameState.snakes.length > 0) {
       const livingSnakes = gameState.snakes.filter(snake => snake.alive);
       if (livingSnakes.length > 0) {
@@ -100,7 +93,6 @@ const Index = () => {
       }
     }
     
-    // Update the active snake's data with the latest from game state
     if (activeSnake) {
       const updatedSnake = gameState.snakes.find(s => s.id === activeSnake.id);
       if (updatedSnake && updatedSnake.alive) {
@@ -109,7 +101,6 @@ const Index = () => {
     }
   }, [gameState.snakes, activeSnake]);
   
-  // Inicializar el juego al cargar el componente
   useEffect(() => {
     console.log("Componente Index montado");
     
@@ -131,7 +122,6 @@ const Index = () => {
       
       <VictoryDisplay victories={victories} />
       
-      {/* Display the generation tracker when we have snakes */}
       {gameState.snakes && gameState.snakes.length > 0 && (
         <GenerationTracker snakes={gameState.snakes} />
       )}
@@ -140,7 +130,6 @@ const Index = () => {
         <div className="relative bg-gray-900 p-4 rounded-xl border border-gray-700 shadow-xl">
           <Timer startTime={startTime} />
           
-          {/* Indicador de grabación */}
           {isRecording && (
             <div className="absolute top-2 right-2 flex items-center bg-red-900/80 text-white px-3 py-1 rounded-full text-xs font-medium animate-pulse z-10">
               <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
@@ -175,7 +164,6 @@ const Index = () => {
           
           <ScoreBoard snakes={gameState.snakes || []} generationInfo={generationInfo} />
           
-          {/* Información de generación mejorada */}
           <div className="p-4 bg-gray-900 rounded-xl border border-gray-700 shadow-lg text-white">
             <div className="flex justify-between items-center mb-1">
               <p className="text-lg">Generación: <span className="font-bold text-yellow-400">{generationInfo.generation}</span></p>
@@ -196,7 +184,6 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Controles de grabación */}
           <div className="p-4 bg-gray-900 rounded-xl border border-gray-700 shadow-lg text-white">
             <h3 className="text-lg font-semibold mb-3 border-b border-gray-700 pb-2">Herramientas de grabación</h3>
             
@@ -208,7 +195,7 @@ const Index = () => {
                   variant="destructive"
                   className="flex-1"
                 >
-                  <CircleRecord className="w-4 h-4 mr-2" />
+                  <Circle className="w-4 h-4 mr-2" />
                   Iniciar grabación
                 </Button>
                 
@@ -240,7 +227,6 @@ const Index = () => {
         </div>
       </div>
       
-      {/* Botones de control */}
       <div className="flex gap-4 mt-6">
         <Button 
           onClick={handleInitializeGame} 
@@ -259,7 +245,6 @@ const Index = () => {
         </Button>
       </div>
       
-      {/* Estado del aprendizaje - Simplified with focus on decision visualization */}
       <div className="mt-6 p-4 bg-gray-900 rounded-xl border border-gray-700 text-white text-sm max-w-2xl shadow-lg">
         <p className="font-bold mb-2 text-purple-400">Sistema de evolución neural:</p>
         <div className="grid grid-cols-2 gap-4">
