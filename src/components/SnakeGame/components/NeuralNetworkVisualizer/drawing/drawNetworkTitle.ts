@@ -34,7 +34,7 @@ export const drawNetworkTitle = (
         snakeType = `⚪ Snake #${activeSnake.id} (Experimental)`;
     }
     
-    // Get generation with priority order: brain function, snake property, fallback
+    // IMPORTANT: Get generation with priority order: brain function, snake property, fallback
     let generation;
     if (typeof activeSnake.brain?.getGeneration === 'function') {
       try {

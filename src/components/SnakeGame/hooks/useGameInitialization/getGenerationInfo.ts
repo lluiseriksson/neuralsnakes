@@ -14,7 +14,7 @@ export const getGenerationInfo = (snakes: Snake[]) => {
     // Ensure we're getting proper generation from the brain
     let brainGen = s.brain?.getGeneration?.();
     
-    // If we can't get a proper generation, use the global generation
+    // IMPORTANT: If we can't get a proper generation, use the global generation
     if (typeof brainGen !== 'number' || brainGen < 1) {
       brainGen = globalGeneration;
       // Try to update the snake's brain with the global generation if possible
@@ -23,7 +23,7 @@ export const getGenerationInfo = (snakes: Snake[]) => {
       }
     }
     
-    // Also update the snake's own generation property for consistency
+    // IMPORTANT: Also update the snake's own generation property for consistency
     s.generation = brainGen;
     
     return brainGen;
@@ -53,15 +53,15 @@ export const getGenerationInfo = (snakes: Snake[]) => {
   const highestScore = Math.max(...scores, globalHighestScore);
   const highestProgress = Math.max(...progresses);
   
-  // Create a correct map of snake ID to generation
+  // IMPORTANT: Create a correct map of snake ID to generation for consistent display
   const snakeGenerations = {};
   snakes.forEach(snake => {
     const brainGen = snake.brain?.getGeneration?.();
-    // If snake has a valid generation, use it, otherwise use global generation
+    // IMPORTANT: If snake has a valid generation, use it, otherwise use global generation
     snakeGenerations[snake.id] = (typeof brainGen === 'number' && brainGen > 0) ? 
       brainGen : globalGeneration;
       
-    // Also update the snake's own generation property for display consistency
+    // IMPORTANT: Also update the snake's own generation property for display consistency
     snake.generation = snakeGenerations[snake.id];
   });
   

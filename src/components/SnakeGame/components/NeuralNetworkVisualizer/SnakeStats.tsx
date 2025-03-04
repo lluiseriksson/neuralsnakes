@@ -11,7 +11,7 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
   const [score, setScore] = useState(activeSnake?.score || 0);
   const [applesEaten, setApplesEaten] = useState(activeSnake?.decisionMetrics?.applesEaten || 0);
   const [successRate, setSuccessRate] = useState("0.0");
-  const [generation, setGeneration] = useState(activeSnake?.generation || 5);
+  const [generation, setGeneration] = useState(activeSnake?.generation || 1);
   
   // Update the local stats whenever activeSnake changes
   useEffect(() => {
@@ -45,7 +45,7 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
         setSuccessRate(calculatedRate.toFixed(1));
       }
       
-      // Get generation without capping (updated logic)
+      // IMPORTANT: Get the correct generation value without any limit
       if (typeof activeSnake.brain?.getGeneration === 'function') {
         try {
           const brainGen = activeSnake.brain.getGeneration();
@@ -53,7 +53,7 @@ const SnakeStats: React.FC<SnakeStatsProps> = ({ activeSnake }) => {
           console.log(`Snake ${activeSnake.id} (${getSnakeTypeLabel()}) actual generation: ${brainGen}`);
           
           if (typeof brainGen === 'number') {
-            // Use the brain's generation value directly with no limit
+            // IMPORTANT: Use the brain's generation value directly with no limit
             setGeneration(brainGen);
           } else if (activeSnake.generation && typeof activeSnake.generation === 'number') {
             // Fallback to snake's own generation property

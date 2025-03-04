@@ -8,8 +8,6 @@ interface SnakeScoreCardProps {
   score: number;
 }
 
-// Removed MAX_GENERATION_DISPLAY cap
-
 const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
   // Use local state to track score and ensure it updates visually
   const [currentScore, setCurrentScore] = useState(score);
@@ -34,9 +32,9 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
     if (snake.brain && typeof snake.brain.getGeneration === 'function') {
       try {
         const generation = snake.brain.getGeneration();
-        // Only update if we get a valid generation number
+        // IMPORTANT: Only update if we get a valid generation number
         if (typeof generation === 'number' && generation >= 0) {
-          // No cap on generation to allow unlimited values
+          // IMPORTANT: No cap on generation to allow unlimited values
           setCurrentGeneration(generation);
         }
       } catch (error) {

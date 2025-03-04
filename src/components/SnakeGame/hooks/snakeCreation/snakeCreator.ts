@@ -1,3 +1,4 @@
+
 import { Direction, Snake } from '../../types';
 import { generateInitialSnake } from '../../movement/initialSnake';
 import { createBestModelBrain, createCombinedModelBrain, createRandomBrain } from './createSnakeBrain';
@@ -22,9 +23,9 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
         return createRandomBrain(id);
       });
       
-      // Yellow snake should use the global generation to maintain consistency
+      // IMPORTANT: Force yellow snake to use the global generation
       brain.updateGeneration(currentGlobalGeneration);
-      console.log(`🟡 YELLOW SNAKE GENERATION SET TO: ${brain.getGeneration()} 🟡`);
+      console.log(`🟡 YELLOW SNAKE GENERATION FORCEFULLY SET TO: ${currentGlobalGeneration} 🟡`);
       
     } else if (id === 1) {
       // Blue snake - combined model brain
@@ -42,22 +43,23 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
       console.log(`🟢 Creating RANDOM SNAKE ${id} with color ${color} 🟢`);
       brain = createRandomBrain(id);
       
-      // Use the current global generation for all random snakes too
+      // IMPORTANT: Force all random snakes to use the global generation
       brain.updateGeneration(currentGlobalGeneration);
-      console.log(`🟢 RANDOM SNAKE ${id} GENERATION SET TO: ${brain.getGeneration()} 🟢`);
+      console.log(`🟢 RANDOM SNAKE ${id} GENERATION FORCEFULLY SET TO: ${currentGlobalGeneration} 🟢`);
     }
 
     if (!brain) {
       console.error(`Failed to create brain for snake ${id}, creating fallback random brain`);
       brain = createRandomBrain(id);
       
-      // Ensure fallback brain gets current generation
+      // IMPORTANT: Force fallback brain to use current generation
       brain.updateGeneration(currentGlobalGeneration);
-      console.log(`⚠️ FALLBACK SNAKE ${id} GENERATION SET TO: ${brain.getGeneration()} ⚠️`);
+      console.log(`⚠️ FALLBACK SNAKE ${id} GENERATION FORCEFULLY SET TO: ${currentGlobalGeneration} ⚠️`);
     }
 
-    // Double-check brain has a valid generation
-    console.log(`Final snake ${id} generation: ${brain.getGeneration()}`);
+    // Double-check brain has a valid generation that matches global generation
+    const finalGeneration = brain.getGeneration();
+    console.log(`Final snake ${id} generation: ${finalGeneration}`);
 
     // Generate initial positions with safety check
     let positions = generateInitialSnake(x, y);
@@ -126,10 +128,10 @@ export const createSnake = async (id: number, x: number, y: number, direction: D
     // Create fallback brain
     const fallbackBrain = createRandomBrain(id);
     
-    // Ensure fallback brain has the current global generation
+    // IMPORTANT: Force fallback brain to use the current global generation
     const globalGen = getCurrentGeneration();
     fallbackBrain.updateGeneration(globalGen);
-    console.log(`⚠️ FALLBACK SNAKE ${id} GENERATION SET TO: ${fallbackBrain.getGeneration()} ⚠️`);
+    console.log(`⚠️ FALLBACK SNAKE ${id} GENERATION FORCEFULLY SET TO: ${globalGen} ⚠️`);
     
     return {
       id,
