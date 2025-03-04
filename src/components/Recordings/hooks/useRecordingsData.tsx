@@ -6,7 +6,7 @@ import { GameRecorder, GameRecording } from "../../SnakeGame/database/gameRecord
 export function useRecordingsData() {
   const [recordings, setRecordings] = useState<GameRecording[]>([]);
   const [loading, setLoading] = useState(true);
-  const [downloading, setDownloading] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState<{ [key: string]: boolean }>({});
   const { toast } = useToast();
 
   // Load recordings
@@ -35,7 +35,9 @@ export function useRecordingsData() {
   // Download recording
   const handleDownload = async (recording: GameRecording) => {
     try {
-      setDownloading(recording.id);
+      const recordingId = recording.id || "";
+      setDownloading(prev => ({ ...prev, [recordingId]: true }));
+      
       GameRecorder.createRecordingDownload(recording);
       
       toast({
@@ -50,7 +52,13 @@ export function useRecordingsData() {
         variant: "destructive"
       });
     } finally {
-      setDownloading(null);
+      if (recording.id) {
+        setDownloading(prev => {
+          const newState = { ...prev };
+          delete newState[recording.id || ""];
+          return newState;
+        });
+      }
     }
   };
 

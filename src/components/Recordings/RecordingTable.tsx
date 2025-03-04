@@ -60,7 +60,7 @@ const RecordingTable: React.FC<RecordingTableProps> = ({
             <RecordingTableRow 
               key={recording.id}
               recording={recording} 
-              downloading={downloading[recording.id || '']} 
+              downloading={downloading[recording.id || ''] || false} 
               onDownload={() => onDownload(recording)}
               onPlay={() => onPlay(recording)}
             />

@@ -14,7 +14,7 @@ const RecordingsPage = () => {
   const { 
     recordings,
     loading,
-    downloading,
+    downloading, // This should be an object of format { [key: string]: boolean }
     handleDownload,
     addUploadedRecording,
     refresh
@@ -79,7 +79,7 @@ const RecordingsPage = () => {
           <RecordingTable 
             recordings={recordings}
             loading={loading}
-            downloading={downloading}
+            downloading={downloading} // Pass the downloading object as is
             onDownload={handleDownload}
             onPlay={handlePlayRecording}
           />
