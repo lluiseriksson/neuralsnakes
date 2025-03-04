@@ -11,6 +11,7 @@ export const useAnimationLoop = (
 ) => {
   const animationFrameId = useRef<number>();
   const isRenderingRef = useRef(false);
+  const frameCountRef = useRef(0);
 
   useEffect(() => {
     if (!isActive) return;
@@ -21,6 +22,7 @@ export const useAnimationLoop = (
         try {
           isRenderingRef.current = true;
           renderFrame();
+          frameCountRef.current += 1;
         } finally {
           isRenderingRef.current = false;
         }
@@ -30,11 +32,14 @@ export const useAnimationLoop = (
     
     render();
     
-    // Clean up animation loop on unmount
+    // Clean up animation loop on unmount or when dependencies change
     return () => {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
+        animationFrameId.current = undefined;
       }
     };
   }, [isActive, renderFrame, ...dependencies]);
+  
+  return frameCountRef.current;
 };

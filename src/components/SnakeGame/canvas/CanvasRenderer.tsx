@@ -47,7 +47,7 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   }, [gameState, drawGame]);
   
   // Animation loop hook - only pass the memoized draw function
-  useAnimationLoop(true, memoizedDrawGame, [gameState]);
+  const frameCount = useAnimationLoop(true, memoizedDrawGame, [gameState]);
 
   return (
     <canvas
@@ -60,6 +60,7 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       }}
       className="border-2 border-gray-700 bg-black rounded-lg shadow-xl"
       title="Click on a snake to select it"
+      data-frame-count={frameCount}
     />
   );
 };

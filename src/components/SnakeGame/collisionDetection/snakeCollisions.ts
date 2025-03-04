@@ -128,7 +128,7 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
   Array.from(headToHeadCollisions).forEach(index => {
     const snake = updatedSnakes[index];
     
-    // Apply learning to both snakes
+    // Apply learning to all snakes in head-to-head collisions
     applyNegativeLearning(snake, 2.0);
     
     // Mark snake as dead
@@ -137,7 +137,7 @@ export const checkSnakeCollisions = (snakes: Snake[]): Snake[] => {
     // Log final scores
     console.log(`Snake ${snake.id} died in head-to-head collision. Final score: ${snake.score}`);
     
-    // Count as death
+    // Count as suicide
     if (snake.decisionMetrics) {
       snake.decisionMetrics.suicides = (snake.decisionMetrics.suicides || 0) + 1;
     }

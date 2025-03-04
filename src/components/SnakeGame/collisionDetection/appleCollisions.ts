@@ -47,7 +47,7 @@ export const checkAppleCollisions = (snakes: Snake[], apples: Apple[]): { snakes
         console.log(`Snake ${snake.id} apples eaten: ${snake.decisionMetrics.applesEaten}`);
       }
       
-      // Add a new segment to the snake (RESTORED FUNCTIONALITY)
+      // Add a new segment to the snake
       const lastSegment = snake.positions[snake.positions.length - 1];
       snake.positions.push({ ...lastSegment });
       console.log(`Snake ${snake.id} grew to ${snake.positions.length} segments`);
@@ -73,9 +73,14 @@ export const generateAppleExplosion = (snake: Snake): Apple[] => {
     return [];
   }
   
-  // Generate an apple for each segment of the snake (RESTORED FUNCTIONALITY)
-  return snake.positions.map((position, index) => ({
+  console.log(`Generating apple explosion for snake ${snake.id} with ${snake.positions.length} segments`);
+  
+  // Generate an apple for each segment of the snake
+  const explosionApples = snake.positions.map((position, index) => ({
     id: Date.now() + index * 10, // Ensure unique IDs for each apple
     position: { ...position }
   }));
+  
+  console.log(`Generated ${explosionApples.length} new apples from snake ${snake.id}`);
+  return explosionApples;
 };

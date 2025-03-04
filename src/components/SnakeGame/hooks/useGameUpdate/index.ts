@@ -1,9 +1,9 @@
 
 import { useCallback } from 'react';
 import { GameState } from '../../types';
-import { checkCollisions, getCollisionInfo } from '../../collisionDetection';
+import { checkCollisions } from '../../collisionDetection';
 import { processSnakesMovement, hasLivingSnakes, storePreviousPositions } from './snakeProcessing';
-import { calculatePreviousDistances, calculateDistanceToClosestApple } from './calculateDistances';
+import { calculatePreviousDistances } from './calculateDistances';
 import { applyPositiveAppleLearning, applyDistanceBasedLearning, applyMissedApplePenalty } from './applyLearning';
 
 export const useGameUpdate = (
@@ -51,87 +51,14 @@ export const useGameUpdate = (
           const newSnakes = processSnakesMovement(prevState.snakes, prevState);
           
           // Check collisions after moving all snakes
-          const { newSnakes: snakesAfterCollisions, newApples } = checkCollisions(newSnakes, prevState.apples);
-          let finalApples = ensureMinimumApples(newApples);
-          let snakesToUpdate = [...snakesAfterCollisions];
+          const collisionResult = checkCollisions(newSnakes, prevState.apples);
           
-          // Process learning for each snake with enhanced visualization data
-          snakesToUpdate.forEach((snake, index) => {
-            if (!snake.alive) return;
-
-            const head = snake.positions[0];
-            
-            // Add collision info for visualization
-            if (!snake.debugInfo) {
-              snake.debugInfo = {};
-            }
-            
-            // Get detailed collision info for visualization
-            snake.debugInfo.collisionInfo = getCollisionInfo(snake.id, head, finalApples);
-            
-            // Check if snake ate an apple
-            const appleIndex = finalApples.findIndex(apple => 
-              apple.position.x === head.x && apple.position.y === head.y
-            );
-
-            if (appleIndex !== -1) {
-              console.log(`Snake ${snake.id} ate an apple at (${head.x}, ${head.y})`);
-              snake.score += 1;
-              
-              // Initialize actions array if needed
-              if (!snake.debugInfo.actions) {
-                snake.debugInfo.actions = [];
-              }
-              
-              // Record this action for visualization
-              snake.debugInfo.actions.push({
-                type: 'eat_apple',
-                position: {...head},
-                time: Date.now()
-              });
-              
-              // Apply positive reinforcement for eating an apple
-              applyPositiveAppleLearning(snake, prevState);
-              
-              // Add a new segment to the snake
-              const lastSegment = snake.positions[snake.positions.length - 1];
-              snake.positions.push({ ...lastSegment });
-              
-              // Remove the eaten apple
-              finalApples.splice(appleIndex, 1);
-            } else {
-              // No apple eaten - evaluate if snake is making progress
-              
-              // Calculate current distance to closest apple
-              const currentMinDistance = calculateDistanceToClosestApple(head, finalApples);
-              
-              // Initialize evaluations array if needed
-              if (!snake.debugInfo.evaluations) {
-                snake.debugInfo.evaluations = [];
-              }
-              
-              // Record this evaluation for visualization
-              snake.debugInfo.evaluations.push({
-                prevDistance: previousDistances[index],
-                currentDistance: currentMinDistance,
-                improvement: previousDistances[index] - currentMinDistance,
-                time: Date.now()
-              });
-              
-              // Apply learning based on whether the snake is moving closer to an apple
-              applyDistanceBasedLearning(snake, prevState, previousDistances[index], currentMinDistance);
-              
-              // Check for missed adjacent apples
-              applyMissedApplePenalty(snake, prevState, finalApples);
-            }
-          });
-
-          finalApples = ensureMinimumApples(finalApples);
+          // Ensure we have minimum number of apples
+          let finalApples = ensureMinimumApples(collisionResult.newApples);
           
-          // Return updated state
           return {
             ...prevState,
-            snakes: snakesToUpdate,
+            snakes: collisionResult.newSnakes,
             apples: finalApples
           };
         } catch (error) {
