@@ -59,7 +59,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 p-4">
       <h1 className="text-4xl font-bold mb-6 text-white bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-        Neural Network Evolution Simulator
+        Neural Snakes
       </h1>
       
       <VictoryDisplay victories={victories} />
