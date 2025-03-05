@@ -1,40 +1,9 @@
 
-// Add window augmentation for TypeScript to recognize our custom events
-declare global {
-  interface WindowEventMap {
-    'update-highest-score': CustomEvent<{ score: number }>;
-    'new-high-score': CustomEvent<{ score: number }>;
-  }
-}
+// Export the entire API from this index file
+export * from './cacheManagement';
+export * from './gameTracking';
+export * from './generationTracking';
+export * from './scoreTracking';
 
-// Re-export all model cache functionality from the modular files
-export { 
-  getModelCache,
-  setBestModelCache,
-  setCombinedModelCache,
-  resetModelCaches
-} from './cacheManagement';
-
-export {
-  incrementGeneration,
-  incrementGenerationAfterVictory,
-  updateCurrentGeneration,
-  forceGenerationUpdate,
-  getCurrentGeneration,
-  advanceGenerationBasedOnMetrics,
-  purgeAllModelCaches
-} from './generationTracking';
-
-export {
-  trackGamePlayed,
-  getGamesSinceLastIncrement,
-  resetGamesSinceLastIncrement,
-  updateHighestScore,
-  getHighestScore
-} from './gameTracking';
-
-export {
-  updateHighestScoreAchieved,
-  getCurrentHighestScore,
-  resetHighestScore
-} from './scoreTracking';
+// This index file prevents circular dependencies
+// Always import from this file instead of directly from the individual files
