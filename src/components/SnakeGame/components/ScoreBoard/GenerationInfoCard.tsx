@@ -1,6 +1,6 @@
 
-import React, { useEffect } from 'react';
-import { resetHighestScore } from '../../hooks/snakeCreation/modelCache';
+import React, { useEffect, useState } from 'react';
+import { getCurrentHighestScore, resetHighestScore } from '../../hooks/snakeCreation/modelCache';
 
 interface GenerationInfoCardProps {
   generation: number;
@@ -13,14 +13,45 @@ const GenerationInfoCard: React.FC<GenerationInfoCardProps> = ({
   bestScore, 
   progress 
 }) => {
+  // Local state to ensure best score always updates
+  const [localBestScore, setLocalBestScore] = useState(0);
+  
   // Reset high score when the component is first mounted
   useEffect(() => {
-    resetHighestScore();
-    console.log("High score reset on GenerationInfoCard mount");
+    // Get the highest score from global tracking
+    const currentHighScore = getCurrentHighestScore();
+    setLocalBestScore(Math.max(currentHighScore, bestScore));
+    
+    console.log("GenerationInfoCard: Initialized with best score:", 
+      Math.max(currentHighScore, bestScore));
+  }, [bestScore]);
+  
+  // Listen for high score updates
+  useEffect(() => {
+    const handleNewHighScore = (event: CustomEvent<{ score: number }>) => {
+      if (event.detail && typeof event.detail.score === 'number') {
+        setLocalBestScore(event.detail.score);
+        console.log("GenerationInfoCard: Updated best score from event:", event.detail.score);
+      }
+    };
+    
+    window.addEventListener('new-high-score', handleNewHighScore as EventListener);
+    
+    return () => {
+      window.removeEventListener('new-high-score', handleNewHighScore as EventListener);
+    };
   }, []);
+  
+  // Also update when props change
+  useEffect(() => {
+    if (bestScore > localBestScore) {
+      setLocalBestScore(bestScore);
+      console.log("GenerationInfoCard: Updated best score from props:", bestScore);
+    }
+  }, [bestScore, localBestScore]);
 
   // Ensure best score is always displayed as an integer and is at least 0
-  const displayScore = Math.max(0, Math.floor(bestScore));
+  const displayScore = Math.max(0, Math.floor(localBestScore));
   
   return (
     <div className="bg-gray-800 p-3 rounded-lg text-white">

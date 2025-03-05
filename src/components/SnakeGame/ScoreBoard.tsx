@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Snake } from './types';
 import GenerationInfoCard from './components/ScoreBoard/GenerationInfoCard';
 import SnakeScoreGrid from './components/ScoreBoard/SnakeScoreGrid';
-import { getHighestScore, resetHighestScore } from './hooks/snakeCreation/modelCache';
+import { getCurrentHighestScore, resetHighestScore } from './hooks/snakeCreation/modelCache';
 
 interface ScoreBoardProps {
   snakes: Snake[];
@@ -20,11 +20,13 @@ const ScoreBoard: React.FC<ScoreBoardProps> = ({ snakes, generationInfo }) => {
   // Add local state for best score to ensure it updates properly
   const [bestScore, setBestScore] = useState(0);
   
-  // Reset score on mount
+  // Reset score on mount and initialize from localStorage
   useEffect(() => {
-    // Reset the high score when component mounts
-    resetHighestScore();
-    console.log("High score reset on scoreboard mount");
+    // First, check if we have a stored score
+    const storedBestScore = getCurrentHighestScore();
+    setBestScore(storedBestScore);
+    
+    console.log("ScoreBoard: Initialized with stored best score:", storedBestScore);
   }, []);
   
   // Update the local scores whenever snakes array changes
@@ -39,15 +41,29 @@ const ScoreBoard: React.FC<ScoreBoardProps> = ({ snakes, generationInfo }) => {
     }
   }, [snakes]);
   
-  // Update best score every half second
+  // Listen for high score updates
   useEffect(() => {
-    const interval = setInterval(() => {
-      const currentBestScore = getHighestScore();
-      setBestScore(currentBestScore);
-    }, 500);
+    const handleNewHighScore = (event: CustomEvent<{ score: number }>) => {
+      if (event.detail && typeof event.detail.score === 'number') {
+        setBestScore(event.detail.score);
+        console.log("ScoreBoard: Updated best score from event:", event.detail.score);
+      }
+    };
     
-    return () => clearInterval(interval);
+    window.addEventListener('new-high-score', handleNewHighScore as EventListener);
+    
+    return () => {
+      window.removeEventListener('new-high-score', handleNewHighScore as EventListener);
+    };
   }, []);
+  
+  // Also update best score from generationInfo props
+  useEffect(() => {
+    if (generationInfo && generationInfo.bestScore > bestScore) {
+      setBestScore(generationInfo.bestScore);
+      console.log("ScoreBoard: Updated best score from props:", generationInfo.bestScore);
+    }
+  }, [generationInfo, bestScore]);
 
   return (
     <div className="mt-4 space-y-4">

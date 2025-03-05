@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Snake } from '../../types';
-import { updateHighestScore } from '../../hooks/snakeCreation/modelCache';
+import { updateHighestScoreAchieved } from '../../hooks/snakeCreation/modelCache';
 
 interface SnakeScoreCardProps {
   snake: Snake;
@@ -23,7 +23,7 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
       if (snake.brain && typeof snake.brain.updateBestScore === 'function' && score > 0) {
         snake.brain.updateBestScore(score);
         // Also update the global highest score
-        updateHighestScore(score);
+        updateHighestScoreAchieved(score);
       }
     }
   }, [score, snake.brain]);
@@ -33,43 +33,25 @@ const SnakeScoreCard: React.FC<SnakeScoreCardProps> = ({ snake, score }) => {
     // FIXED: Get generation directly from snake object for consistency
     if (typeof snake.generation === 'number' && snake.generation > 0) {
       setCurrentGeneration(snake.generation);
-      console.log(`ScoreCard: Snake ${snake.id} using snake.generation: ${snake.generation}`);
     }
   }, [snake]);
 
-  // Also update score based on snake length
+  // Also update score based on snake length if score is 0 but snake is longer
   useEffect(() => {
-    if (snake.positions && snake.positions.length > 3) {
+    if (snake.positions && snake.positions.length > 3 && currentScore === 0) {
       const lengthScore = snake.positions.length - 3;
-      // Check if the snake.score is valid and higher
-      const snakeScore = typeof snake.score === 'number' && !isNaN(snake.score) ? snake.score : 0;
-      
-      // Use the max of length-based score or stored score
-      const displayScore = Math.max(lengthScore, snakeScore);
-      
-      if (displayScore !== currentScore) {
-        console.log(`Snake ${snake.id} score updated in UI: ${currentScore} -> ${displayScore}`);
-        setCurrentScore(displayScore);
+      if (lengthScore > 0) {
+        setCurrentScore(lengthScore);
         
         // Also update the snake's brain best score
-        if (snake.brain && typeof snake.brain.updateBestScore === 'function' && displayScore > 0) {
-          snake.brain.updateBestScore(displayScore);
+        if (snake.brain && typeof snake.brain.updateBestScore === 'function') {
+          snake.brain.updateBestScore(lengthScore);
           // Update the global highest score as well
-          updateHighestScore(displayScore);
+          updateHighestScoreAchieved(lengthScore);
         }
       }
-    } else if (typeof snake.score === 'number' && !isNaN(snake.score) && snake.score !== currentScore) {
-      console.log(`Snake ${snake.id} score updated in UI from properties: ${currentScore} -> ${snake.score}`);
-      setCurrentScore(snake.score);
-      
-      // Also update the snake's brain best score
-      if (snake.brain && typeof snake.brain.updateBestScore === 'function' && snake.score > 0) {
-        snake.brain.updateBestScore(snake.score);
-        // Update the global highest score as well
-        updateHighestScore(snake.score);
-      }
     }
-  }, [snake.positions, snake.score, currentScore, snake.id, snake.brain]);
+  }, [snake.positions, currentScore, snake.brain]);
 
   // Determine a status label for the snake
   const getSnakeStatus = () => {

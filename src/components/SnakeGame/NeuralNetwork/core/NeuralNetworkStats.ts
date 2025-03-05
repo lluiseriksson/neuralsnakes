@@ -30,6 +30,27 @@ export class NetworkStats {
       this.learningRate = Math.max(0.05, 0.3 - (generation / 1000));
       console.log(`Network (gen ${generation}) using adaptive learning rate: ${this.learningRate.toFixed(4)}`);
     }
+    
+    // Try to get the best score from global tracking
+    this.tryLoadGlobalBestScore();
+  }
+  
+  private tryLoadGlobalBestScore(): void {
+    // Try to get the best score from localStorage
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const storedScore = localStorage.getItem('snake-highest-score');
+        if (storedScore) {
+          const parsedScore = parseInt(storedScore, 10);
+          if (!isNaN(parsedScore) && parsedScore > this.bestScore) {
+            this.bestScore = parsedScore;
+            console.log(`Neural network loaded best score from localStorage: ${this.bestScore}`);
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to read best score from localStorage:", e);
+      }
+    }
   }
 
   getLearningRate(): number {
@@ -62,29 +83,51 @@ export class NetworkStats {
         this.bestScore = score;
         console.log(`New best score: ${this.bestScore} for generation ${this.generation}`);
         
+        // Save to localStorage for cross-session persistence
+        this.saveToLocalStorage();
+        
         // Notify global score tracking through CustomEvent
-        try {
-          const scoreUpdateEvent = new CustomEvent('update-highest-score', { 
-            detail: { score: score } 
-          });
-          window.dispatchEvent(scoreUpdateEvent);
-        } catch (e) {
-          console.warn("Couldn't update global highest score through event:", e);
-        }
+        this.notifyScoreUpdate(score);
         
         // Also notify UI that score changed
         if (now - this.lastUIUpdate > 500) {
           this.lastUIUpdate = now;
-          try {
-            const scoreUpdateEvent = new CustomEvent('score-update', { 
-              detail: { score: this.score, bestScore: this.bestScore } 
-            });
-            window.dispatchEvent(scoreUpdateEvent);
-          } catch (e) {
-            console.warn("Couldn't dispatch score update event:", e);
-          }
+          this.notifyUIUpdate();
         }
       }
+    }
+  }
+  
+  private saveToLocalStorage(): void {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        localStorage.setItem('snake-highest-score', this.bestScore.toString());
+        console.log(`Saved best score to localStorage: ${this.bestScore}`);
+      } catch (e) {
+        console.warn("Failed to save best score to localStorage:", e);
+      }
+    }
+  }
+  
+  private notifyScoreUpdate(score: number): void {
+    try {
+      const scoreUpdateEvent = new CustomEvent('update-highest-score', { 
+        detail: { score: score } 
+      });
+      window.dispatchEvent(scoreUpdateEvent);
+    } catch (e) {
+      console.warn("Couldn't update global highest score through event:", e);
+    }
+  }
+  
+  private notifyUIUpdate(): void {
+    try {
+      const scoreUpdateEvent = new CustomEvent('score-update', { 
+        detail: { score: this.score, bestScore: this.bestScore } 
+      });
+      window.dispatchEvent(scoreUpdateEvent);
+    } catch (e) {
+      console.warn("Couldn't dispatch score update event:", e);
     }
   }
   
@@ -110,15 +153,11 @@ export class NetworkStats {
       this.bestScore = score;
       console.log(`Updated best score: ${this.bestScore} for generation ${this.generation}`);
       
+      // Save to localStorage for cross-session persistence
+      this.saveToLocalStorage();
+      
       // Notify global score tracking through a custom event
-      try {
-        const scoreUpdateEvent = new CustomEvent('update-highest-score', { 
-          detail: { score: score } 
-        });
-        window.dispatchEvent(scoreUpdateEvent);
-      } catch (e) {
-        console.warn("Couldn't update global highest score through event:", e);
-      }
+      this.notifyScoreUpdate(score);
     }
   }
   
