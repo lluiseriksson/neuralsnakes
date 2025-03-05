@@ -7,7 +7,6 @@ import { useToast } from "../components/ui/use-toast";
 import { Snake } from "../components/SnakeGame/types";
 import GameVisualizer from "../components/SnakeGame/components/GameVisualizer";
 import SnakeVisualizer from "../components/SnakeGame/components/SnakeVisualizer";
-import GenerationInfo from "../components/SnakeGame/components/GenerationInfo";
 
 const Index = () => {
   const [activeSnake, setActiveSnake] = useState<Snake | null>(null);
@@ -44,22 +43,6 @@ const Index = () => {
     setActiveSnake(snake);
   };
   
-  useEffect(() => {
-    const currentGenElement = document.getElementById('current-gen');
-    const bestScoreElement = document.getElementById('best-score');
-    const aliveCountElement = document.getElementById('alive-count');
-    const appleCountElement = document.getElementById('apple-count');
-    
-    if (currentGenElement) currentGenElement.textContent = generationInfo.generation.toString();
-    if (bestScoreElement) bestScoreElement.textContent = Math.floor(generationInfo.bestScore).toString();
-    if (aliveCountElement && gameState.snakes) {
-      aliveCountElement.textContent = gameState.snakes.filter(s => s.alive).length.toString();
-    }
-    if (appleCountElement && gameState.apples) {
-      appleCountElement.textContent = gameState.apples.length.toString();
-    }
-  }, [generationInfo, gameState.snakes, gameState.apples]);
-  
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 p-4">
       <h1 className="text-4xl font-bold mb-6 text-white bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
@@ -87,12 +70,9 @@ const Index = () => {
             onSelectSnake={handleSelectSnake}
           />
           
-          <GenerationInfo
-            generation={generationInfo.generation}
-            bestScore={Math.floor(generationInfo.bestScore)}
-            progress={generationInfo.progress}
-            snakeCount={gameState.snakes?.filter(s => s.alive).length || 0}
-            appleCount={gameState.apples?.length || 0}
+          <ScoreBoard 
+            snakes={gameState.snakes || []} 
+            generationInfo={generationInfo}
           />
         </div>
       </div>
