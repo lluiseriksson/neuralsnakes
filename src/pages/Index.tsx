@@ -53,8 +53,8 @@ const Index = () => {
         <VictoryDisplay victories={victories} />
       </div>
       
-      <div className="flex flex-col gap-8 items-center mt-4 w-full max-w-[1400px]">
-        <div className="w-full">
+      <div className="flex flex-col lg:flex-row gap-8 items-start mt-4 w-full max-w-[1400px]">
+        <div className="w-full lg:w-[60%]">
           <GameVisualizer 
             gameState={gameState}
             startTime={startTime}
@@ -63,21 +63,17 @@ const Index = () => {
           />
         </div>
         
-        <div className="w-full flex flex-col lg:flex-row gap-5">
-          <div className="w-full lg:w-1/2">
-            <ScoreBoard 
-              snakes={gameState.snakes || []} 
-              generationInfo={generationInfo}
-            />
-          </div>
+        <div className="w-full lg:w-[40%] flex flex-col gap-5">
+          <SnakeVisualizer
+            snakes={gameState.snakes || []}
+            activeSnake={activeSnake}
+            onSelectSnake={handleSelectSnake}
+          />
           
-          <div className="w-full lg:w-1/2">
-            <SnakeVisualizer
-              snakes={gameState.snakes || []}
-              activeSnake={activeSnake}
-              onSelectSnake={handleSelectSnake}
-            />
-          </div>
+          <ScoreBoard 
+            snakes={gameState.snakes || []} 
+            generationInfo={generationInfo}
+          />
         </div>
       </div>
     </div>
